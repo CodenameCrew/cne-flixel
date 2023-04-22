@@ -483,6 +483,11 @@ class FlxCamera extends FlxBasic
 	var _fxFadeAlpha:Float = 0;
 
 	/**
+	 * If true, removes the black bars at screen edge when using the `shake()` effect.
+	 */
+	public var shakeBorderFix:Bool = true;
+
+	/**
 	 * Internal, percentage of screen size representing the maximum distance that the screen can move while shaking.
 	 */
 	var _fxShakeIntensity:Float = 0;
@@ -858,6 +863,12 @@ class FlxCamera extends FlxBasic
 				matrix.translate(-width / 2, -height / 2);
 				matrix.rotateWithTrig(_cosAngle, _sinAngle);
 				matrix.translate(width / 2, height / 2);
+			}
+
+			if (shakeBorderFix && _fxShakeDuration > 0)
+			{
+				matrix.translate(_fxShakeAxes.x ? FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) * zoom * FlxG.scaleMode.scale.x : 0,
+					_fxShakeAxes.y ? FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) * zoom * FlxG.scaleMode.scale.y : 0);
 			}
 
 			#if FLX_RENDER_TRIANGLE
@@ -1392,6 +1403,8 @@ class FlxCamera extends FlxBasic
 			}
 			else
 			{
+				if (shakeBorderFix)
+					return;
 				if (_fxShakeAxes.x)
 				{
 					flashSprite.x += FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) * zoom * FlxG.scaleMode.scale.x;
