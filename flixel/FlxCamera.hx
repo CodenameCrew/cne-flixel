@@ -488,6 +488,11 @@ class FlxCamera extends FlxBasic
 	public var shakeBorderFix:Bool = true;
 
 	/**
+	 * If true, you're able to set `fxShakePoint` to a custom value.
+	 */
+	public var useCustomShake:Bool = false;
+
+	/**
 	 * Random point used for the fixed `shake()` effect.
 	 */
 	public var fxShakePoint:FlxPoint = FlxPoint.get();
@@ -1410,8 +1415,11 @@ class FlxCamera extends FlxBasic
 			{
 				if (shakeBorderFix)
 				{
-					fxShakePoint.set(_fxShakeAxes.x ? _fxShakeIntensity * width * FlxG.random.float(-1, 1) : 0,
-						_fxShakeAxes.y ? _fxShakeIntensity * height * FlxG.random.float(-1, 1) : 0);
+					if (!useCustomShake)
+					{
+						fxShakePoint.set(_fxShakeAxes.x ? _fxShakeIntensity * width * FlxG.random.float(-1, 1) : 0,
+							_fxShakeAxes.y ? _fxShakeIntensity * height * FlxG.random.float(-1, 1) : 0);
+					}
 					return;
 				}
 				if (_fxShakeAxes.x)
