@@ -1981,10 +1981,6 @@ class FlxCamera extends FlxBasic
 
 		if (!rotateSprite && angle != 0)
 		{
-			_tempCamRect.left += 50;
-			_tempCamRect.right -= 50;
-			_tempCamRect.top += 50;
-			_tempCamRect.bottom -= 50;
 			_tempPoint.pivotDegrees(FlxPoint.weak(), angle);
 		}
 
@@ -2020,11 +2016,8 @@ class FlxCamera extends FlxBasic
 
 		if (!rotateSprite && angle != 0)
 		{
-			_tempCamRect.left += 50;
-			_tempCamRect.right -= 50;
-			_tempCamRect.top += 50;
-			_tempCamRect.bottom -= 50;
-			_tempCamRect.getRotatedBounds(angle, FlxPoint.weak(), _tempRect, FlxPoint.weak());
+			_tempRect.getRotatedBounds(angle, FlxPoint.weak(), _tempRect, FlxPoint.weak());
+			_tempCamRect.getRotatedBounds(angle, FlxPoint.weak(), _tempCamRect, FlxPoint.weak());
 		}
 
 		if (_fxShakeDuration > 0 && shakeBorderFix)
