@@ -345,7 +345,7 @@ class FlxRect implements IFlxPooled
 	 * @return A globally aligned `FlxRect` that fully contains the input rectangle.
 	 * @since 4.11.0
 	 */
-	public function getRotatedBounds(degrees:Float, ?origin:FlxPoint, ?newRect:FlxRect, ?innerOffset:FlxPoint):FlxRect
+	public function getRotatedBounds(degrees:Float, ?origin:FlxPoint, ?newRect:FlxRect, ?innerOffset:Null<FlxPoint>):FlxRect
 	{
 		if (origin == null)
 			origin = FlxPoint.weak(0, 0);
@@ -367,10 +367,14 @@ class FlxRect implements IFlxPooled
 		var cos = Math.cos(radians);
 		var sin = Math.sin(radians);
 
+		if (innerOffset == null)
+			innerOffset = FlxPoint.weak();
 		var left = -origin.x - innerOffset.x;
 		var top = -origin.y - innerOffset.y;
 		var right = -origin.x + width - innerOffset.x;
 		var bottom = -origin.y + height - innerOffset.y;
+		innerOffset.putWeak();
+
 		if (degrees < 90)
 		{
 			newRect.x = x + origin.x + cos * left - sin * bottom;
@@ -379,7 +383,7 @@ class FlxRect implements IFlxPooled
 		else if (degrees < 180)
 		{
 			newRect.x = x + origin.x + cos * right - sin * bottom;
-			newRect.y = y + origin.y + sin * left  + cos * bottom;
+			newRect.y = y + origin.y + sin * left + cos * bottom;
 		}
 		else if (degrees < 270)
 		{
@@ -392,8 +396,8 @@ class FlxRect implements IFlxPooled
 			newRect.y = y + origin.y + sin * right + cos * top;
 		}
 		// temp var, in case input rect is the output rect
-		var newHeight = Math.abs(cos * height) + Math.abs(sin * width );
-		newRect.width = Math.abs(cos * width ) + Math.abs(sin * height);
+		var newHeight = Math.abs(cos * height) + Math.abs(sin * width);
+		newRect.width = Math.abs(cos * width) + Math.abs(sin * height);
 		newRect.height = newHeight;
 
 		origin.putWeak();

@@ -1969,8 +1969,32 @@ class FlxCamera extends FlxBasic
 	 */
 	public inline function containsPoint(point:FlxPoint, width:Float = 0, height:Float = 0):Bool
 	{
-		var contained = (point.x + width > viewMarginLeft) && (point.x < viewMarginRight) && (point.y + height > viewMarginTop) && (point.y < viewMarginBottom);
+		// make a new point to leave the original intact
+		var _tempPoint:FlxPoint = FlxPoint.weak().copyFrom(point).subtractPoint(fxShakePoint);
+		var _tempCamRect:FlxRect = FlxRect.weak();
+
+		// god i WISH there was a function for this. this code looks painful
+		_tempCamRect.left = viewMarginLeft;
+		_tempCamRect.right = viewMarginRight;
+		_tempCamRect.top = viewMarginTop;
+		_tempCamRect.bottom = viewMarginBottom;
+
+		if (!rotateSprite && angle != 0)
+		{
+			_tempPoint.pivotDegrees(FlxPoint.weak(), angle);
+		}
+
+		if (_fxShakeDuration > 0 && shakeBorderFix)
+		{
+			_tempCamRect.offset(fxShakePoint.x, fxShakePoint.y);
+		}
+
+		var contained = (_tempPoint.x + width > _tempCamRect.left)
+			&& (_tempPoint.x < _tempCamRect.right)
+			&& (_tempPoint.y + height > _tempCamRect.top)
+			&& (_tempPoint.y < _tempCamRect.bottom);
 		point.putWeak();
+		_tempPoint.putWeak();
 		return contained;
 	}
 
@@ -1980,8 +2004,37 @@ class FlxCamera extends FlxBasic
 	 */
 	public inline function containsRect(rect:FlxRect):Bool
 	{
-		var contained = (rect.right > viewMarginLeft) && (rect.x < viewMarginRight) && (rect.bottom > viewMarginTop) && (rect.y < viewMarginBottom);
+		// make a new rect to leave the original intact
+		var _tempRect:FlxRect = FlxRect.weak().copyFrom(rect);
+		var _tempCamRect:FlxRect = FlxRect.weak();
+
+		// god i WISH there was a function for this. this code looks painful
+		_tempCamRect.left = viewMarginLeft;
+		_tempCamRect.right = viewMarginRight;
+		_tempCamRect.top = viewMarginTop;
+		_tempCamRect.bottom = viewMarginBottom;
+
+		if (!rotateSprite && angle != 0)
+		{
+			_tempCamRect.left += 50;
+			_tempCamRect.right -= 50;
+			_tempCamRect.top += 50;
+			_tempCamRect.bottom -= 50;
+			_tempCamRect.getRotatedBounds(angle, FlxPoint.weak(), _tempRect, FlxPoint.weak());
+		}
+
+		if (_fxShakeDuration > 0 && shakeBorderFix)
+		{
+			_tempCamRect.offset(fxShakePoint.x, fxShakePoint.y);
+		}
+
+		var contained = (_tempRect.right > _tempCamRect.left)
+			&& (_tempRect.x < _tempCamRect.right)
+			&& (_tempRect.bottom > _tempCamRect.top)
+			&& (_tempRect.y < _tempCamRect.bottom);
 		rect.putWeak();
+		_tempRect.putWeak();
+		_tempCamRect.putWeak();
 		return contained;
 	}
 
