@@ -1981,6 +1981,10 @@ class FlxCamera extends FlxBasic
 
 		if (!rotateSprite && angle != 0)
 		{
+			_tempCamRect.left += 50;
+			_tempCamRect.right -= 50;
+			_tempCamRect.top += 50;
+			_tempCamRect.bottom -= 50;
 			_tempPoint.pivotDegrees(FlxPoint.weak(), angle);
 		}
 
