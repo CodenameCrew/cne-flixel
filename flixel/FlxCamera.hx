@@ -1410,9 +1410,8 @@ class FlxCamera extends FlxBasic
 			{
 				if (shakeBorderFix)
 				{
-					_fxShakePoint.set(_fxShakeAxes.x ? FlxG.random.float(-_fxShakeIntensity * width,
-						_fxShakeIntensity * width) * zoom * FlxG.scaleMode.scale.x : 0,
-						_fxShakeAxes.y ? FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) * zoom * FlxG.scaleMode.scale.y : 0);
+					_fxShakePoint.set(_fxShakeAxes.x ? FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) : 0,
+						_fxShakeAxes.y ? FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) : 0);
 					return;
 				}
 				if (_fxShakeAxes.x)
