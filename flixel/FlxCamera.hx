@@ -488,9 +488,9 @@ class FlxCamera extends FlxBasic
 	public var shakeBorderFix:Bool = true;
 
 	/**
-	 * Internal, random value for the fixed `shake()` effect.
+	 * Random point used for the fixed `shake()` effect.
 	 */
-	var _fxShakePoint:FlxPoint = FlxPoint.get();
+	public var fxShakePoint:FlxPoint = FlxPoint.get();
 
 	/**
 	 * Internal, percentage of screen size representing the maximum distance that the screen can move while shaking.
@@ -872,7 +872,7 @@ class FlxCamera extends FlxBasic
 
 			if (shakeBorderFix && _fxShakeDuration > 0)
 			{
-				matrix.translate(_fxShakePoint.x, _fxShakePoint.y);
+				matrix.translate(fxShakePoint.x, fxShakePoint.y);
 			}
 
 			#if FLX_RENDER_TRIANGLE
@@ -1208,7 +1208,7 @@ class FlxCamera extends FlxBasic
 		_lastTargetPosition = FlxDestroyUtil.put(_lastTargetPosition);
 		_flashOffset = FlxDestroyUtil.put(_flashOffset);
 		_scrollTarget = FlxDestroyUtil.put(_scrollTarget);
-		_fxShakePoint = FlxDestroyUtil.put(_fxShakePoint);
+		fxShakePoint = FlxDestroyUtil.put(fxShakePoint);
 
 		target = null;
 		flashSprite = null;
@@ -1410,7 +1410,7 @@ class FlxCamera extends FlxBasic
 			{
 				if (shakeBorderFix)
 				{
-					_fxShakePoint.set(_fxShakeAxes.x ? _fxShakeIntensity * width * FlxG.random.float(-1, 1) : 0,
+					fxShakePoint.set(_fxShakeAxes.x ? _fxShakeIntensity * width * FlxG.random.float(-1, 1) : 0,
 						_fxShakeAxes.y ? _fxShakeIntensity * height * FlxG.random.float(-1, 1) : 0);
 					return;
 				}
