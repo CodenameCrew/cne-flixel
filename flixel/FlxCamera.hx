@@ -1410,17 +1410,17 @@ class FlxCamera extends FlxBasic
 			{
 				if (shakeBorderFix)
 				{
-					_fxShakePoint.set(_fxShakeAxes.x ? FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) : 0,
-						_fxShakeAxes.y ? FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) : 0);
+					_fxShakePoint.set(_fxShakeAxes.x ? _fxShakeIntensity * width * FlxG.random.float(-1, 1) : 0,
+						_fxShakeAxes.y ? _fxShakeIntensity * height * FlxG.random.float(-1, 1) : 0);
 					return;
 				}
 				if (_fxShakeAxes.x)
 				{
-					flashSprite.x += FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) * zoom * FlxG.scaleMode.scale.x;
+					flashSprite.x += (_fxShakeIntensity * width * FlxG.random.float(-1, 1)) * zoom * FlxG.scaleMode.scale.x;
 				}
 				if (_fxShakeAxes.y)
 				{
-					flashSprite.y += FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) * zoom * FlxG.scaleMode.scale.y;
+					flashSprite.y += (_fxShakeIntensity * height * FlxG.random.float(-1, 1)) * zoom * FlxG.scaleMode.scale.y;
 				}
 			}
 		}
