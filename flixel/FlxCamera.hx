@@ -1423,14 +1423,16 @@ class FlxCamera extends FlxBasic
 					return;
 				}
 
-				if (!useCustomShake) {
+				if (!useCustomShake)
+				{
 					flashSprite.x += _fxShakeAxes.x ? (_fxShakeIntensity * width * FlxG.random.float(-1, 1)) * zoom * FlxG.scaleMode.scale.x : 0;
 					flashSprite.y += _fxShakeAxes.y ? (_fxShakeIntensity * height * FlxG.random.float(-1, 1)) * zoom * FlxG.scaleMode.scale.y : 0;
-				} else {
+				}
+				else
+				{
 					flashSprite.x += _fxShakeAxes.x ? fxShakePoint.x : 0;
 					flashSprite.y += _fxShakeAxes.y ? fxShakePoint.y : 0;
 				}
-				
 			}
 		}
 	}
@@ -1982,7 +1984,6 @@ class FlxCamera extends FlxBasic
 		var _tempPoint:FlxPoint = FlxPoint.weak().copyFrom(point).subtractPoint(fxShakePoint);
 		var _tempCamRect:FlxRect = FlxRect.weak();
 
-		// god i WISH there was a function for this. this code looks painful
 		_tempCamRect.left = viewMarginLeft;
 		_tempCamRect.right = viewMarginRight;
 		_tempCamRect.top = viewMarginTop;
@@ -1991,6 +1992,7 @@ class FlxCamera extends FlxBasic
 		if (!rotateSprite && angle != 0)
 		{
 			_tempPoint.pivotDegrees(FlxPoint.weak(), angle);
+			_tempCamRect.getRotatedBounds(angle, FlxPoint.weak(), _tempCamRect, FlxPoint.weak());
 		}
 
 		if (_fxShakeDuration > 0 && shakeBorderFix)
@@ -2017,7 +2019,6 @@ class FlxCamera extends FlxBasic
 		var _tempRect:FlxRect = FlxRect.weak().copyFrom(rect);
 		var _tempCamRect:FlxRect = FlxRect.weak();
 
-		// god i WISH there was a function for this. this code looks painful
 		_tempCamRect.left = viewMarginLeft;
 		_tempCamRect.right = viewMarginRight;
 		_tempCamRect.top = viewMarginTop;
