@@ -2006,6 +2006,7 @@ class FlxCamera extends FlxBasic
 			&& (_tempPoint.y < _tempCamRect.bottom);
 		point.putWeak();
 		_tempPoint.putWeak();
+		_tempCamRect.putWeak();
 		return contained;
 	}
 
