@@ -1981,7 +1981,7 @@ class FlxCamera extends FlxBasic
 	public function containsPoint(point:FlxPoint, width:Float = 0, height:Float = 0):Bool
 	{
 		// make a new point to leave the original intact
-		var _tempPoint:FlxPoint = FlxPoint.weak().copyFrom(point).subtractPoint(fxShakePoint);
+		var _tempPoint:FlxPoint = FlxPoint.weak().copyFrom(point);
 		var _tempCamRect:FlxRect = FlxRect.weak();
 
 		_tempCamRect.left = viewMarginLeft;
@@ -1997,6 +1997,7 @@ class FlxCamera extends FlxBasic
 
 		if (_fxShakeDuration > 0 && shakeBorderFix)
 		{
+			_tempPoint += fxShakePoint;
 			_tempCamRect.offset(fxShakePoint.x, fxShakePoint.y);
 		}
 
@@ -2033,7 +2034,7 @@ class FlxCamera extends FlxBasic
 
 		if (_fxShakeDuration > 0 && shakeBorderFix)
 		{
-			_tempCamRect.offset(fxShakePoint.x, fxShakePoint.y);
+			_tempRect.offset(fxShakePoint.x, fxShakePoint.y);
 		}
 
 		var contained = (_tempRect.right > _tempCamRect.left)
