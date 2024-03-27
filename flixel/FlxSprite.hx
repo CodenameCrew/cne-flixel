@@ -1384,8 +1384,9 @@ class FlxSprite extends FlxObject
 		newRect.setPosition(x, y);
 		if (pixelPerfectPosition)
 			newRect.floor();
-		_scaledOrigin.set(origin.x * scale.x, origin.y * scale.y);
-		_scaledFrameOffset.set(frameOffset.x * scale.x, frameOffset.y * scale.y);
+		_scaledOrigin.set(origin.x * Math.abs(scale.x), origin.y * Math.abs(scale.y));
+		_scaledFrameOffset.set(frameOffset.x * Math.abs(scale.x), frameOffset.y * Math.abs(scale.y));
+		// _scaledFrameOffset.set(frameOffset.x * scale.x, frameOffset.y * scale.y);
 		newRect.x += -Std.int(camera.scroll.x * scrollFactor.x) - offset.x + origin.x - _scaledOrigin.x;
 		newRect.y += -Std.int(camera.scroll.y * scrollFactor.y) - offset.y + origin.y - _scaledOrigin.y;
 		if (isPixelPerfectRender(camera))
