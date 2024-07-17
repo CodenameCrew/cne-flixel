@@ -48,7 +48,7 @@ class FlxMouseEventManager extends FlxBasic
 	var _downList:Array<FlxMouseEvent<FlxObject>> = [];
 	var _clickList:Array<FlxMouseEvent<FlxObject>> = [];
 
-	var mouseClickedTime:Int = -1;
+	var mouseClickedTime:flixel.FlxTypes.LimeTime = -1;
 
 	@:noCompletion
 	var _point:FlxPoint = FlxPoint.get();

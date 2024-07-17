@@ -1,5 +1,6 @@
 package flixel.system.debug.stats;
 
+import flixel.FlxTypes;
 import openfl.display.BitmapData;
 import openfl.system.System;
 import openfl.text.TextField;
@@ -49,9 +50,9 @@ class Stats extends Window
 	var _leftTextField:TextField;
 	var _rightTextField:TextField;
 
-	var _itvTime:Int = 0;
+	var _itvTime:LimeTime = 0;
 	var _frameCount:Int;
-	var _currentTime:Int;
+	var _currentTime:LimeTime;
 
 	var fpsGraph:StatsGraph;
 	var memoryGraph:StatsGraph;
@@ -61,17 +62,17 @@ class Stats extends Window
 	var flashPlayerFramerate:Float = 0;
 	var visibleCount:Int = 0;
 	var activeCount:Int = 0;
-	var updateTime:Int = 0;
-	var drawTime:Int = 0;
+	var updateTime:LimeTime = 0;
+	var drawTime:LimeTime = 0;
 	var drawCallsCount:Int = 0;
 
-	var _lastTime:Int = 0;
-	var _updateTimer:Int = 0;
+	var _lastTime:LimeTime = 0;
+	var _updateTimer:LimeTime = 0;
 
-	var _update:Array<Int> = [];
+	var _update:Array<LimeTime> = [];
 	var _updateMarker:Int = 0;
 
-	var _draw:Array<Int> = [];
+	var _draw:Array<LimeTime> = [];
 	var _drawMarker:Int = 0;
 
 	var _drawCalls:Array<Int> = [];
@@ -226,9 +227,9 @@ class Stats extends Window
 		{
 			return;
 		}
-		var time:Int = _currentTime = FlxG.game.ticks;
+		var time = _currentTime = FlxG.game.ticks;
 
-		var elapsed:Int = time - _lastTime;
+		var elapsed = time - _lastTime;
 
 		if (elapsed > UPDATE_DELAY)
 		{
@@ -341,7 +342,7 @@ class Stats extends Window
 	 *
 	 * @param 	Time	How long this update took.
 	 */
-	public function flixelUpdate(Time:Int):Void
+	public function flixelUpdate(Time:LimeTime):Void
 	{
 		if (_paused)
 			return;
@@ -353,7 +354,7 @@ class Stats extends Window
 	 *
 	 * @param	Time	How long this render took.
 	 */
-	public function flixelDraw(Time:Int):Void
+	public function flixelDraw(Time:LimeTime):Void
 	{
 		if (_paused)
 			return;

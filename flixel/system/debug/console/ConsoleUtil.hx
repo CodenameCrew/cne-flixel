@@ -169,7 +169,8 @@ class Interp extends hscript.Interp
 {
 	public function getGlobals():Array<String>
 	{
-		return toArray(locals.keys()).concat(toArray(variables.keys()));
+		//return toArray(locals.keys()).concat(toArray(variables.keys()));
+		return [];
 	}
 
 	function toArray<T>(iterator:Iterator<T>):Array<T>

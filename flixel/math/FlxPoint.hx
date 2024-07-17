@@ -69,7 +69,7 @@ import openfl.geom.Point;
  * Otherwise, the remainging points will become garbage, adding to the
  * heap, potentially triggering a garbage collection when you don't want.
  */
-@:forward abstract FlxPoint(FlxBasePoint) to FlxBasePoint from FlxBasePoint 
+@:forward abstract FlxPoint(FlxBasePoint) to FlxBasePoint from FlxBasePoint
 {
 	public static inline var EPSILON:Float = 0.0000001;
 	public static inline var EPSILON_SQUARED:Float = EPSILON * EPSILON;
@@ -85,9 +85,9 @@ import openfl.geom.Point;
 	 * @param   x  The X-coordinate of the point in space.
 	 * @param   y  The Y-coordinate of the point in space.
 	 */
-	public static inline function get(x:Float = 0, y:Float = 0):FlxPoint
+	public static inline function get(x:Float = 0, y:Float = 0/*, addLog:Bool = true*/):FlxPoint
 	{
-		return FlxBasePoint.get(x, y);
+		return FlxBasePoint.get(x, y/*, addLog*/);
 	}
 
 	/**
@@ -142,7 +142,6 @@ import openfl.geom.Point;
 		return result;
 	}
 
-	
 	/**
 	 * Operator that divides a point by float, returning a new point.
 	 */
@@ -185,7 +184,6 @@ import openfl.geom.Point;
 		return a.scale(b);
 	}
 
-	
 	/**
 	 * Operator that adds two points, returning a new point.
 	 */
@@ -1447,11 +1445,21 @@ class FlxBasePoint implements IFlxPooled
 	 * @param   y  The Y-coordinate of the point in space.
 	 * @return  This point.
 	 */
-	public static inline function get(x:Float = 0, y:Float = 0):FlxBasePoint
+	public static inline function get(x:Float = 0, y:Float = 0/*, addLog:Bool = true*/):FlxBasePoint
 	{
 		#if FLX_POINT_POOL
 		var point = pool.get().set(x, y);
 		point._inPool = false;
+		/*if(addLog) {
+			var cs = haxe.CallStack.callStack();
+			//while(haxe.CallStack.toString(cs).indexOf("openfl.events.EventDispatcher.__dispatchEvent") != -1) {
+			//	cs.pop();
+			//}
+			for(i in 0...10) {
+				cs.pop();
+			}
+			point.madeIn.push(haxe.CallStack.toString(cs)+"\n");
+		}*/
 		return point;
 		#else
 		return new FlxBasePoint(x, y);
@@ -1481,6 +1489,7 @@ class FlxBasePoint implements IFlxPooled
 	#if FLX_POINT_POOL
 	var _weak:Bool = false;
 	var _inPool:Bool = false;
+	//public var madeIn:Array<String> = [];
 	#end
 
 	@:keep
@@ -1572,7 +1581,6 @@ class FlxBasePoint implements IFlxPooled
 		return y = Value;
 	}
 }
-
 
 /**
  * A FlxPoint that calls a function when set_x(), set_y() or set() is called. Used in FlxSpriteGroup.

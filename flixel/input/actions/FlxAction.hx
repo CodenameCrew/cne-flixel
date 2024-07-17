@@ -341,7 +341,7 @@ class FlxAction implements IFlxDestroyable
 	var _x:Null<Float> = null;
 	var _y:Null<Float> = null;
 
-	var _timestamp:Int = 0;
+	var _timestamp:flixel.FlxTypes.LimeTime = 0;
 	var _checked:Bool = false;
 
 	/**

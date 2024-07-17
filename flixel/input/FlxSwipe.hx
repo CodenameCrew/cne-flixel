@@ -26,10 +26,10 @@ class FlxSwipe implements IFlxDestroyable
 	public var radians(get, never):Float;
 	public var duration(get, never):Float;
 
-	var _startTimeInTicks:Int;
-	var _endTimeInTicks:Int;
+	var _startTimeInTicks:flixel.FlxTypes.LimeTime;
+	var _endTimeInTicks:flixel.FlxTypes.LimeTime;
 
-	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:Int)
+	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:flixel.FlxTypes.LimeTime)
 	{
 		this.ID = ID;
 		startPosition = StartPosition;
@@ -40,11 +40,13 @@ class FlxSwipe implements IFlxDestroyable
 
 	public function destroy()
 	{
-		if(startPosition != null) {
+		if (startPosition != null)
+		{
 			startPosition.putWeak();
 			startPosition = null;
 		}
-		if(endPosition != null) {
+		if (endPosition != null)
+		{
 			endPosition.putWeak();
 			endPosition = null;
 		}

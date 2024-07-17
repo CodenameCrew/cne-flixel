@@ -37,7 +37,7 @@ class FlxTouch extends FlxPointer implements IFlxDestroyable implements IFlxInpu
 	var flashPoint = new Point();
 
 	public var justPressedPosition(default, null) = FlxPoint.get();
-	public var justPressedTimeInTicks(default, null):Int = -1;
+	public var justPressedTimeInTicks(default, null):flixel.FlxTypes.LimeTime = -1;
 
 	public function destroy():Void
 	{
