@@ -313,6 +313,11 @@ class FlxSprite extends FlxObject
 	public var shaderEnabled:Bool = true;
 
 	/**
+	 * Layer to draw on
+	 */
+	public var layer:FlxLayer;
+
+	/**
 	 * The actual frame used for sprite rendering
 	 */
 	@:noCompletion
@@ -937,7 +942,11 @@ class FlxSprite extends FlxObject
 
 		doAdditionalMatrixStuff(_matrix, camera);
 
-		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
+    if (layer != null)
+			layer.drawPixels(this, camera, _frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
+		else
+			camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
+    
 		_animOffset.putWeak();
 	}
 
