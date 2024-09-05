@@ -73,6 +73,10 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 			transforms[len++] = matrix.tx;
 			transforms[len++] = matrix.ty; */
 
+		#if (cpp && HXCPP_MULTI_PUSH)
+		rects.push4(rect.x, rect.y, rect.width, rect.height);
+		transforms.push6(matrix.a, matrix.b, matrix.c, matrix.d, matrix.tx, matrix.ty);
+		#else
 		rects.push(rect.x);
 		rects.push(rect.y);
 		rects.push(rect.width);
@@ -84,12 +88,17 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 		transforms.push(matrix.d);
 		transforms.push(matrix.tx);
 		transforms.push(matrix.ty);
+		#end
 
 		var alphaMultiplier = transform != null ? transform.alphaMultiplier : 1.0;
+		#if (cpp && HXCPP_MULTI_PUSH)
+		untyped __cpp__("{0}->push({1}, {1}, {1}, {1});", alphas, alphaMultiplier);
+		#else
 		var len = alphas.length;
 		alphas.resize(len + VERTICES_PER_QUAD);
 		for (i in 0...VERTICES_PER_QUAD)
 			alphas[len++] = alphaMultiplier;
+		#end
 
 		if (colored || hasColorOffsets)
 		{
