@@ -424,7 +424,7 @@ class FlxCamera extends FlxBasic
 	 * Its value depends on camera's size (`width` and `height`), game's `scale` and camera's initial zoom factor.
 	 * Do not modify it unless you know what are you doing.
 	 */
-	var _flashOffset:FlxPoint = FlxPoint.get();
+	var _flashOffset:Point = new Point();
 
 	/**
 	 * Internal, represents the color of `flash()` special effect.
@@ -1199,7 +1199,6 @@ class FlxCamera extends FlxBasic
 		deadzone = FlxDestroyUtil.put(deadzone);
 		_point = FlxDestroyUtil.put(_point);
 		_lastTargetPosition = FlxDestroyUtil.put(_lastTargetPosition);
-		_flashOffset = FlxDestroyUtil.put(_flashOffset);
 		_scrollTarget = FlxDestroyUtil.put(_scrollTarget);
 
 		target = null;
@@ -1207,6 +1206,7 @@ class FlxCamera extends FlxBasic
 		_scrollRect = null;
 		_flashRect = null;
 		_flashPoint = null;
+		_flashOffset = null;
 		_fxFlashComplete = null;
 		_fxFadeComplete = null;
 		_fxShakeComplete = null;
