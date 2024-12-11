@@ -98,6 +98,11 @@ class FlxAnimation extends FlxBaseAnimation
 	var _frameTimer:Float = 0;
 
 	/**
+	 * Internal, used to wait the frameDuration at the end of the animation.
+	 */
+	var _frameFinishedEndTimer:Float = 0;
+
+	/**
 	 * How fast or slow time should pass for this animation.
 	 *
 	 * Similar to `FlxAnimationController`'s `timeScale`, but won't effect other animations.
@@ -106,6 +111,7 @@ class FlxAnimation extends FlxBaseAnimation
 	public var timeScale:Float = 1.0;
 
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
+	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onPlay:FlxTypedSignal<String->Bool->Bool->Int->Void> = new FlxTypedSignal();
 	public var onLoop:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 
@@ -134,6 +140,7 @@ class FlxAnimation extends FlxBaseAnimation
 	override public function destroy():Void
 	{
 		FlxDestroyUtil.destroy(onFinish);
+		FlxDestroyUtil.destroy(onFinishEnd);
 		FlxDestroyUtil.destroy(onPlay);
 		frames = null;
 		name = null;
@@ -223,8 +230,21 @@ class FlxAnimation extends FlxBaseAnimation
 			play(false, reversed);
 	}
 
+	function _doFinishedEndCallback():Void
+	{
+		parent.onFinishEnd.dispatch(name);
+		onFinishEnd.dispatch()
+	}
+
 	override public function update(elapsed:Float):Void
 	{
+		if (_frameFinishedEndTimer > 0) {
+			_frameFinishedEndTimer -= elapsed * timeScale;
+			if (_frameFinishedEndTimer <= 0) {
+				_frameFinishedEndTimer = 0;
+				_doFinishedEndCallback(name);
+			}
+		}
 		var curFrameDuration = getCurrentFrameDuration();
 		if (curFrameDuration == 0 || finished || paused)
 			return;
@@ -306,6 +326,7 @@ class FlxAnimation extends FlxBaseAnimation
 
 		if (finished)
 		{
+			_frameFinishedEndTimer = frameDuration;
 			onFinish.dispatch();
 			if (parent != null)
 				parent.fireFinishCallback(name);
