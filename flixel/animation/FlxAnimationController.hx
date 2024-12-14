@@ -104,7 +104,7 @@ class FlxAnimationController implements IFlxDestroyable
 	 * 
 	 * @param animName The name of the animation that ended
 	 */
-	public final onFinishEnd = new FlxTypedSignal<(animName:String) -> Vois>();
+	public final onFinishEnd = new FlxTypedSignal<(animName:String) -> Void>();
 
 	/**
 	 * Dispatches each time the current animation is played.

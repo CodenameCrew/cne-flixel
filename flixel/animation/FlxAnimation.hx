@@ -233,7 +233,7 @@ class FlxAnimation extends FlxBaseAnimation
 	function _doFinishedEndCallback():Void
 	{
 		parent.onFinishEnd.dispatch(name);
-		onFinishEnd.dispatch()
+		onFinishEnd.dispatch();
 	}
 
 	override public function update(elapsed:Float):Void
@@ -242,7 +242,7 @@ class FlxAnimation extends FlxBaseAnimation
 			_frameFinishedEndTimer -= elapsed * timeScale;
 			if (_frameFinishedEndTimer <= 0) {
 				_frameFinishedEndTimer = 0;
-				_doFinishedEndCallback(name);
+				_doFinishedEndCallback();
 			}
 		}
 		var curFrameDuration = getCurrentFrameDuration();
