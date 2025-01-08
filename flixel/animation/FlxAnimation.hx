@@ -88,14 +88,27 @@ class FlxAnimation extends FlxBaseAnimation
 	public var frames:Array<Int>;
 
 	/**
-	 * If addByIndicies was used
+	 * If addByIndices was used
 	 */
-	public var usesIndicies:Bool = false;
+	public var usesIndices:Bool = false;
+
+	@:noCompletion public var usesIndicies(get, set):Bool;
+
+	inline function get_usesIndicies():Bool
+		return usesIndices;
+
+	inline function set_usesIndicies(value:Bool):Bool
+		return usesIndices = value;
 
 	/**
 	 * Internal, used to time each frame of animation.
 	 */
 	var _frameTimer:Float = 0;
+
+	/**
+	 * Internal, used to wait the frameDuration at the end of the animation.
+	 */
+	var _frameFinishedEndTimer:Float = 0;
 
 	/**
 	 * How fast or slow time should pass for this animation.
@@ -106,6 +119,7 @@ class FlxAnimation extends FlxBaseAnimation
 	public var timeScale:Float = 1.0;
 
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
+	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onPlay:FlxTypedSignal<String->Bool->Bool->Int->Void> = new FlxTypedSignal();
 	public var onLoop:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 
@@ -134,7 +148,9 @@ class FlxAnimation extends FlxBaseAnimation
 	override public function destroy():Void
 	{
 		FlxDestroyUtil.destroy(onFinish);
+		FlxDestroyUtil.destroy(onFinishEnd);
 		FlxDestroyUtil.destroy(onPlay);
+		FlxDestroyUtil.destroy(onLoop);
 		frames = null;
 		name = null;
 		super.destroy();
@@ -177,9 +193,19 @@ class FlxAnimation extends FlxBaseAnimation
 		}
 
 		if (finished)
-			parent.fireFinishCallback(name);
+		{
+			_frameFinishedEndTimer = frameDuration;
+			onFinish.dispatch();
+			if (parent != null)
+				parent.fireFinishCallback(name);
+		}
+		else
+		{
+			_frameFinishedEndTimer = 0;
+		}
 
-		parent.firePlayCallback(name, Force, Reversed, curFrame);
+		if (parent != null)
+			parent.firePlayCallback(name, Force, Reversed, curFrame);
 		onPlay.dispatch(name, Force, Reversed, curFrame);
 	}
 
@@ -223,10 +249,31 @@ class FlxAnimation extends FlxBaseAnimation
 			play(false, reversed);
 	}
 
+	inline function _doFinishedEndCallback():Void
+	{
+		parent.onFinishEnd.dispatch(name);
+		onFinishEnd.dispatch();
+	}
+
 	override public function update(elapsed:Float):Void
 	{
+		if (paused)
+			return;
+
+		if (_frameFinishedEndTimer > 0)
+		{
+			_frameFinishedEndTimer -= elapsed * timeScale;
+			if (_frameFinishedEndTimer <= 0)
+			{
+				_frameFinishedEndTimer = 0;
+				_doFinishedEndCallback();
+			}
+		}
+		if (finished)
+			return;
+
 		var curFrameDuration = getCurrentFrameDuration();
-		if (curFrameDuration == 0 || finished || paused)
+		if (curFrameDuration == 0)
 			return;
 
 		_frameTimer += elapsed * timeScale;
@@ -306,6 +353,7 @@ class FlxAnimation extends FlxBaseAnimation
 
 		if (finished)
 		{
+			_frameFinishedEndTimer = frameDuration;
 			onFinish.dispatch();
 			if (parent != null)
 				parent.fireFinishCallback(name);

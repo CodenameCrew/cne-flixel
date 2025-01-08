@@ -100,6 +100,13 @@ class FlxAnimationController implements IFlxDestroyable
 	public final onFinish = new FlxTypedSignal<(animName:String) -> Void>();
 
 	/**
+	 * Dispatches each time the last frame of an animation finishes.
+	 * 
+	 * @param animName The name of the animation that ended
+	 */
+	public final onFinishEnd = new FlxTypedSignal<(animName:String) -> Void>();
+
+	/**
 	 * Dispatches each time the current animation is played.
 	 *
 	 * @param   animName     The name of the current animation
@@ -201,6 +208,7 @@ class FlxAnimationController implements IFlxDestroyable
 	{
 		FlxDestroyUtil.destroy(onFrameChange);
 		FlxDestroyUtil.destroy(onFinish);
+		FlxDestroyUtil.destroy(onFinishEnd);
 		FlxDestroyUtil.destroy(onLoop);
 
 		destroyAnimations();
