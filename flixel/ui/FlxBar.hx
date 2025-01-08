@@ -95,7 +95,7 @@ class FlxBar extends FlxSprite
 	/**
 	 * Determines whenever numDivisions will make stuff blocky
 	 */
-	public var unbounded:Bool = false;
+	public var continuous:Bool = false;
 
 	/**
 	 * This function will be called when value will hit it's minimum
@@ -763,8 +763,12 @@ class FlxBar extends FlxSprite
 		var fraction:Float = (value - min) / range;
 		var percent:Float = fraction * _maxPercent;
 		var maxScale:Float = (_fillHorizontal) ? barWidth : barHeight;
-		var scaleInterval:Float = maxScale / numDivisions;
-		var interval:Float = unbounded ? fraction * maxScale : Math.round(Std.int(fraction * maxScale / scaleInterval) * scaleInterval);
+		var interval:Float = continuous ? {
+			fraction * maxScale;
+		} : {
+			var scaleInterval:Float = maxScale / numDivisions;
+			Math.round(Std.int(fraction * maxScale / scaleInterval) * scaleInterval);
+			}
 
 		if (_fillHorizontal)
 		{
@@ -816,10 +820,7 @@ class FlxBar extends FlxSprite
 				if (frontFrames != null)
 				{
 					_filledFlxRect.copyFromFlash(_filledBarRect); // .round();
-					if (percent > 0)
-					{
-						_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
-					}
+					_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
 				}
 			}
 		}
@@ -1035,12 +1036,18 @@ class FlxBar extends FlxSprite
 		return value;
 	}
 
-	function floorFunc(x:Float):Float
+	inline function floorFunc(x:Float):Float
 	{
-		if (unbounded)
-			return x;
-		return Std.int(x);
+		return continuous ? x : Std.int(x);
 	}
+
+	@:noCompletion public var unbounded(get, set):Bool;
+
+	@:noCompletion inline function get_unbounded()
+		return continuous;
+
+	@:noCompletion inline function set_unbounded(value:Bool):Bool
+		return continuous = value;
 }
 
 enum FlxBarFillDirection
