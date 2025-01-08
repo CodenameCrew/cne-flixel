@@ -88,9 +88,17 @@ class FlxAnimation extends FlxBaseAnimation
 	public var frames:Array<Int>;
 
 	/**
-	 * If addByIndicies was used
+	 * If addByIndices was used
 	 */
-	public var usesIndicies:Bool = false;
+	public var usesIndices:Bool = false;
+
+	@:noCompletion public var usesIndicies(get, set):Bool;
+
+	inline function get_usesIndicies():Bool
+		return usesIndices;
+
+	inline function set_usesIndicies(value:Bool):Bool
+		return usesIndices = value;
 
 	/**
 	 * Internal, used to time each frame of animation.
@@ -142,6 +150,7 @@ class FlxAnimation extends FlxBaseAnimation
 		FlxDestroyUtil.destroy(onFinish);
 		FlxDestroyUtil.destroy(onFinishEnd);
 		FlxDestroyUtil.destroy(onPlay);
+		FlxDestroyUtil.destroy(onLoop);
 		frames = null;
 		name = null;
 		super.destroy();
@@ -184,9 +193,19 @@ class FlxAnimation extends FlxBaseAnimation
 		}
 
 		if (finished)
-			parent.fireFinishCallback(name);
+		{
+			_frameFinishedEndTimer = frameDuration;
+			onFinish.dispatch();
+			if (parent != null)
+				parent.fireFinishCallback(name);
+		}
+		else
+		{
+			_frameFinishedEndTimer = 0;
+		}
 
-		parent.firePlayCallback(name, Force, Reversed, curFrame);
+		if (parent != null)
+			parent.firePlayCallback(name, Force, Reversed, curFrame);
 		onPlay.dispatch(name, Force, Reversed, curFrame);
 	}
 
