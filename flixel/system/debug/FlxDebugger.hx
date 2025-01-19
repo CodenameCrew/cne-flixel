@@ -2,6 +2,7 @@ package flixel.system.debug;
 
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
+import flixel.util.FlxSave;
 #if FLX_DEBUG
 import flixel.FlxG;
 import flixel.system.FlxAssets;
@@ -15,7 +16,6 @@ import flixel.system.debug.watch.Tracker;
 import flixel.system.debug.watch.Watch;
 import flixel.system.ui.FlxSystemButton;
 import flixel.util.FlxHorizontalAlign;
-import flixel.util.FlxSave;
 import openfl.display.DisplayObject;
 import openfl.events.MouseEvent;
 import openfl.geom.Point;
@@ -66,6 +66,15 @@ class GraphicDrawDebug extends BitmapData {}
  */
 class FlxDebugger extends openfl.display.Sprite
 {
+	public static var save(get, null):FlxSave;
+
+	static function get_save():FlxSave
+	{
+		if (save == null || !save.isBound)
+			save = FlxG.save;
+		return save;
+	}
+
 	#if FLX_DEBUG
 	/**
 	 * Internal, used to space out windows from the edges.
@@ -76,8 +85,6 @@ class FlxDebugger extends openfl.display.Sprite
 	 * Internal, used to space out windows from the edges.
 	 */
 	public static inline var TOP_HEIGHT:Int = 20;
-
-	public static var save:FlxSave;
 
 	public var stats:Stats;
 	public var log:Log;
@@ -127,8 +134,6 @@ class FlxDebugger extends openfl.display.Sprite
 	function new(Width:Float, Height:Float)
 	{
 		super();
-		if (save == null || !save.isBound)
-			save = FlxG.save;
 
 		visible = false;
 		tabChildren = false;
