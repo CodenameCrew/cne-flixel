@@ -398,6 +398,11 @@ class FlxSharedObject extends SharedObject implements IDisposable
 	{
 		return true;
 	}
+
+	public function dispose()
+	{
+		// do nothing
+	}
 	#else
 	static var all:Map<String, FlxSharedObject>;
 
