@@ -261,7 +261,7 @@ class Window extends Sprite
 	{
 		visible = Value;
 
-		if (!_closable && FlxG.save.isBound)
+		if (!_closable && FlxDebugger.save.isBound)
 			saveWindowVisibility();
 
 		if (toggleButton != null)
@@ -283,30 +283,32 @@ class Window extends Sprite
 
 	function loadSaveData():Void
 	{
-		if (!FlxG.save.isBound)
+		var save = FlxDebugger.save;
+		if (!save.isBound)
 			return;
 
-		if (FlxG.save.data.windowSettings == null)
+		if (save.data.windowSettings == null)
 		{
 			initWindowsSave();
-			FlxG.save.flush();
+			save.flush();
 		}
-		visible = FlxG.save.data.windowSettings[_id];
+		visible = save.data.windowSettings[_id];
 	}
 
 	function initWindowsSave()
 	{
 		var maxWindows = 10; // arbitrary
-		FlxG.save.data.windowSettings = [for (_ in 0...maxWindows) true];
+		FlxDebugger.save.data.windowSettings = [for (_ in 0...maxWindows) true];
 	}
 
 	function saveWindowVisibility()
 	{
-		if (FlxG.save.data.windowSettings == null)
+		var save = FlxDebugger.save;
+		if (save.data.windowSettings == null)
 			initWindowsSave();
 
-		FlxG.save.data.windowSettings[_id] = visible;
-		FlxG.save.flush();
+		save.data.windowSettings[_id] = visible;
+		save.flush();
 	}
 
 	public function update():Void {}

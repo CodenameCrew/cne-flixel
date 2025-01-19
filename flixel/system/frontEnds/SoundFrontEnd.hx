@@ -5,10 +5,11 @@ import flixel.FlxG;
 import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxMath;
-import flixel.system.FlxAssets;
 import flixel.sound.FlxSound;
 import flixel.sound.FlxSoundGroup;
+import flixel.system.FlxAssets;
 import flixel.system.ui.FlxSoundTray;
+import flixel.util.FlxSave;
 import flixel.util.FlxSignal;
 import openfl.Assets;
 import openfl.media.Sound;
@@ -106,6 +107,15 @@ class SoundFrontEnd
 	 * Set this to a number between 0 and 1 to change the global volume.
 	 */
 	public var volume(default, set):Float = 1;
+
+	public static var save(get, null):FlxSave;
+
+	static function get_save():FlxSave
+	{
+		if (save == null || !save.isBound)
+			save = FlxG.save;
+		return save;
+	}
 
 	/**
 	 * Set up and play a looping background soundtrack.
@@ -454,17 +464,18 @@ class SoundFrontEnd
 	 */
 	function loadSavedPrefs():Void
 	{
-		if (!FlxG.save.isBound)
+		var save = SoundFrontEnd.save;
+		if (!save.isBound)
 			return;
 
-		if (FlxG.save.data.volume != null)
+		if (save.data.volume != null)
 		{
-			volume = FlxG.save.data.volume;
+			volume = save.data.volume;
 		}
 
-		if (FlxG.save.data.mute != null)
+		if (save.data.mute != null)
 		{
-			muted = FlxG.save.data.mute;
+			muted = save.data.mute;
 		}
 	}
 

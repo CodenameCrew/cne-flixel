@@ -1,16 +1,17 @@
 package flixel.system.ui;
 
 #if FLX_SOUND_SYSTEM
+import flixel.FlxG;
+import flixel.system.FlxAssets;
+import flixel.system.frontEnds.SoundFrontEnd;
+import flixel.util.FlxColor;
+import openfl.Lib;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
-import openfl.Lib;
 import openfl.text.TextField;
 import openfl.text.TextFormat;
 import openfl.text.TextFormatAlign;
-import flixel.FlxG;
-import flixel.system.FlxAssets;
-import flixel.util.FlxColor;
 #if flash
 import openfl.text.AntiAliasType;
 import openfl.text.GridFitType;
@@ -254,9 +255,10 @@ class FlxSoundTray extends Sprite
 
 	public function saveSoundPreferences():Void
 	{
-		FlxG.save.data.mute = FlxG.sound.muted;
-		FlxG.save.data.volume = FlxG.sound.volume;
-		FlxG.save.flush();
+		var save = SoundFrontEnd.save;
+		save.data.mute = FlxG.sound.muted;
+		save.data.volume = FlxG.sound.volume;
+		save.flush();
 	}
 
 	/**

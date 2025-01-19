@@ -3,25 +3,26 @@ package flixel.system.debug;
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
 #if FLX_DEBUG
+import flixel.FlxG;
+import flixel.system.FlxAssets;
+import flixel.system.debug.completion.CompletionList;
+import flixel.system.debug.console.Console;
+import flixel.system.debug.interaction.Interaction;
+import flixel.system.debug.log.BitmapLog;
+import flixel.system.debug.log.Log;
+import flixel.system.debug.stats.Stats;
+import flixel.system.debug.watch.Tracker;
+import flixel.system.debug.watch.Watch;
+import flixel.system.ui.FlxSystemButton;
+import flixel.util.FlxHorizontalAlign;
+import flixel.util.FlxSave;
+import openfl.display.DisplayObject;
 import openfl.events.MouseEvent;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
 import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
-import openfl.display.DisplayObject;
-import flixel.FlxG;
-import flixel.system.debug.console.Console;
-import flixel.system.debug.log.Log;
-import flixel.system.debug.stats.Stats;
-import flixel.system.debug.watch.Watch;
-import flixel.system.debug.watch.Tracker;
-import flixel.system.debug.completion.CompletionList;
-import flixel.system.debug.log.BitmapLog;
-import flixel.system.debug.interaction.Interaction;
-import flixel.system.FlxAssets;
-import flixel.system.ui.FlxSystemButton;
-import flixel.util.FlxHorizontalAlign;
 
 using flixel.util.FlxArrayUtil;
 #end
@@ -76,6 +77,8 @@ class FlxDebugger extends openfl.display.Sprite
 	 */
 	public static inline var TOP_HEIGHT:Int = 20;
 
+	public static var save:FlxSave;
+
 	public var stats:Stats;
 	public var log:Log;
 	public var watch:Watch;
@@ -124,6 +127,8 @@ class FlxDebugger extends openfl.display.Sprite
 	function new(Width:Float, Height:Float)
 	{
 		super();
+		if (save == null || !save.isBound)
+			save = FlxG.save;
 
 		visible = false;
 		tabChildren = false;
