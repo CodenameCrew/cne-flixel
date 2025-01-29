@@ -13,6 +13,8 @@ import openfl.display.StageScaleMode;
 import openfl.events.Event;
 import openfl.filters.BitmapFilter;
 import flixel.util.FlxDestroyUtil;
+import openfl.geom.Rectangle;
+import openfl.geom.Matrix;
 #if desktop
 import openfl.events.FocusEvent;
 #end
@@ -945,4 +947,8 @@ class FlxGame extends Sprite
 		// expensive, only call if necessary
 		return Lib.getTimer();
 	}
+
+	override function __getBounds(r:Rectangle, m:Matrix) r.setTo(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y);
+	override function __getFilterBounds(r:Rectangle, m:Matrix) r.setTo(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y);
+	override function __getRenderBounds(r:Rectangle, m:Matrix) r.setTo(0, 0, FlxG.scaleMode.gameSize.x, FlxG.scaleMode.gameSize.y);
 }
