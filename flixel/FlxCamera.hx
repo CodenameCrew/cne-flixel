@@ -134,7 +134,7 @@ class FlxCamera extends FlxBasic
 	 * Values are bounded between `0.0` and `FlxG.updateFrameRate / 60` for consistency across framerates.
 	 * The maximum value means no camera easing. A value of `0` means the camera does not move.
 	 */
-	public var followLerp(default, set):Float = 1;
+	public var followLerp:Float = 1;
 
 	/**
 	 * Whenever target following is enabled. Defaults to `true`.
@@ -377,9 +377,16 @@ class FlxCamera extends FlxBasic
 	public var angle(default, set):Float = 0;
 
 	/**
+	 * The rotation of the camera display (in degrees).
+	 * In this case, the "angle" property for FlxCamera are the camera's world rotation in degrees.
+	 */
+	public var rotation(default, set):Float = 0;
+
+	/**
 	 * Whenever the sprite should be rotated.
 	 */
-	public var rotateSprite(default, set):Bool = false;
+	@:deprecated("Use rotation instead.")
+	public var rotateSprite(default, set):Bool;
 
 	/**
 	 * The color tint of the camera display.
@@ -504,6 +511,11 @@ class FlxCamera extends FlxBasic
 	var _fxShakeAxes:FlxAxes = XY;
 
 	/**
+	 * Internal, used for shake position to apply to world matrix.
+	 */
+	var _fxShakePos:FlxPoint = FlxPoint.get();
+
+	/**
 	 * Internal, used for repetitive calculations and added to help avoid costly allocations.
 	 */
 	var _point:FlxPoint = FlxPoint.get();
@@ -551,6 +563,11 @@ class FlxCamera extends FlxBasic
 	 * Helper rect for `drawTriangles()` visibility checks
 	 */
 	var _bounds:FlxRect = FlxRect.get();
+
+	/**
+	 * Helper rect for 'calcMargin(X/Y)'
+	 */
+	var _rotatedBounds:FlxRect = FlxRect.get();
 
 	/**
 	 * Sprite used for actual rendering in tile render mode (instead of `_flashBitmap` for blitting).
@@ -633,7 +650,7 @@ class FlxCamera extends FlxBasic
 	 * @param shader Shader to add
 	 * @return ShaderFilter
 	 */
-	public function addShader(shader:FlxShader)
+	public function addShader(shader:FlxShader):ShaderFilter
 	{
 		var filter:ShaderFilter = null;
 		if (_filters == null)
@@ -830,11 +847,52 @@ class FlxCamera extends FlxBasic
 	@:allow(flixel.system.frontEnds.CameraFrontEnd)
 	function render():Void
 	{
-		var currItem:FlxDrawBaseItem<Dynamic> = _headOfDrawStack;
-		while (currItem != null)
+		if (!visible) return;
+		draw();
+
+		if (filtersEnabled && (flashSprite.filters = filtersEnabled ? _filters : null) != null && _filters.length != 0) {
+			final w = width * initialZoom * FlxG.scaleMode.scale.x * FlxG.stage.window.scale,
+				h = height * initialZoom * FlxG.scaleMode.scale.y * FlxG.stage.window.scale;
+
+			for (f in flashSprite.filters) {
+				if (f is ShaderFilter)
+				{
+					var f:ShaderFilter = cast f;
+					if (f.shader is FlxGraphicsShader)
+					{
+						var shader:FlxGraphicsShader = cast f.shader;
+
+						/*if (rect != null)
+							{
+							shader.setCamSize(rect.x
+								+ (_scrollRect.x + (w * 0.5)), rect.y
+								+ (_scrollRect.y + (h * 0.5)),
+								rect.width
+								- (2 * (_scrollRect.x + (w * 0.5))), rect.height
+								- (2 * (_scrollRect.y + (h * 0.5))));
+						}*/
+						/*shader.setCamSize(0
+							+ (_scrollRect.x + (w * 0.5)), 0
+							+ (_scrollRect.y + (h * 0.5)), w
+							- (2 * (_scrollRect.x + (w * 0.5))),
+							h
+							- (2 * (_scrollRect.y + (h * 0.5)))); */
+
+						shader.setCamSize(0, 0, w, h);
+
+						// trace(shader._camSize.value);
+					}
+				}
+			}
+		}
+	}
+
+	override function draw() {
+		var item = _headOfDrawStack;
+		while (item != null)
 		{
-			currItem.render(this);
-			currItem = currItem.next;
+			item.render(this);
+			item = item.next;
 		}
 	}
 
@@ -860,13 +918,6 @@ class FlxCamera extends FlxBasic
 		{
 			var isColored = (transform != null && transform.hasRGBMultipliers());
 			var hasColorOffsets:Bool = (transform != null && transform.hasRGBAOffsets());
-
-			if (!rotateSprite && angle != 0)
-			{
-				matrix.translate(-width / 2, -height / 2);
-				matrix.rotateWithTrig(_cosAngle, _sinAngle);
-				matrix.translate(width / 2, height / 2);
-			}
 
 			#if FLX_RENDER_TRIANGLE
 			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend);
@@ -1140,7 +1191,7 @@ class FlxCamera extends FlxBasic
 		set_color(FlxColor.WHITE);
 
 		initialZoom = (Zoom == 0) ? defaultZoom : Zoom;
-		zoom = Zoom; // sets the scale of flash sprite, which in turn loads flashOffset values
+		zoom = initialZoom; // sets the scale of flash sprite, which in turn loads flashOffset values
 
 		updateScrollRect();
 		updateFlashOffset();
@@ -1193,6 +1244,7 @@ class FlxCamera extends FlxBasic
 		}
 
 		_bounds = FlxDestroyUtil.put(_bounds);
+		_rotatedBounds = FlxDestroyUtil.put(_rotatedBounds);
 		followLead = FlxDestroyUtil.put(followLead);
 		scroll = FlxDestroyUtil.put(scroll);
 		targetOffset = FlxDestroyUtil.put(targetOffset);
@@ -1201,6 +1253,7 @@ class FlxCamera extends FlxBasic
 		_lastTargetPosition = FlxDestroyUtil.put(_lastTargetPosition);
 		_flashOffset = FlxDestroyUtil.put(_flashOffset);
 		_scrollTarget = FlxDestroyUtil.put(_scrollTarget);
+		_fxShakePos = FlxDestroyUtil.put(_fxShakePos);
 
 		target = null;
 		flashSprite = null;
@@ -1221,74 +1274,18 @@ class FlxCamera extends FlxBasic
 	 */
 	override public function update(elapsed:Float):Void
 	{
-		// follow the target, if there is one
-		if (target != null && followEnabled && !paused)
-		{
-			updateFollow();
+		if (!paused) {
+			if (target != null && followEnabled) {
+				updateFollow();
+				updateLerp(elapsed);
+			}
+			updateFlash(elapsed);
+			updateFade(elapsed);
+			updateShake(elapsed);
 		}
 
 		updateScroll();
-		if (!paused)
-		{
-			updateFlash(elapsed);
-			updateFade(elapsed);
-		}
-
-		flashSprite.filters = filtersEnabled ? _filters : null;
-
 		updateFlashSpritePosition();
-		if (!paused)
-			updateShake(elapsed);
-		else
-		{
-			flashSprite.x += lastShakeX;
-			flashSprite.y += lastShakeY;
-		}
-
-		if (filtersEnabled && flashSprite.filters != null)
-		{
-			// var rect = _scrollRect.scrollRect;
-
-			// if (rect == null)
-			// {
-			//	rect = calculateScrollRect();
-			// }
-
-			var w = width * initialZoom * FlxG.scaleMode.scale.x * FlxG.stage.window.scale;
-			var h = height * initialZoom * FlxG.scaleMode.scale.y * FlxG.stage.window.scale;
-
-			for (f in flashSprite.filters)
-			{
-				if (f is ShaderFilter)
-				{
-					var f:ShaderFilter = cast f;
-					if (f.shader is FlxGraphicsShader)
-					{
-						var shader:FlxGraphicsShader = cast f.shader;
-
-						/*if (rect != null)
-							{
-							shader.setCamSize(rect.x
-								+ (_scrollRect.x + (w * 0.5)), rect.y
-								+ (_scrollRect.y + (h * 0.5)),
-								rect.width
-								- (2 * (_scrollRect.x + (w * 0.5))), rect.height
-								- (2 * (_scrollRect.y + (h * 0.5))));
-						}*/
-						/*shader.setCamSize(0
-							+ (_scrollRect.x + (w * 0.5)), 0
-							+ (_scrollRect.y + (h * 0.5)), w
-							- (2 * (_scrollRect.x + (w * 0.5))),
-							h
-							- (2 * (_scrollRect.y + (h * 0.5)))); */
-
-						shader.setCamSize(0, 0, w, h);
-
-						// trace(shader._camSize.value);
-					}
-				}
-			}
-		}
 	}
 
 	/**
@@ -1319,7 +1316,7 @@ class FlxCamera extends FlxBasic
 		{
 			target.getMidpoint(_point);
 			_point.addPoint(targetOffset);
-			focusOn(_point);
+			_scrollTarget.set(_point.x - width * 0.5, _point.y - height * 0.5);
 		}
 		else
 		{
@@ -1384,16 +1381,15 @@ class FlxCamera extends FlxBasic
 				_lastTargetPosition.x = target.x;
 				_lastTargetPosition.y = target.y;
 			}
+		}
+	}
 
-			if (followLerp == Math.POSITIVE_INFINITY)
-			{
-				scroll.copyFrom(_scrollTarget); // no easing
-			}
-			else
-			{
-				scroll.x = FlxMath.lerp(scroll.x, _scrollTarget.x, followLerp * FlxG.elapsed * 60);
-				scroll.y = FlxMath.lerp(scroll.y, _scrollTarget.y, followLerp * FlxG.elapsed * 60);
-			}
+	function updateLerp(elapsed:Float):Void
+	{
+		if (followLerp >= 1) scroll.copyFrom(_scrollTarget);
+		else if (followLerp > 0) {
+			final lerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
+			scroll.add((_scrollTarget.x - scroll.x) * lerp, (_scrollTarget.y - scroll.y) * lerp);
 		}
 	}
 
@@ -1442,17 +1438,11 @@ class FlxCamera extends FlxBasic
 			_fxFadeComplete();
 	}
 
-	var lastShakeX = 0.0;
-	var lastShakeY = 0.0;
-
 	function updateShake(elapsed:Float):Void
 	{
-		lastShakeX = 0.0;
-		lastShakeY = 0.0;
 		if (_fxShakeDuration > 0)
 		{
-			_fxShakeDuration -= elapsed;
-			if (_fxShakeDuration <= 0)
+			if ((_fxShakeDuration -= elapsed) <= 0)
 			{
 				if (_fxShakeComplete != null)
 				{
@@ -1461,14 +1451,7 @@ class FlxCamera extends FlxBasic
 			}
 			else
 			{
-				if (_fxShakeAxes.x)
-				{
-					flashSprite.x += lastShakeX = FlxG.random.float(-_fxShakeIntensity * width, _fxShakeIntensity * width) * zoom * FlxG.scaleMode.scale.x;
-				}
-				if (_fxShakeAxes.y)
-				{
-					flashSprite.y += lastShakeY = FlxG.random.float(-_fxShakeIntensity * height, _fxShakeIntensity * height) * zoom * FlxG.scaleMode.scale.y;
-				}
+				_fxShakePos.set(_fxShakeAxes.x ? FlxG.random.float(-1, 1) * _fxShakeIntensity * width : 0, _fxShakeAxes.y ? FlxG.random.float(-1, 1) * _fxShakeIntensity * height : 0);
 			}
 		}
 	}
@@ -1506,20 +1489,23 @@ class FlxCamera extends FlxBasic
 	 */
 	function updateScrollRect():Void
 	{
-		var rect:Rectangle = (_scrollRect != null) ? _scrollRect.scrollRect : null;
-
+		final rect = (_scrollRect != null) ? _scrollRect.scrollRect : null;
 		if (rect != null)
 		{
-			rect.x = rect.y = 0;
-
-			rect.width = width * initialZoom * FlxG.scaleMode.scale.x;
-			rect.height = height * initialZoom * FlxG.scaleMode.scale.y;
-
+			rect.setTo(0, 0, width * initialZoom, height * initialZoom);
 			_scrollRect.scrollRect = rect;
-
-			_scrollRect.x = -0.5 * rect.width;
-			_scrollRect.y = -0.5 * rect.height;
+			_scrollRect.x = -0.5 * rect.width * (_scrollRect.scaleX = FlxG.scaleMode.scale.x);
+			_scrollRect.y = -0.5 * rect.height * (_scrollRect.scaleY = FlxG.scaleMode.scale.y);
 		}
+	}
+
+	/**
+	 * Helper function to calculate world matrix
+	 */
+	inline function doCanvasMatrix(matrix:FlxMatrix) {
+		matrix.setTo(scaleX, 0, 0, scaleY, (-0.5 * width + _fxShakePos.x) * scaleX, (-0.5 * height + _fxShakePos.y) * scaleY);
+		matrix.rotateWithTrig(_cosAngle, _sinAngle);
+		matrix.translate(0.5 * width, 0.5 * height);
 	}
 
 	/**
@@ -1530,35 +1516,18 @@ class FlxCamera extends FlxBasic
 	 */
 	function updateInternalSpritePositions():Void
 	{
-		if (FlxG.renderBlit)
+		if (_flashBitmap != null)
 		{
-			if (_flashBitmap != null)
-			{
-				_flashBitmap.x = 0;
-				_flashBitmap.y = 0;
-			}
+			_flashBitmap.x = 0;
+			_flashBitmap.y = 0;
 		}
-		else
+		if (canvas != null)
 		{
-			if (canvas != null)
-			{
-				canvas.x = -0.5 * width * (scaleX - initialZoom) * FlxG.scaleMode.scale.x;
-				canvas.y = -0.5 * height * (scaleY - initialZoom) * FlxG.scaleMode.scale.y;
-
-				canvas.scaleX = totalScaleX;
-				canvas.scaleY = totalScaleY;
-
-				#if FLX_DEBUG
-				if (debugLayer != null)
-				{
-					debugLayer.x = canvas.x;
-					debugLayer.y = canvas.y;
-
-					debugLayer.scaleX = totalScaleX;
-					debugLayer.scaleY = totalScaleY;
-				}
-				#end
-			}
+			doCanvasMatrix(_helperMatrix);
+			canvas.transform.matrix = _helperMatrix;
+			#if FLX_DEBUG
+			if (debugLayer != null) debugLayer.transform.matrix = _helperMatrix;
+			#end
 		}
 	}
 
@@ -1804,13 +1773,13 @@ class FlxCamera extends FlxBasic
 				buffer.fillRect(_flashRect, Color);
 			}
 		}
-		else
+		else if (FxAlpha > 0)
 		{
-			if (FxAlpha == 0)
-				return;
+			final targetGraphics = (graphics == null) ? canvas.graphics : graphics;
 
-			var targetGraphics:Graphics = (graphics == null) ? canvas.graphics : graphics;
-
+			#if (openfl > "8.7.0")
+			targetGraphics.overrideBlendMode(null);
+			#end
 			targetGraphics.beginFill(Color, FxAlpha);
 			// i'm drawing rect with these parameters to avoid light lines at the top and left of the camera,
 			// which could appear while cameras fading
@@ -1881,7 +1850,7 @@ class FlxCamera extends FlxBasic
 		}
 	}
 
-	inline function updateBlitMatrix():Void
+	function updateBlitMatrix():Void
 	{
 		_blitMatrix.identity();
 		_blitMatrix.translate(-viewMarginLeft, -viewMarginTop);
@@ -1961,11 +1930,8 @@ class FlxCamera extends FlxBasic
 	 */
 	public function setScale(X:Float, Y:Float):Void
 	{
-		scaleX = X;
-		scaleY = Y;
-
-		totalScaleX = scaleX * FlxG.scaleMode.scale.x;
-		totalScaleY = scaleY * FlxG.scaleMode.scale.y;
+		totalScaleX = (scaleX = X) * FlxG.scaleMode.scale.x;
+		totalScaleY = (scaleY = Y) * FlxG.scaleMode.scale.y;
 
 		if (FlxG.renderBlit)
 		{
@@ -1985,7 +1951,6 @@ class FlxCamera extends FlxBasic
 
 		calcMarginX();
 		calcMarginY();
-
 		updateScrollRect();
 		updateInternalSpritePositions();
 
@@ -2056,21 +2021,15 @@ class FlxCamera extends FlxBasic
 		return contained;
 	}
 
-	function set_followLerp(Value:Float):Float
-	{
-		return followLerp = FlxMath.bound(Value, 0, 60 / FlxG.updateFramerate);
-	}
-
 	function set_width(Value:Int):Int
 	{
-		if (width != Value && Value > 0)
+		if (width != Value && (width = Value) > 0)
 		{
-			width = Value;
+			calcRotatedBounds();
 			calcMarginX();
 			updateFlashOffset();
 			updateScrollRect();
 			updateInternalSpritePositions();
-
 			FlxG.cameras.cameraResized.dispatch(this);
 		}
 		return Value;
@@ -2078,14 +2037,13 @@ class FlxCamera extends FlxBasic
 
 	function set_height(Value:Int):Int
 	{
-		if (height != Value && Value > 0)
+		if (height != Value && (height = Value) > 0)
 		{
-			height = Value;
+			calcRotatedBounds();
 			calcMarginY();
 			updateFlashOffset();
 			updateScrollRect();
 			updateInternalSpritePositions();
-
 			FlxG.cameras.cameraResized.dispatch(this);
 		}
 		return Value;
@@ -2093,7 +2051,7 @@ class FlxCamera extends FlxBasic
 
 	function set_zoom(Zoom:Float):Float
 	{
-		zoom = (Zoom == 0) ? defaultZoom : Zoom;
+		zoom = Zoom;
 		setScale(zoom, zoom);
 		return zoom;
 	}
@@ -2112,22 +2070,36 @@ class FlxCamera extends FlxBasic
 		return Alpha;
 	}
 
-	function set_rotateSprite(rotate:Bool)
-	{
-		rotateSprite = rotate;
-		set_angle(angle);
-		return rotateSprite;
-	}
-
 	function set_angle(Angle:Float):Float
 	{
 		angle = Angle;
-		flashSprite.rotation = rotateSprite ? Angle : 0;
 
-		var radians:Float = angle * FlxAngle.TO_RAD;
-		_sinAngle = Math.sin(radians);
-		_cosAngle = Math.cos(radians);
+		calcAngleTris();
+		calcRotatedBounds();
+		calcMarginX();
+		calcMarginY();
+		updateInternalSpritePositions();
+
 		return Angle;
+	}
+
+	function set_rotation(Rotation:Float):Float
+	{
+		flashSprite.rotation = Rotation;
+		return rotation = Rotation;
+	}
+
+	function set_rotateSprite(rotate:Bool)
+	{
+		if (rotateSprite = rotate) {
+			rotation = angle;
+			angle = 0;
+		}
+		else {
+			angle = rotation;
+			rotation = 0;
+		}
+		return rotate;
 	}
 
 	function set_color(Color:FlxColor):FlxColor
@@ -2198,21 +2170,30 @@ class FlxCamera extends FlxBasic
 	}
 
 	@:deprecated("Use calcMarginX")
-	inline function calcOffsetX():Void
-		calcMarginX();
+	inline function calcOffsetX():Void calcMarginX();
 
 	@:deprecated("Use calcMarginY")
-	inline function calcOffsetY():Void
-		calcMarginY();
+	inline function calcOffsetY():Void calcMarginY();
 
-	inline function calcMarginX():Void
-	{
-		viewMarginX = 0.5 * width * (scaleX - initialZoom) / scaleX;
+	inline function calcRotatedBounds()
+		_rotatedBounds.getRotatedBounds(angle, null, _rotatedBounds.set(0, 0, width, height));
+
+	inline function calcAngleTris() {
+		final radians = angle * FlxAngle.TO_RAD;
+		_sinAngle = Math.sin(radians);
+		_cosAngle = Math.cos(radians);
 	}
 
-	inline function calcMarginY():Void
+	function calcMarginX():Void
 	{
-		viewMarginY = 0.5 * height * (scaleY - initialZoom) / scaleY;
+		final rotatedScaleX = width / _rotatedBounds.width * scaleX;
+		viewMarginX = 0.5 * width * (rotatedScaleX - initialZoom) / rotatedScaleX;
+	}
+
+	function calcMarginY():Void
+	{
+		final rotatedScaleY = height / _rotatedBounds.height * scaleY;
+		viewMarginY = 0.5 * height * (rotatedScaleY - initialZoom) / rotatedScaleY;
 	}
 
 	static inline function get_defaultCameras():Array<FlxCamera>
