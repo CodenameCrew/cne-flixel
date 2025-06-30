@@ -775,9 +775,10 @@ class FlxGame extends Sprite
 
 		updateElapsed();
 
-		FlxG.signals.preUpdate.dispatch();
-
 		updateInput();
+
+		// This caused issues if it was before `updateInput`.. so uh yeah FINALLY I FIXED A BUG THATS BEEN IN CNE FOR LIKE YEARS :SOB: - LJ
+		FlxG.signals.preUpdate.dispatch();
 
 		#if FLX_POST_PROCESS
 		if (postProcesses[0] != null)
