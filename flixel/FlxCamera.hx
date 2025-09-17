@@ -912,6 +912,8 @@ class FlxCamera extends FlxBasic
 			?position:FlxPoint, ?blend:BlendMode, repeat:Bool = false, smoothing:Bool = false, ?transform:ColorTransform, ?shader:FlxShader,
 			?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):Void
 	{
+		final cameraBounds = _bounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
+
 		if (FlxG.renderBlit)
 		{
 			if (position == null)
@@ -949,7 +951,7 @@ class FlxCamera extends FlxBasic
 
 			position.putWeak();
 
-			if (!_bounds.overlaps(bounds))
+			if (!cameraBounds.overlaps(bounds))	
 			{
 				drawVertices.splice(drawVertices.length - verticesLength, verticesLength);
 			}
@@ -987,7 +989,6 @@ class FlxCamera extends FlxBasic
 		}
 		else
 		{
-			_bounds.set(0, 0, width, height);
 			var isColored:Bool = (colors != null && colors.length != 0);
 
 			#if !flash
@@ -995,10 +996,10 @@ class FlxCamera extends FlxBasic
 			isColored = isColored || (transform != null && transform.hasRGBMultipliers());
 			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(graphic, smoothing, isColored, blend, hasColorOffsets, shader,
 				wrapMode, depthCompareMode, culling);
-			drawItem.addTriangles(vertices, indices, uvtData, colors, position, _bounds, transform);
+			drawItem.addTriangles(vertices, indices, uvtData, colors, position, cameraBounds, transform);
 			#else
 			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(graphic, smoothing, isColored, blend);
-			drawItem.addTriangles(vertices, indices, uvtData, colors, position, _bounds);
+			drawItem.addTriangles(vertices, indices, uvtData, colors, position, cameraBounds);
 			#end
 		}
 	}
