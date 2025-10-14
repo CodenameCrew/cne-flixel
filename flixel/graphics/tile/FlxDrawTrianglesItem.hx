@@ -38,15 +38,19 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	// unused in this fork
+	@:deprecated("verticesPosition is deprecated in cne-flixel")
 	public var verticesPosition:Int = 0;
+	@:deprecated("indicesPosition is deprecated in cne-flixel")
 	public var indicesPosition:Int = 0;
+	@:deprecated("colorsPosition is deprecated")
 	public var colorsPosition:Int = 0;
+	@:deprecated("colors is deprecated, use colorMultipliers and colorOffsets")
+	public var colors:DrawData<Int> = new DrawData<Int>();
 
 	public var culling:TriangleCulling = NONE;
 	public var vertices:DrawData<Float> = new DrawData<Float>();
 	public var indices:DrawData<Int> = new DrawData<Int>();
 	public var uvtData:DrawData<Float> = new DrawData<Float>();
-	public var colors:DrawData<Int> = new DrawData<Int>();
 
 	public function new() {
 		super();
@@ -63,7 +67,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		vertices.length = 0;
 		indices.length = 0;
 		uvtData.length = 0;
-		colors.length = 0;
+		//colors.length = 0;
 	}
 
 	override function dispose() {
@@ -72,7 +76,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		vertices = null;
 		indices = null;
 		uvtData = null;
-		colors = null;
+		//colors = null;
 	}
 
 	public function addTriangles(vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>, ?position:FlxPoint,
