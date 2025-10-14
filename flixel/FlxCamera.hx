@@ -17,6 +17,7 @@ import openfl.geom.Rectangle;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem;
+import flixel.graphics.tile.FlxDrawQuadsItem;
 import flixel.graphics.tile.FlxDrawTrianglesItem;
 import flixel.graphics.tile.FlxGraphicsShader;
 import flixel.math.FlxMath;
@@ -33,6 +34,7 @@ import openfl.Vector;
 
 using flixel.util.FlxColorTransformUtil;
 
+@:deprecated("Don't use this, just use flixel.graphics.tile.FlxDrawQuadsItem")
 typedef FlxDrawItem = flixel.graphics.tile.FlxDrawQuadsItem;
 
 /**
@@ -596,7 +598,7 @@ class FlxCamera extends FlxBasic
 	/**
 	 * Last draw tiles item
 	 */
-	var _headTiles:FlxDrawItem;
+	var _headTiles:FlxDrawQuadsItem;
 
 	/**
 	 * Last draw triangles item
@@ -606,7 +608,7 @@ class FlxCamera extends FlxBasic
 	/**
 	 * Draw tiles stack items that can be reused
 	 */
-	static var _storageTilesHead:FlxDrawItem;
+	static var _storageTilesHead:FlxDrawQuadsItem;
 
 	/**
 	 * Draw triangles stack items that can be reused
@@ -683,7 +685,7 @@ class FlxCamera extends FlxBasic
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
 
 		if (_currentDrawItem != null
-			&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TILES
+			&& _currentDrawItem.type == FlxDrawBaseItem.FlxDrawItemType.TILES
 			&& _headTiles.graphics == graphic
 			&& _headTiles.colored == colored
 			&& _headTiles.hasColorOffsets == hasColorOffsets
@@ -697,7 +699,7 @@ class FlxCamera extends FlxBasic
 
 		var item = _storageTilesHead;
 		if (item != null) _storageTilesHead = _storageTilesHead.nextTyped;
-		else item = new flixel.graphics.tile.FlxDrawQuadsItem();
+		else item = new FlxDrawQuadsItem();
 
 		item.graphics = graphic;
 		item.antialiasing = smooth;
@@ -727,7 +729,7 @@ class FlxCamera extends FlxBasic
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
 
 		if (_currentDrawItem != null
-			&& _currentDrawItem.type == flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType.TRIANGLES
+			&& _currentDrawItem.type == FlxDrawBaseItem.FlxDrawItemType.TRIANGLES
 			&& _headTriangles.graphics == graphic
 			&& _headTriangles.antialiasing == smoothing
 			&& _headTriangles.colored == isColored
@@ -746,13 +748,13 @@ class FlxCamera extends FlxBasic
 	@:noCompletion
 	public function getNewDrawTrianglesItem(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):FlxDrawTrianglesItem
 	{
-		if (blend == null) blend = openfl.display.BlendMode.NORMAL;
-		if (wrapMode == null) wrapMode = openfl.display3D.Context3DWrapMode.CLAMP;
-		if (depthCompareMode == null) depthCompareMode = openfl.display3D.Context3DCompareMode.ALWAYS;
+		if (blend == null) blend = NORMAL;
+		if (wrapMode == null) wrapMode = CLAMP;
+		if (depthCompareMode == null) depthCompareMode = ALWAYS;
 
 		var item = _storageTrianglesHead;
 		if (item != null) _storageTrianglesHead = _storageTrianglesHead.nextTyped;
-		else item = new flixel.graphics.tile.FlxDrawTrianglesItem();
+		else item = new FlxDrawTrianglesItem();
 
 		item.graphics = graphic;
 		item.antialiasing = smoothing;
@@ -852,7 +854,8 @@ class FlxCamera extends FlxBasic
 			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
 				wrapMode, depthCompareMode);
 			#else
-			var drawItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader, wrapMode, depthCompareMode);
+			var drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
+				wrapMode, depthCompareMode);
 			#end
 			drawItem.addQuad(frame, matrix, transform);
 		}
@@ -897,7 +900,8 @@ class FlxCamera extends FlxBasic
 			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
 				wrapMode, depthCompareMode);
 			#else
-			var drawItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader, wrapMode, depthCompareMode);
+			var drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
+				wrapMode, depthCompareMode);
 			#end
 			drawItem.addQuad(frame, _helperMatrix, transform);
 		}
