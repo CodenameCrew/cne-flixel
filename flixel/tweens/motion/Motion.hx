@@ -2,6 +2,7 @@ package flixel.tweens.motion;
 
 import flixel.FlxObject;
 import flixel.tweens.FlxTween;
+import flixel.util.typeLimit.OneOfTwo;
 
 /**
  * Base class for motion Tweens.

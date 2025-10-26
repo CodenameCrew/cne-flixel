@@ -45,6 +45,16 @@ class FlxState extends FlxContainer
 	public var destroySubStates:Bool = true;
 
 	/**
+	 * Tracker for whenever the state has already been created.
+	 */
+	public var created:Bool = false;
+
+	/**
+	 * Tracker for whenever the state has already been post-created.
+	 */
+	public var postCreated:Bool = false;
+
+	/**
 	 * The natural background color the cameras default to. In `AARRGGBB` format.
 	 */
 	public var bgColor(get, set):FlxColor;
@@ -105,7 +115,10 @@ class FlxState extends FlxContainer
 	 * We do NOT recommend initializing any flixel objects or utilizing flixel features in
 	 * the constructor, unless you want some crazy unpredictable things to happen!
 	 */
-	public function create():Void {}
+	public function create():Void
+	{
+		created = true;
+	}
 
 	override public function draw():Void
 	{
@@ -128,6 +141,14 @@ class FlxState extends FlxContainer
 	public function closeSubState():Void
 	{
 		_requestSubStateReset = true;
+	}
+
+	/**
+	 * Called at the very end of the state creation process.
+	 */
+	public function createPost():Void
+	{
+		postCreated = true;
 	}
 
 	/**
@@ -159,13 +180,19 @@ class FlxState extends FlxContainer
 
 			subState._parentState = this;
 
-			if (!subState._created)
+			var didCreate = false;
+
+			if (didCreate = !subState._created)
 			{
 				subState._created = true;
 				subState.create();
 			}
 			if (subState.openCallback != null)
 				subState.openCallback();
+
+			if (didCreate)
+				subState.createPost();
+
 			if (_subStateOpened != null)
 				_subStateOpened.dispatch(subState);
 		}
@@ -218,13 +245,21 @@ class FlxState extends FlxContainer
 	 * This method is called after the game loses focus.
 	 * Can be useful for third party libraries, such as tweening engines.
 	 */
-	public function onFocusLost():Void {}
+	public function onFocusLost():Void
+	{
+		if (subState != null)
+			subState.onFocusLost();
+	}
 
 	/**
 	 * This method is called after the game receives focus.
 	 * Can be useful for third party libraries, such as tweening engines.
 	 */
-	public function onFocus():Void {}
+	public function onFocus():Void
+	{
+		if (subState != null)
+			subState.onFocus();
+	}
 
 	/**
 	 * This function is called whenever the window size has been changed.
@@ -232,7 +267,11 @@ class FlxState extends FlxContainer
 	 * @param   Width    The new window width
 	 * @param   Height   The new window Height
 	 */
-	public function onResize(Width:Int, Height:Int):Void {}
+	public function onResize(Width:Int, Height:Int):Void
+	{
+		if (subState != null)
+			subState.onResize(Width, Height);
+	}
 
 	@:allow(flixel.FlxGame)
 	function tryUpdate(elapsed:Float):Void
@@ -262,7 +301,7 @@ class FlxState extends FlxContainer
 	{
 		return FlxG.cameras.bgColor = Value;
 	}
-    
+
 	@:noCompletion
 	function get_subStateOpened():FlxTypedSignal<FlxSubState->Void>
 	{

@@ -93,4 +93,18 @@ class FlxColorTest extends FlxTest
 		Reflect.setProperty(this, "color", 0.2);
 		f(color);
 	}
+
+	@Test
+	function settingShouldBeConsistent()
+	{
+		var color = new FlxColor(0x00FF0000);
+		color.red = 0xFF;
+		Assert.areEqual(0x00FF0000, color);
+		color.green = 0x00;
+		Assert.areEqual(0x00FF0000, color);
+		color.blue = 0x00;
+		Assert.areEqual(0x00FF0000, color);
+		color.alpha = 0xFF;
+		Assert.areEqual(0xFFFF0000, color);
+	}
 }

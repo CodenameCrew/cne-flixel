@@ -1135,8 +1135,9 @@ class FlxObject extends FlxBasic
 		result.set(x, y);
 		if (pixelPerfectPosition)
 			result.floor();
+		result.subtract(camera.scroll.x * scrollFactor.x, camera.scroll.y * scrollFactor.y);
 
-		return result.subtract(camera.scroll.x * scrollFactor.x, camera.scroll.y * scrollFactor.y);
+		return camera.alterScreenPosition(this, result);
 	}
 
 	/**
@@ -1149,7 +1150,7 @@ class FlxObject extends FlxBasic
 	{
 		if (result == null)
 			result = FlxPoint.get();
-		
+
 		return result.set(x, y);
 	}
 
@@ -1191,6 +1192,8 @@ class FlxObject extends FlxBasic
 		revive();
 	}
 
+	public var forceIsOnScreen:Bool = false;
+
 	/**
 	 * Check and see if this object is currently on screen.
 	 *
@@ -1200,6 +1203,9 @@ class FlxObject extends FlxBasic
 	 */
 	public function isOnScreen(?camera:FlxCamera):Bool
 	{
+		if (forceIsOnScreen)
+			return true;
+
 		if (camera == null)
 			camera = FlxG.camera;
 
@@ -1304,17 +1310,15 @@ class FlxObject extends FlxBasic
 	{
 		if (ignoreDrawDebug)
 			return;
-		
+
 		final drawPath = path != null && !path.ignoreDrawDebug;
-		
+
 		for (camera in getCamerasLegacy())
 		{
 			drawDebugOnCamera(camera);
-			
+
 			if (drawPath)
-			{
 				path.drawDebugOnCamera(camera);
-			}
 		}
 	}
 
@@ -1399,7 +1403,7 @@ class FlxObject extends FlxBasic
 
 		return _rect;
 	}
-	
+
 	/**
 	 * Calculates the smallest globally aligned bounding box that encompasses this
 	 * object's width and height, at its current rotation.
@@ -1413,7 +1417,7 @@ class FlxObject extends FlxBasic
 	{
 		if (newRect == null)
 			newRect = FlxRect.get();
-		
+
 		newRect.set(x, y, width, height);
 		return newRect.getRotatedBounds(angle, null, newRect);
 	}
@@ -1579,7 +1583,7 @@ class FlxObject extends FlxBasic
 /**
  * Determines when to apply collision drag to one object that collided with another.
  */
-enum abstract CollisionDragType(Int)
+enum abstract CollisionDragType(ByteUInt)
 {
 	/** Never drags on colliding objects. */
 	var NEVER = 0;

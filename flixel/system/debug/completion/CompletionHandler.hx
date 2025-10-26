@@ -60,7 +60,7 @@ class CompletionHandler
 				completionList.close();
 
 			case Keyboard.ENTER, Keyboard.ESCAPE, Keyboard.UP, Keyboard.DOWN, Keyboard.TAB:
-			// do nothing
+				// do nothing
 
 			case _:
 				invokeCompletion(getPathBeforeDot(text), e.keyCode == Keyboard.PERIOD);

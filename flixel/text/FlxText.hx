@@ -906,10 +906,13 @@ class FlxText extends FlxSprite
 			
 			case NONE:
 		}
-		
-		final newWidth:Int = Math.ceil(newWidthFloat + borderWidth);
-		final newHeight:Int = Math.ceil(newHeightFloat + borderHeight);
-		
+
+		final newWidth:Int = Math.ceil(textField.width);
+		final textfieldHeight = _autoHeight ? textField.textHeight : textField.height;
+		final vertGutter = _autoHeight ? VERTICAL_GUTTER : 0;
+		// Account for gutter
+		final newHeight:Int = Math.ceil(textfieldHeight) + vertGutter;
+
 		// prevent text height from shrinking on flash if text == ""
 		if (textField.textHeight != 0 && (oldWidth != newWidth || oldHeight != newHeight))
 		{
@@ -1118,9 +1121,13 @@ class FlxText extends FlxSprite
 				
 				var iterations = borderQuality < 1 ? 1 : Std.int(Math.abs(borderSize) * borderQuality);
 				final delta = borderSize / iterations;
+
+				var graphic:BitmapData = _hasBorderAlpha ? _borderPixels : graphic.bitmap;
 				for (i in 0...iterations)
 				{
-					copyTextWithOffset(delta, delta);
+					_matrix.translate(delta, delta); // upper-left
+					drawTextFieldTo(graphic);
+					// copyTextWithOffset(delta, delta);
 				}
 				
 				_matrix.translate(-_shadowOffset.x * borderSize, -_shadowOffset.y * borderSize);
@@ -1165,21 +1172,30 @@ class FlxText extends FlxSprite
 				// Render an outline around the text
 				// (do 8 offset draw calls)
 				applyFormats(_formatAdjusted, true);
-				
+
+				var graphic:BitmapData = _hasBorderAlpha ? _borderPixels : graphic.bitmap;
 				final iterations = FlxMath.maxInt(1, Std.int(borderSize * borderQuality));
 				var i = iterations + 1;
 				while (i-- > 1)
 				{
 					final curDelta = borderSize / iterations * i;
-					copyTextWithOffset(-curDelta, -curDelta); // upper-left
-					copyTextWithOffset(curDelta, 0); // upper-middle
-					copyTextWithOffset(curDelta, 0); // upper-right
-					copyTextWithOffset(0, curDelta); // middle-right
-					copyTextWithOffset(0, curDelta); // lower-right
-					copyTextWithOffset(-curDelta, 0); // lower-middle
-					copyTextWithOffset(-curDelta, 0); // lower-left
-					copyTextWithOffset(0, -curDelta); // lower-left
-					
+					_matrix.translate(-curDelta, -curDelta); // upper-left
+					drawTextFieldTo(graphic);
+					_matrix.translate(curDelta, 0); // upper-middle
+					drawTextFieldTo(graphic);
+					_matrix.translate(curDelta, 0); // upper-right
+					drawTextFieldTo(graphic);
+					_matrix.translate(0, curDelta); // middle-right
+					drawTextFieldTo(graphic);
+					_matrix.translate(0, curDelta); // lower-right
+					drawTextFieldTo(graphic);
+					_matrix.translate(-curDelta, 0); // lower-middle
+					drawTextFieldTo(graphic);
+					_matrix.translate(-curDelta, 0); // lower-left
+					drawTextFieldTo(graphic);
+					_matrix.translate(0, -curDelta); // lower-left
+					drawTextFieldTo(graphic);
+
 					_matrix.translate(curDelta, 0); // return to center
 				}
 			
@@ -1188,17 +1204,26 @@ class FlxText extends FlxSprite
 				// (do 4 diagonal offset draw calls)
 				// (this method might not work with certain narrow fonts)
 				applyFormats(_formatAdjusted, true);
-				
+
+				var graphic:BitmapData = _hasBorderAlpha ? _borderPixels : graphic.bitmap;
 				final iterations = FlxMath.maxInt(1, Std.int(borderSize * borderQuality));
 				var i = iterations + 1;
 				while (i-- > 1)
 				{
 					final curDelta = borderSize / iterations * i;
-					copyTextWithOffset(-curDelta, -curDelta); // upper-left
-					copyTextWithOffset(curDelta * 2, 0); // upper-right
-					copyTextWithOffset(0, curDelta * 2); // lower-right
-					copyTextWithOffset(-curDelta * 2, 0); // lower-left
-					
+					_matrix.translate(-curDelta, -curDelta);
+					drawTextFieldTo(graphic);
+					_matrix.translate(curDelta * 2, 0);
+					drawTextFieldTo(graphic);
+					_matrix.translate(0, curDelta * 2);
+					drawTextFieldTo(graphic);
+					_matrix.translate(-curDelta * 2, 0);
+					drawTextFieldTo(graphic);
+					// copyTextWithOffset(-curDelta, -curDelta); // upper-left
+					// copyTextWithOffset(curDelta * 2, 0); // upper-right
+					// copyTextWithOffset(0, curDelta * 2); // lower-right
+					// copyTextWithOffset(-curDelta * 2, 0); // lower-left
+
 					_matrix.translate(curDelta, -curDelta); // return to center
 				}
 			
@@ -1292,6 +1317,13 @@ class FlxText extends FlxSprite
 		_regen = false;
 		return Frames;
 	}
+
+	#if CUSTOM_CLASSES
+	override function update(elapsed:Float):Void
+	{
+		super.update(elapsed);
+	}
+	#end
 }
 
 @:allow(flixel.text.FlxText.applyFormats)
@@ -1330,7 +1362,7 @@ class FlxTextFormat
 	}
 }
 
-private class FlxTextFormatRange
+class FlxTextFormatRange
 {
 	public var range(default, null):FlxRange<Int>;
 	public var format(default, null):FlxTextFormat;

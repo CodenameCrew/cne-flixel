@@ -239,6 +239,25 @@ class Console extends Window
 			case Keyboard.DOWN:
 				if (!history.isEmpty)
 					setText(history.getNextCommand());
+
+				#if html5
+				// FlxKeyboard.preventDefaultKeys adds "preventDefault" on HTML5
+				// so it ends up not fully propegating our inputs to the stage/event listeners
+				// we do this small work around so we don't need to mess around with lime/openfl events
+				// todo: support the modifier keys
+				case Keyboard.RIGHT:
+					if (FlxG.keys.preventDefaultKeys.contains(Keyboard.RIGHT))
+					{
+						@:privateAccess
+						input.window_onKeyDown(RIGHT, 0);
+					}
+				case Keyboard.LEFT:
+					if (FlxG.keys.preventDefaultKeys.contains(Keyboard.LEFT))
+					{
+						@:privateAccess
+						input.window_onKeyDown(LEFT, 0);
+					}
+				#end
 		}
 	}
 
@@ -391,6 +410,17 @@ class Console extends Window
 	public inline function registerClass(c:Class<Dynamic>)
 	{
 		registerObject(FlxStringUtil.getClassName(c, true), c);
+	}
+
+	/**
+	 * Removes a class from the command registry.
+	 *
+	 * @param   c  The class to remove.
+	 * @since 5.4.0
+	 */
+	public inline function removeClass(c:Class<Dynamic>)
+	{
+		removeByAlias(FlxStringUtil.getClassName(c, true));
 	}
 
 	/**

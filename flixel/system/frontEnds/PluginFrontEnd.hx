@@ -18,6 +18,8 @@ class PluginFrontEnd
 	 */
 	public var list(default, null):Array<FlxBasic> = [];
 
+	public var drawOnTop:Bool = false;
+
 	/**
 	 * If `true`, then plugins will be drawn over the current state instead of under it.
 	 * @since 5.7.0
@@ -31,8 +33,10 @@ class PluginFrontEnd
 	 * @param   plugin  Any object that extends FlxBasic. Useful for managers and other things.
 	 * @return  The same plugin you passed in.
 	 */
+	#if FLX_GENERIC
 	@:generic
 	@:deprecated("FlxG.plugins.add is deprecated, use `addIfUniqueType` or `addPlugin`, instead.\nNote: In a later version `add` will be changed to behave like `addPlugin`")
+	#end
 	public inline function add<T:FlxBasic>(plugin:T):T
 	{
 		return addIfUniqueType(plugin);

@@ -331,7 +331,7 @@
 ------------------------------
 #### New features:
 - `FlxMouse`: added `deltaX`, `deltaY`, `deltaScreenX` and `deltaScreenY` ([#2709](https://github.com/HaxeFlixel/flixel/pull/2709))
-- `FlxCamera`: added public `view` and `viewMargin` properties, deprecated old, private viewOffset fields([#2714](https://github.com/HaxeFlixel/flixel/pull/2714))
+- `FlxCamera`: added public `view` and `viewMargin` properties, deprecated old, viewOffset fields([#2714](https://github.com/HaxeFlixel/flixel/pull/2714))
 
 #### Changes and improvements:
 - `FlxStrip`: allows shaders and color transforms ([#2696](https://github.com/HaxeFlixel/flixel/pull/2696))
@@ -392,7 +392,7 @@ The alpha was causing issues with CI due to haxelib issues. We're foregoing the 
 - `FlxTilemap`: Overhaul to pathfinding ([#2480](https://github.com/HaxeFlixel/flixel/pull/2480))
 	- `FlxPathfinder`: Allows customizable pathfinding algorithms for tilemap
 	- `FlxPathSimplifier`: Replace findPath simplify args with a new enum
-	- Expose previously private fields: `tileWidth`, `tileHeight`, `scaledTileWidth`, `scaledTileHeight`, `scaledWidth`, and `scaledHeight`
+	- Expose previously fields: `tileWidth`, `tileHeight`, `scaledTileWidth`, `scaledTileHeight`, `scaledWidth`, and `scaledHeight`
 	- `FlxBaseTilemap`: added `calcRayEntry` and `calcRayExit`
 - `FlxPath`: various new features
 	- added `immovable` bool (previously, objects were always immovable when following paths) ([#2480](https://github.com/HaxeFlixel/flixel/pull/2480))

@@ -11,7 +11,7 @@ import flixel.addons.system.macros.FlxAddonDefines;
 
 using StringTools;
 
-private enum UserDefines
+enum UserDefines
 {
 	FLX_NO_MOUSE_ADVANCED;
 	FLX_NO_GAMEPAD;
@@ -58,6 +58,7 @@ private enum UserDefines
 	 * If this flag is set to any string, that is used for the file extension
 	 */
 	FLX_DEFAULT_SOUND_EXT;
+	FLX_NO_GENERIC;
 }
 
 /**
@@ -65,7 +66,7 @@ private enum UserDefines
  * are shortened into a single define to avoid the redundancy
  * that comes with using them frequently.
  */
-private enum HelperDefines
+enum HelperDefines
 {
 	FLX_GAMEPAD;
 	FLX_MOUSE;
@@ -75,6 +76,7 @@ private enum HelperDefines
 	FLX_FOCUS_LOST_SCREEN;
 	FLX_DEBUG;
 	FLX_STEAMWRAP;
+	FLX_CNE_FORK;
 
 	FLX_MOUSE_ADVANCED;
 	FLX_NATIVE_CURSOR;
@@ -107,6 +109,7 @@ private enum HelperDefines
 	/** The normalized, absolute path of `FLX_CUSTOM_ASSETS_DIRECTORY`, used internally */
 	FLX_CUSTOM_ASSETS_DIRECTORY_ABS;
 	FLX_NO_DEFAULT_SOUND_EXT;
+	FLX_GENERIC;
 }
 
 class FlxDefines
@@ -209,6 +212,7 @@ class FlxDefines
 		defineInversion(FLX_TRACK_POOLS, FLX_NO_TRACK_POOLS);
 		defineInversion(FLX_DEFAULT_SOUND_EXT, FLX_NO_DEFAULT_SOUND_EXT);
 		// defineInversion(FLX_TRACK_GRAPHICS, FLX_NO_TRACK_GRAPHICS); // special case
+		defineInversion(FLX_NO_GENERIC, FLX_GENERIC);
 	}
 
 	static function defineHelperDefines()
@@ -226,7 +230,7 @@ class FlxDefines
 
 		if (!defined(FLX_NO_SOUND_SYSTEM) && !defined(FLX_NO_SOUND_TRAY))
 			define(FLX_SOUND_TRAY);
-
+		
 		#if (lime >= "8.0.0")
 		if (defined(FLX_NO_SOUND_SYSTEM) || defined("flash"))
 			define(FLX_NO_PITCH);
@@ -351,3 +355,4 @@ class FlxDefines
 		Context.fatalError(message, pos);
 	}
 }
+#end

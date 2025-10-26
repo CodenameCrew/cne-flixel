@@ -18,6 +18,11 @@ class FlxBaseAnimation implements IFlxDestroyable
 	public var name:String;
 
 	/**
+	 * Prefix of the anim if it was added using a prefix
+	 */
+	public var prefix:Null<String>;
+
+	/**
 	 * Keeps track of the current index into the tile sheet based on animation or rotation.
 	 */
 	public var curIndex(default, set):Int = 0;
@@ -34,10 +39,11 @@ class FlxBaseAnimation implements IFlxDestroyable
 		return Value;
 	}
 
-	public function new(Parent:FlxAnimationController, Name:String)
+	public function new(Parent:FlxAnimationController, Name:String, ?Prefix:Null<String>)
 	{
 		parent = Parent;
 		name = Name;
+		prefix = Prefix;
 	}
 
 	public function destroy():Void

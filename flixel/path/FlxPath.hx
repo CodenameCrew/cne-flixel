@@ -291,8 +291,7 @@ class FlxPath extends FlxBasePath
 	 * @param nodesAsReference   To pass the input array as reference (true) or to copy the points (false). Default is false.
 	 * @return This path object.
 	 */
-	public function start(?nodes:Array<FlxPoint>, speed = 100.0, mode = FlxPathType.FORWARD, autoRotate = false,
-			nodesAsReference:Bool = false):FlxPath
+	public function start(?nodes:Array<FlxPoint>, speed = 100.0, mode = FlxPathType.FORWARD, autoRotate = false, nodesAsReference:Bool = false):FlxPath
 	{
 		if (nodes != null)
 		{

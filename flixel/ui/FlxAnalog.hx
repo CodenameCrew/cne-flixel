@@ -197,6 +197,7 @@ class FlxAnalog extends FlxSpriteGroup
 		super.destroy();
 
 		_zone = FlxDestroyUtil.put(_zone);
+		_point = FlxDestroyUtil.put(_point);
 
 		_analogs.remove(this);
 		onUp = null;

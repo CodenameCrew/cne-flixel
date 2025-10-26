@@ -11,6 +11,9 @@ import flixel.system.FlxAssets;
 import flixel.system.ui.FlxSoundTray;
 import flixel.text.FlxInputText;
 import flixel.util.FlxSignal;
+#if FLX_SAVE
+import flixel.util.FlxSave;
+#end
 import openfl.media.Sound;
 
 /**
@@ -43,6 +46,11 @@ class SoundFrontEnd
 
 	#if FLX_KEYBOARD
 	/**
+	 * Wether volume control by keys is allowed
+	 */
+	public var keysAllowed:Bool = true;
+
+	/**
 	 * The key codes used to increase volume (see FlxG.keys for the keys available).
 	 * Default keys: + (and numpad +). Set to null to deactivate.
 	 */
@@ -66,14 +74,14 @@ class SoundFrontEnd
 	 * volumeUp-, volumeDown- or muteKeys is pressed.
 	 */
 	public var soundTrayEnabled:Bool = true;
-	
+
 	#if FLX_SOUND_TRAY
 	/**
 	 * The sound tray display container.
 	 * A getter for `FlxG.game.soundTray`.
 	 */
 	public var soundTray(get, never):FlxSoundTray;
-	
+
 	inline function get_soundTray()
 	{
 		return FlxG.game.soundTray;
@@ -99,6 +107,17 @@ class SoundFrontEnd
 	 * Set this to a number between 0 and 1 to change the global volume.
 	 */
 	public var volume(default, set):Float = 1;
+
+	#if FLX_SAVE
+	public static var save(get, null):FlxSave;
+
+	static function get_save():FlxSave
+	{
+		if (save == null || !save.isBound)
+			save = FlxG.save;
+		return save;
+	}
+	#end
 
 	/**
 	 * Set up and play a looping background soundtrack.
@@ -335,6 +354,13 @@ class SoundFrontEnd
 		}
 	}
 
+	inline function destroySound(sound:FlxSound):Void
+	{
+		// defaultMusicGroup.remove(sound);
+		// defaultSoundGroup.remove(sound);
+		sound.destroy();
+	}
+
 	/**
 	 * Toggles muted, also activating the sound tray.
 	 */
@@ -397,7 +423,7 @@ class SoundFrontEnd
 			list.update(elapsed);
 
 		#if FLX_KEYBOARD
-		if (!FlxInputText.globalManager.isTyping)
+		if (!FlxInputText.globalManager.isTyping && keysAllowed)
 		{
 			if (FlxG.keys.anyJustReleased(muteKeys))
 				toggleMuted();
@@ -449,17 +475,18 @@ class SoundFrontEnd
 	 */
 	function loadSavedPrefs():Void
 	{
-		if (!FlxG.save.isBound)
+		var save = SoundFrontEnd.save;
+		if (!save.isBound)
 			return;
 
-		if (FlxG.save.data.volume != null)
+		if (save.data.volume != null)
 		{
-			volume = FlxG.save.data.volume;
+			volume = save.data.volume;
 		}
 
-		if (FlxG.save.data.mute != null)
+		if (save.data.mute != null)
 		{
-			muted = FlxG.save.data.mute;
+			muted = save.data.mute;
 		}
 	}
 	#end

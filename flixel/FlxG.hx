@@ -158,6 +158,11 @@ class FlxG
 	 */
 	@:allow(flixel.FlxGame.updateElapsed)
 	public static var elapsed(default, null):Float = 0;
+	/**
+	 * Represents the amount of time in seconds that passed since last frame. (Ignoring timescale)
+	 */
+	@:allow(flixel.FlxGame.updateElapsed)
+	public static var rawElapsed(default, null):Float = 0;
 
 	/**
 	 * Useful when the timestep is NOT fixed (i.e. variable),
@@ -321,6 +326,11 @@ class FlxG
 	 */
 	public static var plugins(default, null):PluginFrontEnd;
 
+	/**
+	 * Whenever rendering with antialiasing should be enabled. If `false`, no sprite will render with antialiasing.
+	 */
+	public static var enableAntialiasing:Bool = true;
+
 	public static var initialWidth(default, null):Int = 0;
 	public static var initialHeight(default, null):Int = 0;
 
@@ -362,7 +372,6 @@ class FlxG
 		window.height = height;
 		#else
 		Lib.application.window.resize(width, height);
-		#end
 		#end
 	}
 
@@ -605,7 +614,7 @@ class FlxG
 	 * @param   url     The address of the web page.
 	 * @param   target  `"_blank"`, `"_self"`, `"_parent"` or `"_top"`
 	 */
-	public static inline function openURL(url:String, target = "_blank"):Void
+	public static inline function openURL(url:String, target:String = "_blank"):Void
 	{
 		// if the url does not already start with a protocol, add it.
 		if (!~/^.\w+?:\/*/.match(url))

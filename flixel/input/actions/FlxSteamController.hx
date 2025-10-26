@@ -245,7 +245,7 @@ class FlxSteamController
 	#end
 
 	#if FLX_STEAMWRAP
-	private static function getDigitalActionData(controller:Int, action:Int):ControllerDigitalActionData
+	static function getDigitalActionData(controller:Int, action:Int):ControllerDigitalActionData
 	{
 		if (Steam.controllers == null)
 			return 0;
@@ -289,7 +289,7 @@ class FlxSteamController
 	}
 }
 
-private class DigitalActionData
+class DigitalActionData
 {
 	public var bActive:Bool;
 	public var bState:Bool;
@@ -302,7 +302,7 @@ private class DigitalActionData
 }
 
 @:allow(flixel.input.actions)
-#if !FLX_UNIT_TEST private #end class FlxSteamControllerMetadata
+#if !FLX_UNIT_TEST #end class FlxSteamControllerMetadata
 {
 	public var handle:Int = -1;
 	public var actionSet:Int = -1;
@@ -313,7 +313,7 @@ private class DigitalActionData
 }
 
 @:allow(flixel.input.actions)
-private class FlxSteamUpdater implements IFlxInputManager
+class FlxSteamUpdater implements IFlxInputManager
 {
 	var controllerTime:Float = 0.0;
 	var originTime:Float = 0.0;

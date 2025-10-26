@@ -10,7 +10,8 @@ import haxe.PosInfos;
  */
 class LogFrontEnd
 {
-	/**
+	public static var onLogs:Dynamic->LogStyle->Bool->Void;
+	/**	
 	 * Whether everything you trace() is being redirected into the log window.
 	 */
 	public var redirectTraces(default, set):Bool = false;
@@ -76,6 +77,9 @@ class LogFrontEnd
 				style.callbackFunction();
 		}
 		#end
+
+		if (onLogs != null)
+			onLogs(Data, Style, FireOnce);
 		
 		style.onLog.dispatch(data);
 		

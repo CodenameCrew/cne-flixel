@@ -262,20 +262,21 @@ class FlxAnimationControllerTest extends FlxTest
 		var list = sprite.animation.getAnimationList();
 		Assert.areEqual(2, list.length);
 	}
+
 	@Test // #2473
 	function testRename()
 	{
 		loadSpriteSheet();
 		sprite.animation.add("anim1", [0, 1, 0], 15);
 		sprite.animation.add("anim2", [0, 1, 0], 15);
-		
+
 		sprite.animation.rename("anim1", "anim3");
 		sprite.animation.rename("anim2", "anim4");
-		
+
 		Assert.isFalse(sprite.animation.exists("anim1"), 'found "anim1"');
 		Assert.isFalse(sprite.animation.exists("anim2"), 'found "anim2"');
-		Assert.isTrue (sprite.animation.exists("anim3"), 'missing "anim3"');
-		Assert.isTrue (sprite.animation.exists("anim4"), 'missing "anim4"');
+		Assert.isTrue(sprite.animation.exists("anim3"), 'missing "anim3"');
+		Assert.isTrue(sprite.animation.exists("anim4"), 'missing "anim4"');
 	}
 
 	function loadSpriteSheet():Void

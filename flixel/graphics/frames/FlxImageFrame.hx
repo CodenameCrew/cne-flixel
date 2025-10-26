@@ -100,6 +100,7 @@ class FlxImageFrame extends FlxFramesCollection
 		if (region != null)
 			region.copyTo(checkRegion);
 		
+
 		final imageFrame:FlxImageFrame = FlxImageFrame.findFrame(graphic, checkRegion);
 		checkRegion.put();
 		if (imageFrame != null)
@@ -107,6 +108,7 @@ class FlxImageFrame extends FlxFramesCollection
 			if (region != null)
 				region.putWeak();
 			
+
 			return imageFrame;
 		}
 
@@ -206,6 +208,7 @@ class FlxImageFrame extends FlxFramesCollection
 				return imageFrame;
 		}
 		
+
 		frameBorder.putWeak();
 		frameRect.putWeak();
 		return null;

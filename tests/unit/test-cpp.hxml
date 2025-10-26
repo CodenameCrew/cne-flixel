@@ -1,2 +1,2 @@
 -cmd haxelib run munit gen
--cmd haxelib run lime test cpp
+-cmd haxelib run lime test cpp -D HXCPP_CHECK_POINTER -D HXCPP_STACK_LINE -D HXCPP_DEBUG_LINK

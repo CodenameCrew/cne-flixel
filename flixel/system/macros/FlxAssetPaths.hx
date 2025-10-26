@@ -1,5 +1,6 @@
 package flixel.system.macros;
 
+#if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import sys.FileSystem;
@@ -207,8 +208,7 @@ class FlxAssetPaths
 		#end
 	}
 }
-
-private class FileReference
+class FileReference
 {
 	static var valid = ~/^[_A-Za-z]\w*$/;
 	
@@ -280,3 +280,5 @@ private class FileReference
 		Context.warning(msg, Context.makePosition({min: 0, max: 0, file: filePath}));
 	}
 }
+
+#end

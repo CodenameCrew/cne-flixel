@@ -16,7 +16,7 @@ import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/windowHandle.png") #end
-private class GraphicWindowHandle extends BitmapData {}
+class GraphicWindowHandle extends BitmapData {}
 
 /**
  * A generic, Flash-based window class, created for use in FlxDebugger.
@@ -264,7 +264,7 @@ class Window extends Sprite
 		visible = Value;
 
 		#if FLX_SAVE
-		if (!_closable && FlxG.save.isBound)
+		if (!_closable && FlxDebugger.save.isBound)
 			saveWindowVisibility();
 		#end
 
@@ -288,30 +288,32 @@ class Window extends Sprite
 	#if FLX_SAVE
 	function loadSaveData():Void
 	{
-		if (!FlxG.save.isBound)
+		var save = FlxDebugger.save;
+		if (!save.isBound)
 			return;
 
-		if (FlxG.save.data.windowSettings == null)
+		if (save.data.windowSettings == null)
 		{
 			initWindowsSave();
-			FlxG.save.flush();
+			save.flush();
 		}
-		visible = FlxG.save.data.windowSettings[_id];
+		visible = save.data.windowSettings[_id];
 	}
-	
+
 	function initWindowsSave()
 	{
 		var maxWindows = 10; // arbitrary
-		FlxG.save.data.windowSettings = [for (_ in 0...maxWindows) true];
+		FlxDebugger.save.data.windowSettings = [for (_ in 0...maxWindows) true];
 	}
-	
+
 	function saveWindowVisibility()
 	{
-		if (FlxG.save.data.windowSettings == null)
+		var save = FlxDebugger.save;
+		if (save.data.windowSettings == null)
 			initWindowsSave();
-		
-		FlxG.save.data.windowSettings[_id] = visible;
-		FlxG.save.flush();
+
+		save.data.windowSettings[_id] = visible;
+		save.flush();
 	}
 	#end
 

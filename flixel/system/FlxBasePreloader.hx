@@ -411,7 +411,7 @@ class FlxBasePreloader extends DefaultPreloader
 
 #if (openfl >= "8.0.0")
 // This is a slightly trimmed down version of the NMEPreloader present in older OpenFL versions
-private class DefaultPreloader extends Sprite
+class DefaultPreloader extends Sprite
 {
 	public function new()
 	{
@@ -464,5 +464,5 @@ private class DefaultPreloader extends Sprite
 	}
 }
 #else
-private typedef DefaultPreloader = NMEPreloader;
+typedef DefaultPreloader = NMEPreloader;
 #end

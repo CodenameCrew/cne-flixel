@@ -124,7 +124,7 @@ class FlxSpriteUtil
 		}
 		return sprite;
 	}
-	
+
 	/**
 	 * Makes sure a FlxSprite doesn't leave the specified area - most common use case is to call this every frame in update().
 	 * If you call this without specifying an area, the game area (FlxG.width / height as max) will be used. Takes the graphic size into account.
@@ -169,7 +169,7 @@ class FlxSpriteUtil
 	{
 		if (camera == null)
 			camera = FlxG.camera;
-		
+
 		var spriteBounds = sprite.getScreenBounds(camera);
 		var offset = FlxPoint.get(
 			sprite.x - spriteBounds.x - camera.scroll.x,
@@ -185,13 +185,13 @@ class FlxSpriteUtil
 			sprite.y = camera.viewBottom + offset.y;
 		else if (edges.has(DOWN) && spriteBounds.top > camera.viewMarginBottom)
 			sprite.y = camera.viewTop + offset.y - spriteBounds.height;
-		
+
 		spriteBounds.put();
 		offset.put();
-		
+
 		return sprite;
 	}
-	
+
 	/**
 	 * Checks the sprite's screen bounds and keeps it entirely within the camera.
 	 *
@@ -205,7 +205,7 @@ class FlxSpriteUtil
 	{
 		if (camera == null)
 			camera = FlxG.camera;
-		
+
 		var spriteBounds = sprite.getScreenBounds(camera);
 		var offset = FlxPoint.get(
 			sprite.x - spriteBounds.x - camera.scroll.x,
@@ -221,13 +221,13 @@ class FlxSpriteUtil
 			sprite.y = camera.viewTop + offset.y;
 		else if (edges.has(DOWN) && spriteBounds.bottom > camera.viewMarginBottom)
 			sprite.y = camera.viewBottom + offset.y - spriteBounds.height;
-		
+
 		spriteBounds.put();
 		offset.put();
-		
+
 		return sprite;
 	}
-	
+
 	/**
 	 * Aligns a set of FlxObjects so there is equal spacing between them
 	 *

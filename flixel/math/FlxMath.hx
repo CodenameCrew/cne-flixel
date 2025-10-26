@@ -276,6 +276,17 @@ class FlxMath
 		return min + (value - min) % range;
 	}
 
+	public static inline function wrapMax(value:Int, max:Int):Int
+	{
+		var range:Int = max + 1;
+		value = value % range;
+
+		if (value < 0)
+			value += range;
+
+		return value;
+	}
+
 	/**
 	 * Remaps a number from one range to another.
 	 *

@@ -13,6 +13,7 @@ enum abstract FlxDirectionFlags(Int) from Int from FlxDirection to Int
 	var RIGHT = 0x0010; // FlxDirection.RIGHT;
 	var UP = 0x0100; // FlxDirection.UP;
 	var DOWN = 0x1000; // FlxDirection.DOWN;
+
 	// Directions values can't be constructed from other direction values, due to a bug in haxe.
 	// https://github.com/HaxeFoundation/haxe/issues/10237
 	// We'll just define all these using literal hex values, otherwise they can't be used as
@@ -39,6 +40,7 @@ enum abstract FlxDirectionFlags(Int) from Int from FlxDirection to Int
 	 * @since 5.0.0
 	 */
 	public var degrees(get, never):Float;
+
 	function get_degrees():Float
 	{
 		return switch (this)
@@ -61,6 +63,7 @@ enum abstract FlxDirectionFlags(Int) from Int from FlxDirection to Int
 	 * @since 5.0.0
 	 */
 	public var radians(get, never):Float;
+
 	inline function get_radians():Float
 	{
 		return degrees * FlxAngle.TO_RAD;
@@ -140,10 +143,7 @@ enum abstract FlxDirectionFlags(Int) from Int from FlxDirection to Int
 	 */
 	public static function fromBools(left:Bool, right:Bool, up:Bool, down:Bool):FlxDirectionFlags
 	{
-		return (left  ? LEFT  : NONE)
-			|  (right ? RIGHT : NONE)
-			|  (up    ? UP    : NONE)
-			|  (down  ? DOWN  : NONE);
+		return (left ? LEFT : NONE) | (right ? RIGHT : NONE) | (up ? UP : NONE) | (down ? DOWN : NONE);
 	}
 
 	// Expose int operators

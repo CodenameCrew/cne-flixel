@@ -12,7 +12,7 @@ import openfl.gl.GLTexture;
 import openfl.gl.GLBuffer;
 import openfl.utils.Float32Array;
 
-private class Uniform
+class Uniform
 {
 	public var id:Int;
 	public var value:Float;

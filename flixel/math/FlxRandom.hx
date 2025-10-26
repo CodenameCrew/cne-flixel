@@ -255,7 +255,9 @@ class FlxRandom
 	 * @param   EndIndex       Optional index at which to restrict selection. Ignored if 0, which is the default value.
 	 * @return  A pseudorandomly chosen object from Objects.
 	 */
+	#if FLX_GENERIC
 	@:generic
+	#end
 	public function getObject<T>(Objects:Array<T>, ?WeightsArray:Array<Float>, StartIndex:Int = 0, ?EndIndex:Null<Int>):T
 	{
 		var selected:Null<T> = null;
@@ -303,7 +305,9 @@ class FlxRandom
 	 *                         A good rule of thumb is 2-4 times the number of objects in the list.
 	 * @return  The newly shuffled array.
 	 */
+	#if FLX_GENERIC
 	@:generic
+	#end
 	@:deprecated("Unless you rely on reproducing the exact output of shuffleArray(), you should use shuffle() instead, which is both faster and higher quality.")
 	public function shuffleArray<T>(Objects:Array<T>, HowManyTimes:Int):Array<T>
 	{
@@ -331,7 +335,9 @@ class FlxRandom
 	 * @param  array  The array to shuffle.
 	 * @since  4.2.0
 	 */
+	#if FLX_GENERIC
 	@:generic
+	#end
 	public function shuffle<T>(array:Array<T>):Void
 	{
 		var maxValidIndex = array.length - 1;

@@ -69,7 +69,7 @@ class FlxActionSet implements IFlxDestroyable
 	 * @return	An action set
 	 */
 	@:access(flixel.input.actions.FlxActionManager)
-	private static function fromSteam(SteamSet:ControllerActionSet, CallbackDigital:FlxActionDigital->Void, CallbackAnalog:FlxActionAnalog->Void):FlxActionSet
+	static function fromSteam(SteamSet:ControllerActionSet, CallbackDigital:FlxActionDigital->Void, CallbackAnalog:FlxActionAnalog->Void):FlxActionSet
 	{
 		if (SteamSet == null)
 			return null;

@@ -11,25 +11,25 @@ import flixel.util.FlxStringUtil;
 #end
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/open.png") #end
-private class GraphicOpen extends BitmapData {}
+class GraphicOpen extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/pause.png") #end
-private class GraphicPause extends BitmapData {}
+class GraphicPause extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/record_off.png") #end
-private class GraphicRecordOff extends BitmapData {}
+class GraphicRecordOff extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/record_on.png") #end
-private class GraphicRecordOn extends BitmapData {}
+class GraphicRecordOn extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/restart.png") #end
-private class GraphicRestart extends BitmapData {}
+class GraphicRestart extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/step.png") #end
-private class GraphicStep extends BitmapData {}
+class GraphicStep extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/stop.png") #end
-private class GraphicStop extends BitmapData {}
+class GraphicStop extends BitmapData {}
 
 /**
  * This class contains the record, stop, play, and step 1 frame buttons seen on the top edge of the debugger overlay.

@@ -290,7 +290,7 @@ class FlxActionInputAnalogSteam extends FlxActionInputAnalog
 	}
 
 	#if FLX_STEAMWRAP
-	private static var analogActionData:ControllerAnalogActionData = new ControllerAnalogActionData();
+	static var analogActionData:ControllerAnalogActionData = new ControllerAnalogActionData();
 	#end
 }
 

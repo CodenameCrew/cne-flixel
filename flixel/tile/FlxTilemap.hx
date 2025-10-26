@@ -34,22 +34,24 @@ using flixel.util.FlxColorTransformUtil;
  * BitmapData loaded via @:bitmap is loaded asynchronously, this allows us to apply frame
  * padding to the bitmap once it's loaded rather
  */
-private interface IEmbeddedBitmapData
+interface IEmbeddedBitmapData
 {
-	var onLoad:()->Void;
+	var onLoad:() -> Void;
 }
 
 @:keep @:bitmap("assets/images/tile/autotiles.png")
-private class RawGraphicAuto extends BitmapData {}
+class RawGraphicAuto extends BitmapData {}
+
 class GraphicAuto extends RawGraphicAuto implements IEmbeddedBitmapData
 {
 	static inline var WIDTH = 128;
 	static inline var HEIGHT = 8;
 
-	public var onLoad:()->Void;
-	public function new ()
+	public var onLoad:() -> Void;
+
+	public function new()
 	{
-		super(WIDTH, HEIGHT, true, 0xFFffffff, (_)-> if (onLoad != null) onLoad());
+		super(WIDTH, HEIGHT, true, 0xFFffffff, (_) -> if (onLoad != null) onLoad());
 		// Set properties because `@:bitmap` constructors ignore width/height
 		this.width = WIDTH;
 		this.height = HEIGHT;
@@ -57,16 +59,18 @@ class GraphicAuto extends RawGraphicAuto implements IEmbeddedBitmapData
 }
 
 @:keep @:bitmap("assets/images/tile/autotiles_alt.png")
-private class RawGraphicAutoAlt extends BitmapData {}
+class RawGraphicAutoAlt extends BitmapData {}
+
 class GraphicAutoAlt extends RawGraphicAutoAlt implements IEmbeddedBitmapData
 {
 	static inline var WIDTH = 128;
 	static inline var HEIGHT = 8;
 
-	public var onLoad:()->Void;
-	public function new ()
+	public var onLoad:() -> Void;
+
+	public function new()
 	{
-		super(WIDTH, HEIGHT, true, 0xFFffffff, (_)-> if (onLoad != null) onLoad());
+		super(WIDTH, HEIGHT, true, 0xFFffffff, (_) -> if (onLoad != null) onLoad());
 		// Set properties because `@:bitmap` constructors ignore width/height
 		this.width = WIDTH;
 		this.height = HEIGHT;
@@ -74,16 +78,18 @@ class GraphicAutoAlt extends RawGraphicAutoAlt implements IEmbeddedBitmapData
 }
 
 @:keep @:bitmap("assets/images/tile/autotiles_full.png")
-private class RawGraphicAutoFull extends BitmapData {}
+class RawGraphicAutoFull extends BitmapData {}
+
 class GraphicAutoFull extends RawGraphicAutoFull implements IEmbeddedBitmapData
 {
 	static inline var WIDTH = 256;
 	static inline var HEIGHT = 48;
 
-	public var onLoad:()->Void;
-	public function new ()
+	public var onLoad:() -> Void;
+
+	public function new()
 	{
-		super(WIDTH, HEIGHT, true, 0xFFffffff, (_)-> if (onLoad != null) onLoad());
+		super(WIDTH, HEIGHT, true, 0xFFffffff, (_) -> if (onLoad != null) onLoad());
 		// Set properties because `@:bitmap` constructors ignore width/height
 		this.width = WIDTH;
 		this.height = HEIGHT;
@@ -236,7 +242,7 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 	 * The scaled height of a single tile.
 	 */
 	public var scaledTileHeight(default, null):Float = 0;
-	
+
 	/**
 	 * The scaled width of the entire map.
 	 */
@@ -482,12 +488,7 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 
 	function padTileFrames(tileWidth:Int, tileHeight:Int, graphic:FlxGraphic, padding:Int)
 	{
-		return FlxTileFrames.fromBitmapAddSpacesAndBorders(
-			graphic,
-			FlxPoint.get(tileWidth, tileHeight),
-			null,
-			FlxPoint.get(padding, padding)
-		);
+		return FlxTileFrames.fromBitmapAddSpacesAndBorders(graphic, FlxPoint.get(tileWidth, tileHeight), null, FlxPoint.get(padding, padding));
 	}
 
 	#if FLX_DEBUG
@@ -636,6 +637,9 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 	 */
 	override public function isOnScreen(?camera:FlxCamera):Bool
 	{
+		if (forceIsOnScreen)
+			return true;
+
 		if (camera == null)
 			camera = FlxG.camera;
 
@@ -885,13 +889,12 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 		if (camera == null)
 			camera = FlxG.camera;
 
-		camera.setScrollBoundsRect(
-			x + border * scaledTileWidth,
-			y + border * scaledTileHeight,
-			scaledWidth - border * scaledTileWidth * 2,
-			scaledHeight - border * scaledTileHeight * 2,
-			updateWorld
-		);
+		camera.setScrollBoundsRect(x
+			+ border * scaledTileWidth, y
+			+ border * scaledTileHeight, scaledWidth
+			- border * scaledTileWidth * 2,
+			scaledHeight
+			- border * scaledTileHeight * 2, updateWorld);
 	}
 
 	/**
@@ -940,7 +943,7 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 		{
 			if (result != null)
 				result.copyFrom(start);
-			
+
 			clearRefs();
 			return false;
 		}
@@ -1000,7 +1003,7 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 						result.x += scaledTileWidth;
 
 					// set result to left side
-					result.y = m * result.x + b;//mx + b
+					result.y = m * result.x + b; // mx + b
 				}
 				else
 				{
@@ -1026,16 +1029,16 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 	{
 		if (startY < 0)
 			startY = 0;
-		
+
 		if (endY < 0)
 			endY = 0;
-		
+
 		if (startY > heightInTiles - 1)
 			startY = heightInTiles - 1;
-		
+
 		if (endY > heightInTiles - 1)
 			endY = heightInTiles - 1;
-		
+
 		var y = startY;
 		final step = startY <= endY ? 1 : -1;
 		while (true)
@@ -1044,13 +1047,13 @@ class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
 			final tile = getTileData(index);
 			if (tile != null && tile.solid)
 				return index;
-			
+
 			if (y == endY)
 				break;
-			
+
 			y += step;
 		}
-		
+
 		return -1;
 	}
 

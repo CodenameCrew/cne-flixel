@@ -531,7 +531,7 @@ class FlxActionManager implements IFlxInputManager implements IFlxDestroyable
  * internal helper class
  */
 @:allow(flixel.input.actions.FlxActionManager)
-private class ActionSetRegister implements IFlxDestroyable
+class ActionSetRegister implements IFlxDestroyable
 {
 	/**
 	 * The current action set for the mouse

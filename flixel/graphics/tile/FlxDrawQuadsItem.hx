@@ -1,5 +1,6 @@
 package flixel.graphics.tile;
 
+import flixel.util.FlxColor;
 import flixel.FlxCamera;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
@@ -55,6 +56,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 	override public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform):Void
 	{
 		var rect = frame.frame;
+
 		rects.push(rect.x);
 		rects.push(rect.y);
 		rects.push(rect.width);
@@ -86,6 +88,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 					colorMultipliers.push(transform.redMultiplier);
 					colorMultipliers.push(transform.greenMultiplier);
 					colorMultipliers.push(transform.blueMultiplier);
+					colorMultipliers.push(1);
 
 					colorOffsets.push(transform.redOffset);
 					colorOffsets.push(transform.greenOffset);
@@ -97,17 +100,26 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 					colorMultipliers.push(1);
 					colorMultipliers.push(1);
 					colorMultipliers.push(1);
+					colorMultipliers.push(1);
 
 					colorOffsets.push(0);
 					colorOffsets.push(0);
 					colorOffsets.push(0);
 					colorOffsets.push(0);
 				}
-
-				colorMultipliers.push(1);
 			}
 		}
 	}
+
+	#if debug
+	private static var ERROR_BITMAP = new openfl.display.BitmapData(1, 1, true, 0xFFff0000);
+	#end
+	#if ANTIALIASING_DEBUG
+	private static var ALPHA_ERROR_BITMAP = new openfl.display.BitmapData(1, 1, true, 0x40ff0000);
+	#end
+	#if DRAW_CALLS_DEBUG
+	private static var randColors:Array<openfl.display.BitmapData> = [];
+	#end
 
 	#if !flash
 	override public function render(camera:FlxCamera):Void
@@ -118,10 +130,14 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 		// TODO: catch this error when the dev actually messes up, not in the draw phase
 		if (shader == null && graphics.isDestroyed)
 			throw 'Attempted to render an invalid FlxDrawItem, did you destroy a cached sprite?';
-		
+
 		final shader = shader != null ? shader : graphics.shader;
+
+		if (shader == null || graphics == null || shader.bitmap == null || graphics.bitmap == null)
+			return;
+		
 		shader.bitmap.input = graphics.bitmap;
-		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
+		shader.bitmap.filter = (FlxG.enableAntialiasing && (camera.antialiasing || antialiasing)) ? LINEAR : NEAREST;
 		shader.alpha.value = alphas;
 
 		if (colored || hasColorOffsets)
@@ -129,6 +145,11 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 			shader.colorMultiplier.value = colorMultipliers;
 			shader.colorOffset.value = colorOffsets;
 		}
+		// else
+		// {
+		//	shader.colorMultiplier.value = null;
+		//	shader.colorOffset.value = null;
+		// }
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
@@ -138,6 +159,37 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 		#end
 		camera.canvas.graphics.beginShaderFill(shader);
 		camera.canvas.graphics.drawQuads(rects, null, transforms);
+
+		#if ANTIALIASING_DEBUG
+		if (!antialiasing)
+		{
+			#if debug
+			#if (openfl > "8.7.0")
+			camera.canvas.graphics.overrideBlendMode(blend);
+			#end
+			camera.canvas.graphics.beginBitmapFill(ALPHA_ERROR_BITMAP);
+			camera.canvas.graphics.drawQuads(rects, null, transforms);
+			camera.canvas.graphics.endFill();
+			#end
+		}
+		#end
+
+		#if DRAW_CALLS_DEBUG
+		var drawCalls = FlxDrawBaseItem.drawCalls;
+
+		while (randColors[drawCalls] == null)
+		{
+			var color = FlxColor.fromRGB(Std.int(Math.random() * 255), Std.int(Math.random() * 255), Std.int(Math.random() * 255), 0x40);
+			randColors.push(new openfl.display.BitmapData(1, 1, true, color));
+		}
+
+		#if (openfl > "8.7.0")
+		camera.canvas.graphics.overrideBlendMode(blend);
+		#end
+		camera.canvas.graphics.beginBitmapFill(randColors[drawCalls]);
+		camera.canvas.graphics.drawQuads(rects, null, transforms);
+		camera.canvas.graphics.endFill();
+		#end
 		super.render(camera);
 	}
 

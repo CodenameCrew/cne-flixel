@@ -237,7 +237,7 @@ class FlxBitmapText extends FlxSprite
 			textDrawData = [];
 			borderDrawData = [];
 		}
-		
+
 		this.text = text;
 	}
 
@@ -281,7 +281,7 @@ class FlxBitmapText extends FlxSprite
 			super.drawFrame(Force);
 		}
 	}
-	
+
 	override function updateHitbox()
 	{
 		checkPendingChanges(true);

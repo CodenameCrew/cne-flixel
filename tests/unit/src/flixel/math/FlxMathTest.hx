@@ -88,6 +88,14 @@ class FlxMathTest extends FlxTest
 	}
 
 	@Test
+	function testWrapMax()
+	{
+		Assert.areEqual(FlxMath.wrap(0, 0, 0), FlxMath.wrapMax(0, 0));
+		Assert.areEqual(FlxMath.wrap(-1, 0, 4), FlxMath.wrapMax(-1, 4));
+		Assert.areEqual(FlxMath.wrap(5, 0, 4), FlxMath.wrapMax(5, 4));
+	}
+
+	@Test
 	function testLerp()
 	{
 		Assert.areEqual(0, FlxMath.lerp(0, 10, 0));

@@ -5,6 +5,7 @@ import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxStringUtil;
+import flixel.util.FlxDestroyUtil;
 
 @:allow(flixel.input.mouse.FlxMouseButton)
 @:allow(flixel.input.touch.FlxTouch)
@@ -42,6 +43,18 @@ class FlxSwipe implements IFlxDestroyable
 	{
 		startPosition = FlxDestroyUtil.put(startPosition);
 		endPosition = FlxDestroyUtil.put(endPosition);
+	}
+
+	public function destroy()
+	{
+		if(startPosition != null) {
+			startPosition.putWeak();
+			startPosition = null;
+		}
+		if(endPosition != null) {
+			endPosition.putWeak();
+			endPosition = null;
+		}
 	}
 
 	inline function toString():String

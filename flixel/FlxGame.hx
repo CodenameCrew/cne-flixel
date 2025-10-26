@@ -3,8 +3,9 @@ package flixel;
 import flixel.graphics.tile.FlxDrawBaseItem;
 import flixel.system.FlxSplash;
 import flixel.util.FlxArrayUtil;
-import flixel.util.FlxDestroyUtil;
 import flixel.util.typeLimit.NextState;
+import openfl.filters.ShaderFilter;
+import flixel.system.FlxAssets.FlxShader;
 import openfl.Assets;
 import openfl.Lib;
 import openfl.display.Sprite;
@@ -12,6 +13,7 @@ import openfl.display.StageAlign;
 import openfl.display.StageScaleMode;
 import openfl.events.Event;
 import openfl.filters.BitmapFilter;
+import flixel.util.FlxDestroyUtil;
 #if desktop
 import openfl.events.FocusEvent;
 #end
@@ -295,6 +297,44 @@ class FlxGame extends Sprite
 		_initialState = (initialState == null) ? FlxState.new : initialState.toNextState();
 
 		addEventListener(Event.ADDED_TO_STAGE, create);
+	}
+
+	/**
+	 * Adds a FlxShader as a filter to the FlxGame
+	 * @param shader Shader to add
+	 * @return ShaderFilter
+	 */
+	public function addShader(shader:FlxShader)
+	{
+		var filter:ShaderFilter = null;
+		if (_filters == null)
+			_filters = [];
+		_filters.push(filter = new ShaderFilter(shader));
+		return filter;
+	}
+
+	/**
+	 * Removes a FlxShader's ShaderFilter from the FlxGame.
+	 * @param shader Shader to remove
+	 * @return Whenever the shader has been successfully removed or not.
+	 */
+	public function removeShader(shader:FlxShader):Bool
+	{
+		if (_filters == null)
+			_filters = [];
+		for (f in _filters)
+		{
+			if (f is ShaderFilter)
+			{
+				var sf = cast(f, ShaderFilter);
+				if (sf.shader == shader)
+				{
+					_filters.remove(f);
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -623,12 +663,12 @@ class FlxGame extends Sprite
 		FlxRandom.updateStateSeed();
 		#end
 
+		// we mark the entire cache as destroyable. while the cache is marked as destroyable, nothing is immediately removed, to make loading times faster
+		FlxG.bitmap.mapCacheAsDestroyable();
+
 		// Destroy the old state (if there is an old state)
 		if (_state != null)
 			_state.destroy();
-
-		// we need to clear bitmap cache only after previous state is destroyed, which will reset useCount for FlxGraphic objects
-		FlxG.bitmap.clearCache();
 
 		// Finally assign and create the new state
 		_state = _nextState.createInstance();
@@ -649,6 +689,10 @@ class FlxGame extends Sprite
 		debugger.console.registerObject("state", _state);
 		#end
 
+		// we remove the destroyable attribute from the cache, and remove all bitmaps that are unused.
+		FlxG.bitmap.clearCache();
+
+		_state.createPost();
 		FlxG.signals.postStateSwitch.dispatch();
 	}
 
@@ -736,9 +780,10 @@ class FlxGame extends Sprite
 
 		updateElapsed();
 
-		FlxG.signals.preUpdate.dispatch();
-
 		updateInput();
+
+		// This caused issues if it was before `updateInput`.. so uh yeah FINALLY I FIXED A BUG THATS BEEN IN CNE FOR LIKE YEARS :SOB: - LJ
+		FlxG.signals.preUpdate.dispatch();
 
 		#if FLX_POST_PROCESS
 		if (postProcesses[0] != null)
@@ -777,14 +822,15 @@ class FlxGame extends Sprite
 		if (FlxG.fixedTimestep)
 		{
 			FlxG.elapsed = FlxG.timeScale * _stepSeconds; // fixed timestep
+			FlxG.rawElapsed = _stepSeconds;
 		}
 		else
 		{
-			FlxG.elapsed = FlxG.timeScale * (_elapsedMS / 1000); // variable timestep
+			FlxG.rawElapsed = _elapsedMS / 1000; // variable timestep
+			if (FlxG.rawElapsed > FlxG.maxElapsed)
+				FlxG.rawElapsed = FlxG.maxElapsed;
 
-			var max = FlxG.maxElapsed * FlxG.timeScale;
-			if (FlxG.elapsed > max)
-				FlxG.elapsed = max;
+			FlxG.elapsed = FlxG.timeScale * FlxG.rawElapsed;
 		}
 	}
 

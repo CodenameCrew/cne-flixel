@@ -37,7 +37,7 @@ class FlxFramesCollection implements IFlxDestroyable
 	/**
 	 * Hash of frames, by name, for this frame collection.
 	 */
-	var framesByName(default, null):Map<String, FlxFrame>;
+	public var framesByName(default, null):Map<String, FlxFrame>;
 
 	/**
 	 * Graphic object this frames belongs to.
@@ -78,7 +78,7 @@ class FlxFramesCollection implements IFlxDestroyable
 	{
 		return framesByName.get(name);
 	}
-	
+
 	/**
 	 * Whether the collection has frame with the specified name.
 	 *
@@ -249,11 +249,11 @@ class FlxFramesCollection implements IFlxDestroyable
 	 * Sets the target frame's offset to the specified values. This mainly exists because certain
 	 * atlas exporters don't give the correct offset. If no frame with the specified name exists,
 	 * a warning is logged.
-	 * 
+	 *
 	 * @param   name     The name of the frame.
 	 * @param   offsetX  The new horizontal offset of the frame.
 	 * @param   offsetY  The new vertical offset of the frame.
-	 * 
+	 *
 	 * @since 5.3.0
 	 */
 	public function setFrameOffset(name:String, offsetX:Float, offsetY:Float)
@@ -268,11 +268,11 @@ class FlxFramesCollection implements IFlxDestroyable
 	 * Adjusts the target frame's offset by the specified values. This mainly exists because certain
 	 * atlas exporters don't give the correct offset. If no frame with the specified name exists,
 	 * a warning is logged.
-	 * 
+	 *
 	 * @param   name     The name of the frame.
 	 * @param   offsetX  The horizontal adjustment added to the frame's current offset.
 	 * @param   offsetY  The vertical adjustment added to the frame's current offset.
-	 * 
+	 *
 	 * @since 5.3.0
 	 */
 	public function addFrameOffset(name:String, offsetX:Float, offsetY:Float)
@@ -296,7 +296,9 @@ class FlxFramesCollection implements IFlxDestroyable
 	 */
 	public function setFramesOffsetByPrefix(prefix:String, offsetX:Float, offsetY:Float, warnIfEmpty = true)
 	{
-		forEachByPrefix(prefix, (frame)->{ frame.offset.set(offsetX, offsetY); }, warnIfEmpty);
+		forEachByPrefix(prefix, (frame) -> {
+			frame.offset.set(offsetX, offsetY);
+		}, warnIfEmpty);
 	}
 
 	/**
@@ -312,17 +314,19 @@ class FlxFramesCollection implements IFlxDestroyable
 	 */
 	public function addFramesOffsetByPrefix(prefix:String, offsetX:Float, offsetY:Float, warnIfEmpty = true)
 	{
-		forEachByPrefix(prefix, (frame)->{ frame.offset.add(offsetX, offsetY); }, warnIfEmpty);
+		forEachByPrefix(prefix, (frame) -> {
+			frame.offset.add(offsetX, offsetY);
+		}, warnIfEmpty);
 	}
 
 	/**
 	 * Sets the target frame's offset to the specified values. This mainly exists because certain
 	 * atlas exporters don't give the correct offset. If no frame with the specified name exists,
 	 * a warning is logged.
-	 * 
+	 *
 	 * @param   name      The name of the frame.
 	 * @param   duration  The new duration of the frame.
-	 * 
+	 *
 	 * @since 5.3.0
 	 */
 	public function setFrameDuration(name:String, duration:Float)
@@ -395,20 +399,11 @@ class FlxFramesCollection implements IFlxDestroyable
 		return FlxStringUtil.getDebugString([LabelValuePair.weak("frames", frames), LabelValuePair.weak("type", type)]);
 	}
 
-	inline function get_numFrames():Int
-	{
-		return frames.length;
-	}
+	inline function get_numFrames():Int return frames.length;
 	
-	inline function get_framesHash()
-	{
-		return framesByName;
-	}
+	inline function get_framesHash() return framesByName;
 	
-	inline function set_framesHash(value)
-	{
-		return framesByName = value;
-	}
+	inline function set_framesHash(value) return framesByName = value;
 }
 
 /**

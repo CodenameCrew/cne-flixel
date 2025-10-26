@@ -10,10 +10,10 @@ import openfl.text.TextFormat;
 import flixel.FlxG;
 
 @:keep @:bitmap("assets/images/preloader/light.png")
-private class GraphicLogoLight extends BitmapData {}
+class GraphicLogoLight extends BitmapData {}
 
 @:keep @:bitmap("assets/images/preloader/corners.png")
-private class GraphicLogoCorners extends BitmapData {}
+class GraphicLogoCorners extends BitmapData {}
 
 /**
  * This is the Default HaxeFlixel Themed Preloader

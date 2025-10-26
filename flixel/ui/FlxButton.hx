@@ -664,7 +664,7 @@ class FlxTypedButton<T:FlxSprite> extends FlxSprite implements IFlxInput
 /** 
  * Helper function for `FlxButton` which handles its events.
  */
-private class FlxButtonEvent implements IFlxDestroyable
+class FlxButtonEvent implements IFlxDestroyable
 {
 	/**
 	 * The callback function to call when this event fires.

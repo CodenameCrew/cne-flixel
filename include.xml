@@ -3,27 +3,27 @@
 	xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
 
 	<icon path="assets/images/logo/HaxeFlixel.svg" priority="-10" />
-	
+
 	<section unless="unit-test">
 		<assets path="assets/sounds" rename="flixel/sounds" include="*.mp3" if="web || air" embed="true" />
 		<assets path="assets/sounds" rename="flixel/sounds" include="*.ogg" unless="flash || air" embed="true" />
 	</section>
-	
+
 	<assets path="assets/fonts/nokiafc22.ttf" rename="flixel/fonts/nokiafc22.ttf" embed="true" />
 	<assets path="assets/fonts/monsterrat.ttf" rename="flixel/fonts/monsterrat.ttf" embed="true" />
-	
+
 	<section unless="unit-test html5">
 		<assets path="assets/images/ui/button.png" rename="flixel/images/ui/button.png" embed="true" />
 		<assets path="assets/images/logo/default.png" rename="flixel/images/logo/default.png" embed="true" />
 	</section>
-	
+
 	<set name="legacy" unless="next" />
-	
+
 	<haxelib name="openfl" unless="create" />
 	<haxelib name="hscript" unless="create || coverage2" optional="true" />
-	
+
 	<haxeflag name="--macro" value="flixel.system.macros.FlxDefines.run()" />
-	
+
 	<section if="setup">
 		<haxelib name="hscript" />
 		<haxelib name="systools" />
@@ -33,7 +33,7 @@
 		<haxelib name="flixel-tools" />
 		<haxelib name="flixel-templates" />
 	</section>
-	
+
 	<section if="create">
 		<sample path="${haxelib:flixel-demos}/Arcade" />
 		<sample path="${haxelib:flixel-demos}/Editors" />

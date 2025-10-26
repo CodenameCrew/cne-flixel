@@ -24,6 +24,11 @@ import flixel.util.FlxSpriteUtil;
 #if !(FLX_NATIVE_CURSOR && FLX_MOUSE)
 import openfl.display.Bitmap;
 #end
+#if (haxe_ver >= 4.2)
+import Std.isOfType;
+#else
+import Std.is as isOfType;
+#end
 
 /**
  * Adds a new functionality to Flixel debugger that allows any object
@@ -64,7 +69,7 @@ class Interaction extends Window
 		#else
 		false;
 		#end
-	
+
 	var _container:Sprite;
 	var _customCursor:Sprite;
 	var _tools:Array<Tool> = [];
@@ -423,7 +428,7 @@ class Interaction extends Window
 	public function getTool(className:Class<Tool>):Tool
 	{
 		for (tool in _tools)
-			if (Std.isOfType(tool, className))
+			if (isOfType(tool, className))
 				return tool;
 		return null;
 	}

@@ -2,35 +2,36 @@ package flixel.system.debug;
 
 import openfl.display.BitmapData;
 import openfl.display.Sprite;
+import flixel.util.FlxSave;
 #if FLX_DEBUG
+import flixel.FlxG;
+import flixel.system.FlxAssets;
+import flixel.system.debug.completion.CompletionList;
+import flixel.system.debug.console.Console;
+import flixel.system.debug.interaction.Interaction;
+import flixel.system.debug.log.BitmapLog;
+import flixel.system.debug.log.Log;
+import flixel.system.debug.stats.Stats;
+import flixel.system.debug.watch.Tracker;
+import flixel.system.debug.watch.Watch;
+import flixel.system.ui.FlxSystemButton;
+import flixel.util.FlxHorizontalAlign;
+import openfl.display.DisplayObject;
 import openfl.events.MouseEvent;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import openfl.text.TextField;
 import openfl.text.TextFieldAutoSize;
 import openfl.text.TextFormat;
-import openfl.display.DisplayObject;
-import flixel.FlxG;
-import flixel.system.debug.console.Console;
-import flixel.system.debug.log.Log;
-import flixel.system.debug.stats.Stats;
-import flixel.system.debug.watch.Watch;
-import flixel.system.debug.watch.Tracker;
-import flixel.system.debug.completion.CompletionList;
-import flixel.system.debug.log.BitmapLog;
-import flixel.system.debug.interaction.Interaction;
-import flixel.system.FlxAssets;
-import flixel.system.ui.FlxSystemButton;
-import flixel.util.FlxHorizontalAlign;
 
 using flixel.util.FlxArrayUtil;
 #end
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/flixel.png") #end
-private class GraphicFlixel extends BitmapData {}
+@:noCompletion class class GraphicFlixel extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/drawDebug.png") #end
-private class GraphicDrawDebug extends BitmapData {}
+@:noCompletion class class GraphicDrawDebug extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/log.png") #end
 @:noCompletion class GraphicLog extends BitmapData {}
@@ -64,6 +65,15 @@ private class GraphicDrawDebug extends BitmapData {}
  */
 class FlxDebugger extends openfl.display.Sprite
 {
+	public static var save(get, null):FlxSave;
+
+	static function get_save():FlxSave
+	{
+		if (save == null || !save.isBound)
+			save = FlxG.save;
+		return save;
+	}
+
 	#if FLX_DEBUG
 	/**
 	 * Internal, used to space out windows from the edges.
@@ -127,12 +137,19 @@ class FlxDebugger extends openfl.display.Sprite
 		visible = false;
 		tabChildren = false;
 
+		#if openfl_dpi_aware
+		scaleX = scaleY = FlxG.stage.window.scale;
+		#else
+		scaleX = scaleY = 1;
+		#end
+
 		Tooltip.init(this);
 
 		_topBar = new Sprite();
 		_topBar.graphics.beginFill(0x000000, 0xAA / 255);
-		_topBar.graphics.drawRect(0, 0, FlxG.stage.stageWidth, TOP_HEIGHT);
+		_topBar.graphics.drawRect(0, 0, 1, 1);
 		_topBar.graphics.endFill();
+		_topBar.height = TOP_HEIGHT;
 		addChild(_topBar);
 
 		var txt = new TextField();
@@ -326,14 +343,23 @@ class FlxDebugger extends openfl.display.Sprite
 
 	public function onResize(Width:Float, Height:Float):Void
 	{
+		#if openfl_dpi_aware
+		Width = Width / FlxG.stage.window.scale;
+		Height = Height / FlxG.stage.window.scale;
+		#end
+
 		_screen.x = Width;
 		_screen.y = Height;
 
 		updateBounds();
-		_topBar.width = FlxG.stage.stageWidth;
+		_topBar.width = Width;
 		resetButtonLayout();
 		resetLayout();
+		#if openfl_dpi_aware
+		scaleX = scaleY = FlxG.stage.window.scale;
+		#else
 		scaleX = scaleY = 1;
+		#end
 		x = -FlxG.scaleMode.offset.x;
 		y = -FlxG.scaleMode.offset.y;
 	}
@@ -374,10 +400,10 @@ class FlxDebugger extends openfl.display.Sprite
 	{
 		hAlignButtons(_buttons[FlxHorizontalAlign.LEFT], 10, true, 10);
 
-		var offset = FlxG.stage.stageWidth * 0.5 - hAlignButtons(_buttons[FlxHorizontalAlign.CENTER], 10, false) * 0.5;
+		var offset = FlxG.stage.stageWidth / scaleX * 0.5 - hAlignButtons(_buttons[FlxHorizontalAlign.CENTER], 10, false) * 0.5;
 		hAlignButtons(_buttons[FlxHorizontalAlign.CENTER], 10, true, offset);
 
-		var offset = FlxG.stage.stageWidth - hAlignButtons(_buttons[FlxHorizontalAlign.RIGHT], 10, false);
+		var offset = FlxG.stage.stageWidth / scaleX - hAlignButtons(_buttons[FlxHorizontalAlign.RIGHT], 10, false);
 		hAlignButtons(_buttons[FlxHorizontalAlign.RIGHT], 10, true, offset);
 	}
 
@@ -514,7 +540,7 @@ class FlxDebugger extends openfl.display.Sprite
 
 	inline function openGitHub():Void
 	{
-		var url = "https://github.com/HaxeFlixel/flixel";
+		var url = "https://github.com/FNF-CNE-Devs/flixel";
 		if (FlxVersion.sha != "")
 		{
 			url += '/commit/${FlxVersion.sha}';

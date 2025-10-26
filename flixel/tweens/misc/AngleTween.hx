@@ -2,6 +2,7 @@ package flixel.tweens.misc;
 
 import flixel.FlxSprite;
 import flixel.tweens.FlxTween;
+import flixel.util.typeLimit.OneOfTwo;
 
 /**
  * Tweens from one angle to another.
@@ -59,8 +60,8 @@ class AngleTween extends FlxTween
 			sprite.angle = spriteAngle;
 		}
 	}
-	
-	override function isTweenOf(object:Dynamic, ?field:String):Bool
+
+	override function isTweenOf(object:Dynamic, ?field:OneOfTwo<String, Int>):Bool
 	{
 		return sprite == object && (field == null || field == "angle");
 	}

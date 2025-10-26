@@ -301,10 +301,10 @@ class FlxCollision
 			return getResult(start.x, start.y);
 
 		// are both points above, below, left or right of the bounds
-		if ((start.y < rect.top    && end.y < rect.top   )
-		||  (start.y > rect.bottom && end.y > rect.bottom)
-		||  (start.x > rect.right  && end.x > rect.right )
-		||  (start.x < rect.left   && end.x < rect.left) )
+		if ((start.y < rect.top && end.y < rect.top)
+			|| (start.y > rect.bottom && end.y > rect.bottom)
+			|| (start.x > rect.right && end.x > rect.right)
+			|| (start.x < rect.left && end.x < rect.left))
 		{
 			return nullResult();
 		}
@@ -330,7 +330,6 @@ class FlxCollision
 		// if left and right intercepts are both above and below, there is no entry
 		if ((leftY < rect.top && rightY < rect.top) || (leftY > rect.bottom && rightY > rect.bottom))
 			return nullResult();
-
 		// if ray moves right
 		else if (start.x < end.x)
 		{

@@ -7,31 +7,31 @@ import openfl.geom.Point;
 
 /**
  * 2-dimensional point class
- * 
+ *
  * ## Pooling
  * To avoid creating new instances, unnecessarily, used points can be
  * for later use. Rather than creating a new instance directly, call
  * `FlxPoint.get(x, y)` and it will retrieve a point from the pool, if
  * one exists, otherwise it will create a new instance. Similarly, when
  * you're done using a point, call `myPoint.put()` to place it back.
- * 
+ *
  * You can disable point pooling entirely with `FLX_NO_POINT_POOL`.
- * 
+ *
  * ## Weak points
  * Weak points are points meant for a singular use, rather than calling
  * `put` on every point you `get`, you can create a weak point, and have
  * it placed back once used. All `FlxPoint` methods and Flixel utilities
  * automatically call `putWeak()` on every point passed in.
- * 
+ *
  * In the following example, a weak point is created, and passed into
  * `p.degreesTo` where `putWeak` is called on it, putting it back in the pool.
  *
  * ```haxe
  * var angle = p.degreesTo(FlxPoint.weak(FlxG.mouse.x, FlxG.mouse.y));
  * ```
- * 
+ *
  * ## Overloaded Operators
- * 
+ *
  * - `A += B` adds the value of `B` to `A`
  * - `A -= B` subtracts the value of `B` from `A`
  * - `A *= k` scales `A` by float `k` in both x and y components
@@ -43,7 +43,7 @@ import openfl.geom.Point;
  *
  * Note: that these operators get points from the pool, but do not put
  * points back in the pool, unless they are weak.
- * 
+ *
  * Example: 4 total points are created, but only 3 are put into the pool
  * ```haxe
  * var a = FlxPoint.get(1, 1);
@@ -53,7 +53,7 @@ import openfl.geom.Point;
  * b.put();
  * c.put();
  * ```
- * 
+ *
  * To put all 4 back, it should look like this:
  * ```haxe
  * var a = FlxPoint.get(1, 1);
@@ -65,11 +65,11 @@ import openfl.geom.Point;
  * c.put();
  * d.put();
  * ```
- * 
+ *
  * Otherwise, the remainging points will become garbage, adding to the
  * heap, potentially triggering a garbage collection when you don't want.
  */
-@:forward abstract FlxPoint(FlxBasePoint) to FlxBasePoint from FlxBasePoint 
+@:forward abstract FlxPoint(FlxBasePoint) to FlxBasePoint from FlxBasePoint
 {
 	public static inline var EPSILON:Float = 0.0000001;
 	public static inline var EPSILON_SQUARED:Float = EPSILON * EPSILON;
@@ -142,7 +142,6 @@ import openfl.geom.Point;
 		return result;
 	}
 
-	
 	/**
 	 * Operator that divides a point by float, returning a new point.
 	 */
@@ -185,7 +184,6 @@ import openfl.geom.Point;
 		return a.scale(b);
 	}
 
-	
 	/**
 	 * Operator that adds two points, returning a new point.
 	 */
@@ -315,6 +313,194 @@ import openfl.geom.Point;
 		return this;
 	}
 
+	inline function get_x():Float
+		return this.x;
+
+	inline function set_x(x:Float):Float
+		return this.x = x;
+
+	inline function get_y():Float
+		return this.y;
+
+	inline function set_y(y:Float):Float
+		return this.y = y;
+
+	inline function get_dx():Float
+		return this.dx;
+
+	inline function get_dy():Float
+		return this.dy;
+
+	inline function get_length():Float
+		return this.length;
+
+	inline function set_length(l:Float):Float
+		return this.length = l;
+
+	inline function get_lengthSquared():Float
+		return this.lengthSquared;
+
+	inline function get_degrees():Float
+		return this.degrees;
+
+	inline function set_degrees(degs:Float):Float
+		return this.degrees = degs;
+
+	inline function get_radians():Float
+		return this.radians;
+
+	inline function set_radians(rads:Float):Float
+		return this.radians = rads;
+
+	inline function get_rx():Float
+		return this.rx;
+
+	inline function get_ry():Float
+		return this.ry;
+
+	inline function get_lx():Float
+		return this.lx;
+
+	inline function get_ly():Float
+		return this.ly;
+}
+
+/**
+ * The base class of FlxPoint, just use FlxPoint instead.
+ *
+ * Note to contributors: don't worry about adding functionality to the base class.
+ * it's all mostly inlined anyway so there's no runtime definitions for
+ * reflection or anything.
+ */
+@:noCompletion
+@:noDoc
+@:allow(flixel.math.FlxPoint)
+class FlxBasePoint implements IFlxPooled
+{
+	public static inline var EPSILON:Float = 0.0000001;
+	public static inline var EPSILON_SQUARED:Float = EPSILON * EPSILON;
+
+	#if FLX_POINT_POOL
+	static var pool:FlxPool<FlxBasePoint> = new FlxPool(FlxBasePoint);
+	#end
+
+	static var _point1 = new FlxPoint();
+	static var _point2 = new FlxPoint();
+	static var _point3 = new FlxPoint();
+
+	/**
+	 * Recycle or create a new FlxBasePoint.
+	 * Be sure to put() them back into the pool after you're done with them!
+	 *
+	 * @param   x  The X-coordinate of the point in space.
+	 * @param   y  The Y-coordinate of the point in space.
+	 * @return  This point.
+	 */
+	public static inline function get(x:Float = 0, y:Float = 0):FlxBasePoint
+	{
+		#if FLX_POINT_POOL
+		var point = pool.get().set(x, y);
+		point._inPool = false;
+		return point;
+		#else
+		return new FlxBasePoint(x, y);
+		#end
+	}
+
+	/**
+	 * Recycle or create a new FlxBasePoint which will automatically be released
+	 * to the pool when passed into a flixel function.
+	 *
+	 * @param   x  The X-coordinate of the point in space.
+	 * @param   y  The Y-coordinate of the point in space.
+	 * @return  This point.
+	 */
+	public static inline function weak(x:Float = 0, y:Float = 0):FlxBasePoint
+	{
+		var point = get(x, y);
+		#if FLX_POINT_POOL
+		point._weak = true;
+		#end
+		return point;
+	}
+
+	public var x(default, set):Float = 0;
+	public var y(default, set):Float = 0;
+
+	/**
+	 * The horizontal component of the unit point
+	 */
+	public var dx(get, never):Float;
+
+	/**
+	 * The vertical component of the unit point
+	 */
+	public var dy(get, never):Float;
+
+	/**
+	 * Length of the point
+	 */
+	public var length(get, set):Float;
+
+	/**
+	 * length of the point squared
+	 */
+	public var lengthSquared(get, never):Float;
+
+	/**
+	 * The angle formed by the point with the horizontal axis (in degrees)
+	 */
+	public var degrees(get, set):Float;
+
+	/**
+	 * The angle formed by the point with the horizontal axis (in radians)
+	 */
+	public var radians(get, set):Float;
+
+	/**
+	 * The horizontal component of the right normal of the point
+	 */
+	public var rx(get, never):Float;
+
+	/**
+	 * The vertical component of the right normal of the point
+	 */
+	public var ry(get, never):Float;
+
+	/**
+	 * The horizontal component of the left normal of the point
+	 */
+	public var lx(get, never):Float;
+
+	/**
+	 * The vertical component of the left normal of the point
+	 */
+	public var ly(get, never):Float;
+
+	#if FLX_POINT_POOL
+	var _weak:Bool = false;
+	var _inPool:Bool = false;
+	#end
+
+	@:keep
+	public inline function new(x:Float = 0, y:Float = 0)
+	{
+		set(x, y);
+	}
+
+	/**
+	 * Set the coordinates of this point object.
+	 *
+	 * @param   x  The X-coordinate of the point in space.
+	 * @param   y  The Y-coordinate of the point in space.
+	 */
+	public function set(x:Float = 0, y:Float = 0):FlxPoint
+	{
+		this.x = x;
+		this.y = y;
+		return this;
+	}
+
 	/**
 	 * Adds to the coordinates of this point.
 	 *
@@ -324,8 +510,8 @@ import openfl.geom.Point;
 	 */
 	public inline function add(x:Float = 0, y:Float = 0):FlxPoint
 	{
-		this.x += x;
-		this.y += y;
+		this.x = this.x + x;
+		this.y = this.y + y;
 		return this;
 	}
 
@@ -351,8 +537,8 @@ import openfl.geom.Point;
 	 */
 	public inline function subtract(x:Float = 0, y:Float = 0):FlxPoint
 	{
-		this.x -= x;
-		this.y -= y;
+		this.x = this.x - x;
+		this.y = this.y - y;
 		return this;
 	}
 
@@ -381,8 +567,8 @@ import openfl.geom.Point;
 		if (y == null)
 			y = x;
 
-		this.x *= x;
-		this.y *= y;
+		this.x = this.x * x;
+		this.y = this.y * y;
 		return this;
 	}
 
@@ -497,8 +683,8 @@ import openfl.geom.Point;
 	 */
 	public inline function addToFlash(p:Point):Point
 	{
-		p.x += x;
-		p.y += y;
+		p.x = p.x + x;
+		p.y = p.y + y;
 
 		return p;
 	}
@@ -511,8 +697,8 @@ import openfl.geom.Point;
 	 */
 	public inline function subtractFromFlash(p:Point):Point
 	{
-		p.x -= x;
-		p.y -= y;
+		p.x = p.x + x;
+		p.y = p.y + y;
 
 		return p;
 	}
@@ -597,7 +783,7 @@ import openfl.geom.Point;
 	public function pivotRadians(pivot:FlxPoint, radians:Float):FlxPoint
 	{
 		_point1.copyFrom(this).subtractPoint(pivot);
-		_point1.radians += radians;
+		_point1.radians = _point1.radians + radians;
 		set(_point1.x + pivot.x, _point1.y + pivot.y);
 		pivot.putWeak();
 		return this;
@@ -684,16 +870,16 @@ import openfl.geom.Point;
 	}
 
 	/** DEPRECATED
-	 * 
+	 *
 	 * Calculates the angle between this and another point. 0 degrees points straight up.
-	 * 
+	 *
 	 * Note: Every other flixel function treats straight right as 0 degrees.
-	 * 
+	 *
 	 * Also Note: The result is very innacurate.
 	 *
 	 * @param   point   The other point.
 	 * @return  The angle in degrees, between -180 and 180.
-	 * 
+	 *
 	 * @see [Flixel 5.0.0 Migration guide](https://github.com/HaxeFlixel/flixel/wiki/Flixel-5.0.0-Migration-guide)
 	 */
 	@:deprecated("angleBetween is deprecated, use degreesTo instead")
@@ -945,7 +1131,7 @@ import openfl.geom.Point;
 	 * @param   length   The length to set the point
 	 * @param   radians  The angle to set the point, in radians
 	 * @return  The rotated point
-	 * 
+	 *
 	 * @since 4.10.0
 	 */
 	public function setPolarRadians(length:Float, radians:Float):FlxPoint
@@ -961,7 +1147,7 @@ import openfl.geom.Point;
 	 * @param   length  The length to set the point
 	 * @param   degrees The angle to set the point, in degrees
 	 * @return  The rotated point
-	 * 
+	 *
 	 * @since 4.10.0
 	 */
 	public inline function setPolarDegrees(length:Float, degrees:Float):FlxPoint
@@ -1000,8 +1186,8 @@ import openfl.geom.Point;
 	 */
 	public inline function negate():FlxPoint
 	{
-		x *= -1;
-		y *= -1;
+		x = -x;
+		y = -y;
 		return this;
 	}
 
@@ -1320,26 +1506,6 @@ import openfl.geom.Point;
 		return copyTo(p);
 	}
 
-	inline function get_x():Float
-	{
-		return this.x;
-	}
-
-	inline function set_x(x:Float):Float
-	{
-		return this.x = x;
-	}
-
-	inline function get_y():Float
-	{
-		return this.y;
-	}
-
-	inline function set_y(y:Float):Float
-	{
-		return this.y = y;
-	}
-
 	inline function get_dx():Float
 	{
 		if (isZero())
@@ -1572,7 +1738,6 @@ class FlxBasePoint implements IFlxPooled
 		return y = Value;
 	}
 }
-
 
 /**
  * A FlxPoint that calls a function when set_x(), set_y() or set() is called. Used in FlxSpriteGroup.

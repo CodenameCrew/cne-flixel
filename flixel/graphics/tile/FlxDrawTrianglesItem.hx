@@ -25,6 +25,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 
 	#if !flash
 	public var shader:FlxShader;
+
 	var alphas:Array<Float>;
 	var colorMultipliers:Array<Float>;
 	var colorOffsets:Array<Float>;
@@ -140,7 +141,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 	}
 
 	public function addTriangles(vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>, ?position:FlxPoint,
-			?cameraBounds:FlxRect #if !flash , ?transform:ColorTransform #end):Void
+			?cameraBounds:FlxRect #if !flash, ?transform:ColorTransform #end):Void
 	{
 		if (position == null)
 			position = point.set();
@@ -231,7 +232,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 
 			for (_ in 0...indicesLength)
 			{
-				if(transform != null)
+				if (transform != null)
 				{
 					colorMultipliers.push(transform.redMultiplier);
 					colorMultipliers.push(transform.greenMultiplier);
@@ -247,7 +248,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 					colorMultipliers.push(1);
 					colorMultipliers.push(1);
 					colorMultipliers.push(1);
-	
+
 					colorOffsets.push(0);
 					colorOffsets.push(0);
 					colorOffsets.push(0);

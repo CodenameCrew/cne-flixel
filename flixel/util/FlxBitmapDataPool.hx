@@ -153,7 +153,7 @@ class FlxBitmapDataPool
 	}
 }
 
-private class FlxBitmapDataPoolNode
+class FlxBitmapDataPoolNode
 {
 	public var bmd:BitmapData;
 	public var prev:FlxBitmapDataPoolNode;

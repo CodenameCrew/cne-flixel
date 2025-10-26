@@ -18,6 +18,9 @@ import openfl.display.BitmapData;
  */
 class FlxGraphic implements IFlxDestroyable
 {
+	@:allow(flixel.system.frontEnds.BitmapFrontEnd)
+	private var mustDestroy:Bool = false;
+
 	/**
 	 * The default value for the `persist` variable at creation if none is specified in the constructor.
 	 * @see [FlxGraphic.persist](https://api.haxeflixel.com/flixel/graphics/FlxGraphic.html#persist)
@@ -534,6 +537,11 @@ class FlxGraphic implements IFlxDestroyable
 		{
 			collections = new Array<FlxFramesCollection>();
 			frameCollections.set(type, collections);
+
+			#if EXPERIMENTAL_FLXGRAPHIC_DESTROY_FIX
+			if (!frameCollectionTypes.contains(type))
+				frameCollectionTypes.push(type);
+			#end
 		}
 		return collections;
 	}
@@ -571,12 +579,17 @@ class FlxGraphic implements IFlxDestroyable
 
 		return null;
 	}
-	
+
 	inline function get_isLoaded()
 	{
 		return bitmap != null && !bitmap.rect.isEmpty();
 	}
 	
+	inline function get_isDestroyed()
+	{
+		return shader == null;
+	}
+
 	inline function get_isDestroyed()
 	{
 		return shader == null;
@@ -601,7 +614,7 @@ class FlxGraphic implements IFlxDestroyable
 	
 	function checkUseCount()
 	{
-		if (useCount <= 0 && destroyOnNoUse && !persist)
+		if (!FlxG.bitmap.__doNotDelete && useCount <= 0 && destroyOnNoUse && key != null && !persist)
 			FlxG.bitmap.remove(this);
 	}
 

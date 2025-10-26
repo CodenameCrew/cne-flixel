@@ -61,7 +61,9 @@ class FlxArrayUtil
 	 * @param 	index	The index of the element to be removed from the array
 	 * @return	The array
 	 */
+	#if FLX_GENERIC
 	@:generic
+	#end
 	public static inline function swapAndPop<T>(array:Array<T>, index:Int):Array<T>
 	{
 		array[index] = array[array.length - 1]; // swap element to remove and last element
@@ -93,7 +95,7 @@ class FlxArrayUtil
 	 */
 	public static inline function safeSwapByIndex<T>(array:Array<T>, index1:Int, index2:Int):Array<T>
 	{
-		if(index1 >= 0 && index1 < array.length && index2 >= 0 && index2 < array.length)
+		if (index1 >= 0 && index1 < array.length && index2 >= 0 && index2 < array.length)
 		{
 			swapByIndex(array, index1, index2);
 		}
@@ -159,7 +161,9 @@ class FlxArrayUtil
 	 * Flattens 2D arrays into 1D arrays.
 	 * Example: `[[1, 2], [3, 2], [1, 1]]` -> `[1, 2, 3, 2, 1, 1]`
 	 */
+	#if FLX_GENERIC
 	@:generic
+	#end
 	public static function flatten2DArray<T>(array:Array<Array<T>>):Array<T>
 	{
 		var result = [];
@@ -209,14 +213,18 @@ class FlxArrayUtil
 	{
 		if (array == null)
 			array = [];
-		
+
 		array.push(element);
 		return array;
 	}
 
 	public static inline function contains<T>(array:Array<T>, element:T):Bool
 	{
+		#if (haxe >= "4.0.5")
+		return array.contains(element);
+		#else
 		return array.indexOf(element) != -1;
+		#end
 	}
 
 	/**

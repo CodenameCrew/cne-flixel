@@ -155,8 +155,7 @@ class Tracker extends Watch
 				"pressed",
 				"justPressed",
 				"justReleased"
-				#if FLX_MOUSE_ADVANCED, "pressedMiddle", "justPressedMiddle", "justReleasedMiddle", "pressedRight", "justPressedRight", "justReleasedRight"
-				#end
+				#if FLX_MOUSE_ADVANCED, "pressedMiddle", "justPressedMiddle", "justReleasedMiddle", "pressedRight", "justPressedRight", "justReleasedRight" #end
 			], [FlxBasePoint]));
 			#end
 			#if FLX_TOUCH

@@ -734,20 +734,14 @@ class FlxGamepad implements IFlxDestroyable
 	{
 		if (stick == null)
 			return 0;
-		return if (deadZoneMode == CIRCULAR)
-			getAnalogAxisValueCircular(stick, stick.x);
-		else
-			getAnalogAxisValueIndependent(stick.x);
+		return if (deadZoneMode == CIRCULAR) getAnalogAxisValueCircular(stick, stick.x); else getAnalogAxisValueIndependent(stick.x);
 	}
 
 	function getAnalogYAxisValue(stick:FlxGamepadAnalogStick):Float
 	{
 		if (stick == null)
 			return 0;
-		return if (deadZoneMode == CIRCULAR)
-			getAnalogAxisValueCircular(stick, stick.y);
-		else
-			getAnalogAxisValueIndependent(stick.y);
+		return if (deadZoneMode == CIRCULAR) getAnalogAxisValueCircular(stick, stick.y); else getAnalogAxisValueIndependent(stick.y);
 	}
 
 	function getAnalogAxisValueCircular(stick:FlxGamepadAnalogStick, axisID:Int):Float
