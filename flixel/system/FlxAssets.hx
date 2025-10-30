@@ -19,8 +19,10 @@ import haxe.Json;
 import haxe.xml.Access;
 import openfl.Assets;
 import openfl.utils.ByteArray;
-import webp.WebP;
 import haxe.io.Path;
+#if hxWebP
+import webp.WebP;
+#end
 
 using StringTools;
 
@@ -265,8 +267,10 @@ class FlxAssets
 		{
 			switch (Path.extension(id))
 			{
+				#if hxWebP
 				case 'webp':
 					return WebP.getBitmapDataFromBytes(Assets.getBytes(id)); // WebP.getBitmapData(id); is broken as of rn
+				#end
 				default:
 					return Assets.getBitmapData(id, false);
 			}
