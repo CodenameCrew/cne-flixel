@@ -19,6 +19,7 @@ import haxe.Json;
 import haxe.xml.Access;
 import openfl.Assets;
 import openfl.utils.ByteArray;
+import webp.WebP;
 
 using StringTools;
 
@@ -260,7 +261,15 @@ class FlxAssets
 	public static inline function getBitmapData(id:String):BitmapData
 	{
 		if (Assets.exists(id))
-			return Assets.getBitmapData(id, false);
+		{
+			switch (Path.extension(id))
+			{
+				case 'webp':
+					return WebP.getBitmapData(id, true);
+				default:
+					return Assets.getBitmapData(id, false);
+			}
+		}
 		FlxG.log.error('Could not find a BitmapData asset with ID \'$id\'.');
 		return null;
 	}

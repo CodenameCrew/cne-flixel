@@ -21,6 +21,8 @@
 
 	<haxelib name="openfl" unless="create" />
 	<haxelib name="hscript" unless="create || coverage2" optional="true" />
+	
+	<haxelib name="hxWebP" />
 
 	<haxeflag name="--macro" value="flixel.system.macros.FlxDefines.run()" />
 

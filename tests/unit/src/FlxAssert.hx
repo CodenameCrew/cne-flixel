@@ -23,7 +23,7 @@ class FlxAssert
 			&& areNearHelper(expected.y, actual.y, margin)
 			&& areNearHelper(expected.width, actual.width, margin)
 			&& areNearHelper(expected.height, actual.height, margin);
-		
+
 		if (areNear)
 			Assert.assertionCount++;
 		else
