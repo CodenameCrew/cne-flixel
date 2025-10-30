@@ -20,6 +20,7 @@ import haxe.xml.Access;
 import openfl.Assets;
 import openfl.utils.ByteArray;
 import webp.WebP;
+import haxe.io.Path;
 
 using StringTools;
 
@@ -265,7 +266,7 @@ class FlxAssets
 			switch (Path.extension(id))
 			{
 				case 'webp':
-					return WebP.getBitmapData(id, true);
+					return WebP.getBitmapDataFromBytes(Assets.getBytes(id)); // WebP.getBitmapData(id); is broken as of rn
 				default:
 					return Assets.getBitmapData(id, false);
 			}
