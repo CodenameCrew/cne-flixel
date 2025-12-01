@@ -697,8 +697,8 @@ class FlxBasePoint implements IFlxPooled
 	 */
 	public inline function subtractFromFlash(p:Point):Point
 	{
-		p.x = p.x + x;
-		p.y = p.y + y;
+		p.x = p.x - x;
+		p.y = p.y - y;
 
 		return p;
 	}
