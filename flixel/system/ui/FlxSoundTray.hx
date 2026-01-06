@@ -66,6 +66,10 @@ class FlxSoundTray extends Sprite
 	 * Helps us auto-hide the sound tray after a volume change.
 	 */
 	var _timer:Float;
+	/**
+		Whether or not to auto-hide the sound tray after a volume change.
+	**/
+	public static var autoHide:Bool = true;
 
 	/**
 	 * Helps display the volume bars on the sound tray.
@@ -240,7 +244,7 @@ class FlxSoundTray extends Sprite
 		{
 			_timer -= MS / 1000;
 		}
-		else if (y > -height)
+		else if (y > -height && autoHide)
 		{
 			y -= (MS / 1000) * FlxG.height * 2;
 
