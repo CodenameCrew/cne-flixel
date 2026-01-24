@@ -1816,7 +1816,7 @@ class FlxSprite extends FlxObject
 	}
 
 	@:noCompletion
-	inline function checkFlipX():Bool
+	function checkFlipX():Bool
 	{
 		var doFlipX = (flipX != _frame.flipX);
 		if (animation.curAnim != null)
@@ -1827,7 +1827,7 @@ class FlxSprite extends FlxObject
 	}
 
 	@:noCompletion
-	inline function checkFlipY():Bool
+	function checkFlipY():Bool
 	{
 		var doFlipY = (flipY != _frame.flipY);
 		if (animation.curAnim != null)
