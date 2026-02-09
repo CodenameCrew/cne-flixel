@@ -555,15 +555,32 @@ class FlxMath
 	{
 		var n = angle * 0.3183098862;
 
-		if (n > 1.0 || n < -1.0)
+		if (n > 1)
 		{
-			n -= Math.ffloor(n * 0.5 + 0.5) * 2.0;
+			n -= (Math.ceil(n) >> 1) << 1;
+		}
+		else if (n < -1)
+		{
+			n += (Math.ceil(-n) >> 1) << 1;
 		}
 
-		final n2 = n * n;
+		var sin:Float;
+		if (n > 0)
+		{
+			sin = n * (3.1 + n * (0.5 + n * (-7.2 + n * 3.6)));
+		}
+		else
+		{
+			sin = n * (3.1 - n * (0.5 + n * (7.2 + n * 3.6)));
+		}
 
-		final sin = n * (3.1 + n2 * (0.5 + n2 * (-7.2 + n2 * 3.6)));
-		final cos = 1.0 - 0.5 * n2 + 0.0417 * n2 * n2 - 0.00139 * n2 * n2 * n2;
+		var cos = Math.sqrt(1 - sin * sin);
+
+		var originalN = n * Math.PI;
+		if (originalN < -Math.PI * 0.5 || originalN > Math.PI * 0.5)
+		{
+			cos = -cos;
+		}
 
 		return {sin: sin, cos: cos};
 	}
