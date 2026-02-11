@@ -177,7 +177,7 @@ class FlxAnimation extends FlxBaseAnimation
 
 		reversed = Reversed;
 		paused = false;
-		_frameTimer = 0;
+		_frameTimer = -FlxG.elapsed / 2;
 		finished = frameDuration == 0;
 
 		var maxFrameIndex:Int = numFrames - 1;
