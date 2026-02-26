@@ -193,6 +193,23 @@ class FlxBasic implements IFlxDestroyable
 			_cameras[0] = Value;
 		return Value;
 	}
+
+	/**
+	 * The main camera that will draw this. Use `this.cameras` to set specific cameras for this
+	 * object, otherwise the container's camera is used, or the container's container and so on.
+	 * If there is no container, say, if this is inside `FlxGroups` rather than a `FlxContainer`
+	 * then `FlxG.camera` is returned.
+	 * 
+	 * Theres a misleading documentation where this is marked as since 5.7.0 regardless only
+	 * appearing in 6.0.0 and after, so libraries that uses this doesn't work for 5.9.0.
+	 * @since 6.0.0
+	 */
+	public function getDefaultCamera():FlxCamera
+	{
+		final cameras = getCameras();
+		// should never be null, unless people do something stupid, but just in case
+		return cameras == null || cameras.length == 0 ? FlxG.camera : cameras[0];
+	}
 	
 	/**
 	 * The cameras that will draw this. Use `this.cameras` to set specific cameras for this object,

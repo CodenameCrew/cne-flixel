@@ -207,6 +207,10 @@ class FlxGame extends Sprite
 	 */
 	var _nextState:NextState;
 
+	var _requestedState(get, set):NextState;
+	inline function get__requestedState() return _nextState;
+	inline function set__requestedState(v) return _nextState = v;
+
 	/**
 	 * A flag for keeping track of whether a game reset was requested or not.
 	 */
@@ -669,6 +673,11 @@ class FlxGame extends Sprite
 		// Destroy the old state (if there is an old state)
 		if (_state != null)
 			_state.destroy();
+		
+		// sound datas too.
+		#if FLX_SOUND_SYSTEM
+		FlxG.sound.clearCache();
+		#end
 
 		// Finally assign and create the new state
 		_state = _nextState.createInstance();

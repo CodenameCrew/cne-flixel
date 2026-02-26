@@ -110,6 +110,8 @@ enum HelperDefines
 	FLX_CUSTOM_ASSETS_DIRECTORY_ABS;
 	FLX_NO_DEFAULT_SOUND_EXT;
 	FLX_GENERIC;
+	/** Enables audio streaming related APIs */
+	FLX_STREAM_SOUND;
 }
 
 class FlxDefines
@@ -308,6 +310,12 @@ class FlxDefines
 		}
 		else // define boolean inversion
 			define(FLX_STANDARD_ASSETS_DIRECTORY);
+
+		#if (lime_funkin || lime_vorbis)
+		define(FLX_STREAM_SOUND);
+		#end
+
+		define(FLX_CNE_FORK);
 	}
 
 	static function defineInversion(userDefine:UserDefines, invertedDefine:HelperDefines)

@@ -238,7 +238,7 @@ class FlxSoundTray extends Sprite
 		// Animate sound tray thing
 		if (_timer > 0)
 		{
-			_timer -= (MS / 1000);
+			_timer -= MS / 1000;
 		}
 		else if (y > -height)
 		{
@@ -266,6 +266,9 @@ class FlxSoundTray extends Sprite
 		#end
 	}
 
+	public inline function showIncrement():Void show(true);
+	public inline function showDecrement():Void show(false);
+
 	/**
 	 * Makes the little volume tray slide out.
 	 */
@@ -280,7 +283,8 @@ class FlxSoundTray extends Sprite
 
 		if (!silent)
 		{
-			var sound = FlxAssets.getSoundAddExtension(up ? volumeUpSound : volumeDownSound);
+			var sound = up ? (globalVolume >= barsAmount
+				&& volumeMaxChangeSFX != null ? volumeMaxChangeSFX : volumeUpChangeSFX) : volumeDownChangeSFX;
 			if (sound == null)
 				sound = volumeChangeSFX;
 			FlxG.sound.load(sound).play();

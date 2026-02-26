@@ -149,17 +149,6 @@ class FlxBaseSignal<T> implements IFlxSignal<T>
 		}
 	}
 
-	inline function removeHandler(handler:FlxSignalHandler<T>):Void
-	{
-		if (processingListeners)
-			pendingRemove.push(handler)
-		else
-		{
-			handlers.remove(handler);
-			handler.destroy();
-		}
-	}
-
 	public function has(listener:T):Bool
 	{
 		if (listener == null)

@@ -18,8 +18,6 @@ class PluginFrontEnd
 	 */
 	public var list(default, null):Array<FlxBasic> = [];
 
-	public var drawOnTop:Bool = false;
-
 	/**
 	 * If `true`, then plugins will be drawn over the current state instead of under it.
 	 * @since 5.7.0

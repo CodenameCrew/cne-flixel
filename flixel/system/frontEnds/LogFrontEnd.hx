@@ -79,7 +79,7 @@ class LogFrontEnd
 		#end
 
 		if (onLogs != null)
-			onLogs(Data, Style, FireOnce);
+			onLogs(data, style, fireOnce);
 		
 		style.onLog.dispatch(data);
 		
