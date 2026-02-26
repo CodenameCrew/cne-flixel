@@ -575,6 +575,11 @@ class FlxGame extends Sprite
 		// we need to clear bitmap cache only after previous state is destroyed, which will reset useCount for FlxGraphic objects
 		FlxG.bitmap.clearCache();
 
+		// sound datas too.
+		#if FLX_SOUND_SYSTEM
+		FlxG.sound.clearCache();
+		#end
+
 		// Finally assign and create the new state
 		_state = _nextState.createInstance();
 		_state._constructor = _nextState.getConstructor();
