@@ -254,7 +254,7 @@ import openfl.geom.Point;
 	 */
 	public var length(get, set):Float;
 	inline function get_length():Float return this.length;
-	inline function set_length(l:Float):Float this.length = l;
+	inline function set_length(l:Float):Float return this.length = l;
 
 	/**
 	 * length of the point squared
@@ -574,7 +574,7 @@ import openfl.geom.Point;
 	 * @param	height  The height of the region to test within
 	 * @return	True if the point is within the region, otherwise false
 	 */
-	public inline function inCoords(x:Float, y:Float, width:Float, height:Float):Bool return this.inCoord(x, y, width, height);
+	public inline function inCoords(x:Float, y:Float, width:Float, height:Float):Bool return this.inCoords(x, y, width, height);
 
 	/**
 	 * Returns true if this point is within the given rectangular block
@@ -604,7 +604,7 @@ import openfl.geom.Point;
 	 * @param   degrees  Rotate the point by this many degrees clockwise.
 	 * @return  A FlxPoint containing the coordinates of the rotated point.
 	 */
-	public inline function pivotDegrees(pivot:FlxPoint, degrees:Float):FlxPoint return this.pivotRadians(pivot, degrees * FlxMath.TO_RAD);
+	public inline function pivotDegrees(pivot:FlxPoint, degrees:Float):FlxPoint return this.pivotRadians(pivot, degrees * FlxAngle.TO_RAD);
 
 	/**
 	 * Calculate the distance to another point.
@@ -974,12 +974,12 @@ import openfl.geom.Point;
 	/**
 	 * The distance between points
 	 */
-	public overload inline extern function dist(p:FlxPoint):Float return this.distanceTo(p);
+	public overload inline extern function dist(p:FlxPoint):Float return this.distanceToPoint(p);
 	
 	/**
 	 * The squared distance between points
 	 */
-	public overload inline extern function distSquared(p:FlxPoint):Float return this.distanceSquaredTo(p);
+	public overload inline extern function distSquared(p:FlxPoint):Float return this.distanceSquaredToPoint(p);
 	
 	/**
 	 * The squared distance between positions
@@ -1047,9 +1047,7 @@ class FlxBasePoint implements IFlxPooled
 	static var _point2 = new FlxPoint();
 	static var _point3 = new FlxPoint();
 
-	#if FLX_POINT_POOL
-	static var pool:FlxPool<FlxBasePoint> = new FlxPool(FlxBasePoint.new.bind(0, 0));
-	#end
+	public static var EPSILON_LENGTH:Float = FlxPoint.EPSILON * FlxMath.SQUARE_ROOT_OF_TWO;
 
 	/**
 	 * Recycle or create a new FlxBasePoint.
@@ -1091,7 +1089,7 @@ class FlxBasePoint implements IFlxPooled
 
 	/* Reflections from FlxPoint */
 	public var dx(get, never):Float; inline function get_dx():Float return isZero() ? 0 : x / length;
-	public var dy(get, never):Float; inline function get_dx():Float return isZero() ? 0 : y / length;
+	public var dy(get, never):Float; inline function get_dy():Float return isZero() ? 0 : y / length;
 	public var length(get, set):Float;
 	inline function get_length():Float return Math.sqrt(lengthSquared);
 	inline function set_length(l:Float):Float {
@@ -1111,7 +1109,7 @@ class FlxBasePoint implements IFlxPooled
 	}
 
 	public var radians(get, set):Float;
-	inline function get_radians():Float return FLxAngle.radiansFromOrigin(x, y);
+	inline function get_radians():Float return FlxAngle.radiansFromOrigin(x, y);
 	inline function set_radians(rads:Float):Float {
 		if (!isZero()) {
 			final len = length;
@@ -1241,9 +1239,9 @@ class FlxBasePoint implements IFlxPooled
 
 	public function scaleNew(k:Float):FlxBasePoint return copyTo().scale(k, k);
 
-	public function addNew(p:FlxBasePoint):FlxBasePoint return copyTo().add(p);
+	public function addNew(p:FlxBasePoint):FlxBasePoint return copyTo().add(p.x, p.y);
 
-	public function subtractNew(p:FlxBasePoint):FlxBasePoint return copyTo().subtract(p);
+	public function subtractNew(p:FlxBasePoint):FlxBasePoint return copyTo().subtract(p.x, p.y);
 
 	public function copyFrom(p:FlxBasePoint):FlxBasePoint {
 		set(p.x, p.y);
@@ -1311,8 +1309,8 @@ class FlxBasePoint implements IFlxPooled
 
 	public function transform(matrix:Matrix):FlxBasePoint {
 		return set(
-			x1 = x * matrix.a + y * matrix.c + matrix.tx,
-			y1 = x * matrix.b + y * matrix.d + matrix.ty
+			x * matrix.a + y * matrix.c + matrix.tx,
+			x * matrix.b + y * matrix.d + matrix.ty
 		);
 	}
 
