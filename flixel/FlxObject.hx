@@ -13,6 +13,7 @@ import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDirectionFlags;
 import flixel.util.FlxSpriteUtil;
 import flixel.util.FlxStringUtil;
+import flixel.FlxTypes;
 
 /**
  * At their core `FlxObjects` are just boxes with positions that can move and collide with other

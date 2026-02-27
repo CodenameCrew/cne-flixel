@@ -220,11 +220,6 @@ class FlxBar extends FlxSprite
 			_emptyBar = FlxDestroyUtil.dispose(_emptyBar);
 			_filledBar = FlxDestroyUtil.dispose(_filledBar);
 		}
-		else
-		{
-			_frontFrame = null;
-			_filledFlxRect = FlxDestroyUtil.put(_filledFlxRect);
-		}
 		_filledBarRect = null;
 		_filledBarPoint = null;
 
@@ -781,7 +776,7 @@ class FlxBar extends FlxSprite
 		var interval:Float = continuous ? {
 			fraction * maxScale;
 		} : {
-			var scaleInterval:Float = maxScale / numDivisions;
+		var scaleInterval:Float = maxScale / numDivisions;
 			Math.round(Std.int(fraction * maxScale / scaleInterval) * scaleInterval);
 			}
 
@@ -799,7 +794,7 @@ class FlxBar extends FlxSprite
 			switch (fillDirection)
 			{
 				case LEFT_TO_RIGHT, TOP_TO_BOTTOM:
-					//	Already handled above
+				//	Already handled above
 
 				case BOTTOM_TO_TOP:
 					_filledBarRect.y = barHeight - _filledBarRect.height;
@@ -835,7 +830,7 @@ class FlxBar extends FlxSprite
 				if (frontFrames != null)
 				{
 					_filledFlxRect.copyFromFlash(_filledBarRect); // .round();
-					_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
+						_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
 				}
 			}
 		}
@@ -883,7 +878,7 @@ class FlxBar extends FlxSprite
 				{
 					continue;
 				}
-
+				
 				_frontFrame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
 				_matrix.translate(-origin.x, -origin.y);
 				_matrix.scale(scale.x, scale.y);
@@ -906,7 +901,7 @@ class FlxBar extends FlxSprite
 					_matrix.tx = Math.floor(_matrix.tx);
 					_matrix.ty = Math.floor(_matrix.ty);
 				}
-
+				
 				camera.drawPixels(_frontFrame, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
 			}
 		}

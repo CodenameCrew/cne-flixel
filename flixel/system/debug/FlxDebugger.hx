@@ -28,10 +28,10 @@ using flixel.util.FlxArrayUtil;
 #end
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/flixel.png") #end
-@:noCompletion class class GraphicFlixel extends BitmapData {}
+@:noCompletion class GraphicFlixel extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/drawDebug.png") #end
-@:noCompletion class class GraphicDrawDebug extends BitmapData {}
+@:noCompletion class GraphicDrawDebug extends BitmapData {}
 
 #if FLX_DEBUG @:bitmap("assets/images/debugger/buttons/log.png") #end
 @:noCompletion class GraphicLog extends BitmapData {}

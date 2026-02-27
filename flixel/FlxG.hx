@@ -373,6 +373,7 @@ class FlxG
 		#else
 		Lib.application.window.resize(width, height);
 		#end
+		#end
 	}
 
 	/**
@@ -614,7 +615,7 @@ class FlxG
 	 * @param   url     The address of the web page.
 	 * @param   target  `"_blank"`, `"_self"`, `"_parent"` or `"_top"`
 	 */
-	public static inline function openURL(url:String, target:String = "_blank"):Void
+	public static inline function openURL(url:String, target = "_blank"):Void
 	{
 		// if the url does not already start with a protocol, add it.
 		if (!~/^.\w+?:\/*/.match(url))

@@ -230,7 +230,7 @@ class FlxDefines
 
 		if (!defined(FLX_NO_SOUND_SYSTEM) && !defined(FLX_NO_SOUND_TRAY))
 			define(FLX_SOUND_TRAY);
-		
+
 		#if (lime >= "8.0.0")
 		if (defined(FLX_NO_SOUND_SYSTEM) || defined("flash"))
 			define(FLX_NO_PITCH);
@@ -355,4 +355,3 @@ class FlxDefines
 		Context.fatalError(message, pos);
 	}
 }
-#end

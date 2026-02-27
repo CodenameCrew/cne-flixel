@@ -11,6 +11,7 @@ import flixel.math.FlxRect;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxStringUtil;
+import flixel.FlxTypes;
 import haxe.ds.ArraySort;
 import haxe.ds.Vector;
 

@@ -3,6 +3,7 @@ package flixel;
 import flixel.group.FlxContainer;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 import flixel.util.FlxStringUtil;
+import flixel.FlxTypes;
 
 /**
  * This is a useful "generic" Flixel object. Both `FlxObject` and

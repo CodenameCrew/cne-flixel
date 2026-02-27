@@ -18,6 +18,7 @@ import flixel.util.FlxBitmapDataUtil;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDirectionFlags;
+import flixel.FlxTypes;
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
 import openfl.geom.ColorTransform;
