@@ -590,33 +590,9 @@ class SoundFrontEnd
 	 */
 	public function changeVolume(value:Float):Void
 	{
-		volume = linearToLog(logToLinear(_volume) + value);
+		volume += value;
 		muted = false;
 		showSoundTray(value > 0);
-	}
-
-	public function linearToLog(x:Float, minValue:Float = 0.001):Float
-	{
-		// If linear volume is 0, return 0
-		if (x <= 0) return 0;
-
-		// Ensure x is between 0 and 1
-		x = Math.min(1, x);
-
-		// Convert linear scale to logarithmic
-		return Math.exp(Math.log(minValue) * (1 - x));
-	}
-
-	public function logToLinear(x:Float, minValue:Float = 0.001):Float
-	{
-		// If logarithmic volume is 0, return 0
-		if (x <= 0) return 0;
-
-		// Ensure x is between minValue and 1
-		x = Math.min(1, x);
-
-		// Convert logarithmic scale to linear
-		return 1 - (Math.log(Math.max(x, minValue)) / Math.log(minValue));
 	}
 
 	/**
@@ -643,7 +619,7 @@ class SoundFrontEnd
 	 */
 	public dynamic function applySoundCurve(volume:Float)
 	{
-		return volume;
+		return Math.pow(volume, 1.75);
 		
 		// Example of linear to logarithmic sound curve:
 		// final clampedVolume = Math.max(0, Math.min(1, volume));
@@ -657,7 +633,7 @@ class SoundFrontEnd
 	 */
 	public dynamic function reverseSoundCurve(curvedVolume:Float)
 	{
-		return curvedVolume;
+		return Math.pow(curvedVolume, 0.5714285714285714);
 		
 		// Example of logarithmic to linear sound curve:
 		// final clampedVolume = Math.max(minValue, Math.min(1, x));

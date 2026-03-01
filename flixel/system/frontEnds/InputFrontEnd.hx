@@ -27,7 +27,7 @@ class InputFrontEnd
 	@:generic
 	@:deprecated("add is deprecated, use addUniqueType")
 	#end
-	public inline function add<T:IFlxInputManager>(Input:T):T
+	public inline function add<T:IFlxInputManager>(input:T):T
 	{
 		return addUniqueType(input);
 	}
@@ -72,7 +72,7 @@ class InputFrontEnd
 	#if FLX_GENERIC
 	@:generic
 	#end
-	public inline function remove<T:IFlxInputManager>(Input:T):Bool
+	public inline function remove<T:IFlxInputManager>(input:T):Bool
 	{
 		return list.remove(input);
 	}

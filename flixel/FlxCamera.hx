@@ -1,11 +1,15 @@
 package flixel;
 
+import openfl.display.BlendMode;
 import openfl.display.Bitmap;
 import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
 import openfl.display.Graphics;
 import openfl.display.Sprite;
-import openfl.display.BlendMode;
+import openfl.display.TriangleCulling;
+import openfl.display3D.Context3DWrapMode;
+import openfl.display3D.Context3DCompareMode;
+import openfl.filters.BitmapFilter;
 import openfl.filters.ShaderFilter;
 import openfl.geom.ColorTransform;
 import openfl.geom.Point;
@@ -26,8 +30,6 @@ import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxSpriteUtil;
 import openfl.Vector;
-import openfl.display.BlendMode;
-import openfl.filters.BitmapFilter;
 
 using flixel.util.FlxColorTransformUtil;
 

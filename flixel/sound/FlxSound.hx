@@ -37,7 +37,7 @@ class FlxSound extends FlxBasic
 	/**
 	 * The default value for the `timeScaledPitch` variable at creation if none is specified in the constructor.
 	 */
-	public static var defaultTimeScaledPitch:Bool = false;
+	public static var defaultTimeScaledPitch:Bool = true;
 	#end
 
 	/**

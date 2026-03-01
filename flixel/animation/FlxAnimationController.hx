@@ -785,7 +785,7 @@ class FlxAnimationController implements IFlxDestroyable
 	}
 
 	@:allow(flixel.animation)
-	inline function firePlayCallback(name:String, forced:Bool, reversed:Bool, frame:Int):Void
+	function firePlayCallback(name:String, forced:Bool, reversed:Bool, frame:Int):Void
 	{
 		if (playCallback != null)
 		{
@@ -796,19 +796,13 @@ class FlxAnimationController implements IFlxDestroyable
 	}
 
 	@:allow(flixel.animation)
-	inline function fireLoopCallback(name:String):Void
+	function fireLoopCallback(?name:String):Void
 	{
 		if (loopCallback != null)
 		{
 			loopCallback(name);
 		}
 
-		onLoop.dispatch(name);
-	}
-
-	@:allow(flixel.animation)
-	function fireLoopCallback(?name:String):Void
-	{
 		onLoop.dispatch(name);
 	}
 

@@ -424,17 +424,6 @@ class Console extends Window
 	}
 
 	/**
-	 * Removes a class from the command registry.
-	 *
-	 * @param   c  The class to remove.
-	 * @since 5.4.0
-	 */
-	public inline function removeClass(c:Class<Dynamic>)
-	{
-		removeByAlias(FlxStringUtil.getClassName(c, true));
-	}
-
-	/**
 	 * Register a new enum to use in any command.
 	 *
 	 * @param   e  The enum to register.

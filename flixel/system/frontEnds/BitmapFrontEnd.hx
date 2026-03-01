@@ -346,6 +346,7 @@ class BitmapFrontEnd
 
 		__doNotDelete = false;
 
+		// i dont get this, who implemented this -ralty
 		for (g in __countCache)
 			g.useCount -= 10;
 

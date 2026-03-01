@@ -598,6 +598,7 @@ class FlxGraphic implements IFlxDestroyable
 	inline function set_useCount(v:Int):Int
 	{
 		if (useCount > (useCount = v)) checkUseCount();
+		return v;
 	}
 	
 	public function incrementUseCount()

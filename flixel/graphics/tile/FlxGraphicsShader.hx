@@ -71,7 +71,8 @@ uniform bool hasTransform;
 uniform bool hasColorTransform;
 
 vec4 apply_flixel_transform(vec4 color) {
-	if (color.a <= 0.0 || openfl_Alphav == 0.0) return vec4(0.0);
+	if (!hasTransform) return color;
+	else if (color.a <= 0.0 || openfl_Alphav == 0.0) return vec4(0.0);
 
 	color.rgb /= color.a;
 	color = clamp(openfl_ColorOffsetv + (color * openfl_ColorMultiplierv), 0.0, 1.0);
@@ -81,9 +82,7 @@ vec4 apply_flixel_transform(vec4 color) {
 #define applyFlixelEffects(color) apply_flixel_transform(color)
 
 vec4 flixel_texture2D(sampler2D bitmap, vec2 coord) {
-	vec4 color = texture2D(bitmap, coord);
-	if (hasTransform) return apply_flixel_transform(color);
-	else return color;
+	return apply_flixel_transform(texture2D(bitmap, coord));
 }
 
 uniform vec4 _camSize;
@@ -113,5 +112,10 @@ void main(void) {
 }")
 	public function new() {
 		super();
+	}
+
+	public function setCamSize(x:Float, y:Float, width:Float, height:Float)
+	{
+		data._camSize.value = [x, y, width, height];
 	}
 }

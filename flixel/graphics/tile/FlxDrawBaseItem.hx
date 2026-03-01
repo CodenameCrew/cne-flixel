@@ -11,8 +11,6 @@ import flixel.math.FlxMatrix;
 import flixel.system.FlxAssets.FlxShader;
 import flixel.FlxCamera;
 
-import funkin.backend.CPPTypes;
-
 class FlxDrawBaseItem<T> {
 	public static var colorIdentity:ColorTransform = new ColorTransform();
 	public static var drawCalls:Int = 0;

@@ -18,7 +18,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 
 	static final point:FlxPoint = FlxPoint.get();
 	static final rect:FlxRect = FlxRect.get();
-	//static final bounds = FlxRect.get();
+	static final bounds = FlxRect.get();
 
 	public static inline function inflateBounds(bounds:FlxRect, x:Float, y:Float):FlxRect {
 		if (x < bounds.x) {
