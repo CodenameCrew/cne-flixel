@@ -1230,8 +1230,6 @@ class FlxCamera extends FlxBasic
 			updateFade(elapsed);
 		}
 
-		flashSprite.filters = filtersEnabled ? filters : null;
-
 		updateFlashSpritePosition();
 		if (!paused)
 			updateShake(elapsed);
@@ -1243,6 +1241,8 @@ class FlxCamera extends FlxBasic
 
 		if (filtersEnabled && flashSprite.filters != null)
 		{
+			flashSprite.filters = filters;
+
 			// var rect = _scrollRect.scrollRect;
 
 			// if (rect == null)
@@ -1284,6 +1284,10 @@ class FlxCamera extends FlxBasic
 					}
 				}
 			}
+		}
+		else
+		{
+			flashSprite.filters = null;
 		}
 	}
 
