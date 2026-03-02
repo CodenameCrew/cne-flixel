@@ -140,8 +140,12 @@ class FlxCamera extends FlxBasic
 	 * position. `0.5` means the camera always travels halfway to the target position, `0.0` means
 	 * the camera does not move. Generally, the lower the value, the more smooth.
 	 */
-	public var followEnabled:Bool = true;
 	public var followLerp:Float = 1.0;
+
+	/**
+	 * Whether or not should it follows to the target.
+	 */
+	public var followEnabled:Bool = true;
 
 	/**
 	 * You can assign a "dead zone" to the camera in order to better control its movement.
@@ -1409,11 +1413,8 @@ class FlxCamera extends FlxBasic
 		}
 		else if (followLerp > 0.0)
 		{
-			// Adjust lerp based on the current frame rate so lerp is less framerate dependant
-			final adjustedLerp = 1.0 - Math.pow(1.0 - followLerp, elapsed * 60);
-			
-			scroll.x += (_scrollTarget.x - scroll.x) * adjustedLerp;
-			scroll.y += (_scrollTarget.y - scroll.y) * adjustedLerp;
+			final adjustedLerp = FlxMath.getElapsedLerp(followLerp, elapsed);
+			scroll.add((_scrollTarget.x - scroll.x) * adjustedLerp, (_scrollTarget.y - scroll.y) * adjustedLerp);
 		}
 	}
 
