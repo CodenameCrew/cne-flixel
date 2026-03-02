@@ -14,10 +14,10 @@ class FlxPointer
 	
 	/** The world position relative to the main camera's scroll position */
 	@:deprecated("screenX is deprecated, use viewX, instead")
-	public var screenX(default, never):Int = 0;
+	public var screenX(get, never):Int;
 	/** The world position relative to the main camera's scroll position */
 	@:deprecated("screenY is deprecated, use viewY, instead")
-	public var screenY(default, never):Int = 0;
+	public var screenY(get, never):Int;
 	
 	/**
 	 * The world position relative to the main camera's scroll position, `cam.viewMarginX` or
@@ -278,5 +278,15 @@ class FlxPointer
 	{
 		_rawY = value * FlxG.scaleMode.scale.y;
 		return value;
+	}
+
+	inline function get_screenX():Int
+	{
+		return viewX;
+	}
+
+	inline function get_screenY():Int
+	{
+		return viewY;
 	}
 }
