@@ -16,6 +16,7 @@ import openfl.geom.Point;
 import openfl.geom.Rectangle;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxFrame;
+import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
 import flixel.graphics.tile.FlxDrawBaseItem;
 import flixel.graphics.tile.FlxDrawQuadsItem;
 import flixel.graphics.tile.FlxDrawTrianglesItem;
@@ -685,7 +686,7 @@ class FlxCamera extends FlxBasic
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
 
 		if (_currentDrawItem != null
-			&& _currentDrawItem.type == FlxDrawBaseItem.FlxDrawItemType.TILES
+			&& _currentDrawItem.type == FlxDrawItemType.TILES
 			&& _headTiles.graphics == graphic
 			&& _headTiles.colored == colored
 			&& _headTiles.hasColorOffsets == hasColorOffsets
@@ -729,7 +730,7 @@ class FlxCamera extends FlxBasic
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
 
 		if (_currentDrawItem != null
-			&& _currentDrawItem.type == FlxDrawBaseItem.FlxDrawItemType.TRIANGLES
+			&& _currentDrawItem.type == FlxDrawItemType.TRIANGLES
 			&& _headTriangles.graphics == graphic
 			&& _headTriangles.antialiasing == smoothing
 			&& _headTriangles.colored == isColored
@@ -1087,7 +1088,7 @@ class FlxCamera extends FlxBasic
 	 * @param   zoom    The initial zoom level of the camera.
 	 *                  A zoom level of 2 will make all pixels display at 2x resolution.
 	 */
-	public function new(X:Float = 0, Y:Float = 0, Width:Int = 0, Height:Int = 0, Zoom:Float = 0)
+	public function new(x:Float = 0, y:Float = 0, width:Int = 0, height:Int = 0, zoom:Float = 0)
 	{
 		super();
 
