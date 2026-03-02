@@ -10,7 +10,7 @@ import flixel.addons.system.macros.FlxAddonDefines;
 //#end
 #end
 
-
+using StringTools;
 
 enum UserDefines
 {

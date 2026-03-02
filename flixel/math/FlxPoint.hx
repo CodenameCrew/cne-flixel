@@ -1161,7 +1161,9 @@ class FlxBasePoint implements IFlxPooled
 	/**
 	 * Add this FlxBasePoint to the recycling pool if it's a weak reference (allocated via weak()).
 	 */
-	public function putWeak():Void #if FLX_POINT_POOL if (_weak) put(); #end
+	public function putWeak():Void {
+		#if FLX_POINT_POOL if (_weak) put(); #end
+	}
 
 	/**
 	 * Function to compare this FlxBasePoint to another.
