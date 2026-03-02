@@ -17,27 +17,27 @@ class LogFrontEnd
 	public var redirectTraces(default, set):Bool = false;
 
 	var _standardTraceFunction:(Dynamic, ?PosInfos)->Void;
-
-	public inline function add(data:Dynamic):Void
+	
+	public inline function add(data:Dynamic, ?pos:PosInfos):Void
 	{
-		advanced(data, LogStyle.NORMAL);
+		advanced(data, LogStyle.NORMAL, false, pos);
 	}
-
-	public inline function warn(data:Dynamic):Void
+	
+	public inline function warn(data:Dynamic, ?pos:PosInfos):Void
 	{
-		advanced(data, LogStyle.WARNING, true);
+		advanced(data, LogStyle.WARNING, true, pos);
 	}
-
-	public inline function error(data:Dynamic):Void
+	
+	public inline function error(data:Dynamic, ?pos:PosInfos):Void
 	{
-		advanced(data, LogStyle.ERROR, true);
+		advanced(data, LogStyle.ERROR, true, pos);
 	}
-
-	public inline function notice(data:Dynamic):Void
+	
+	public inline function notice(data:Dynamic, ?pos:PosInfos):Void
 	{
-		advanced(data, LogStyle.NOTICE);
+		advanced(data, LogStyle.NOTICE, false, pos);
 	}
-
+	
 	/**
 	 * Add an advanced log message to the debugger by also specifying a LogStyle. Backend to FlxG.log.add(), FlxG.log.warn(), FlxG.log.error() and FlxG.log.notice().
 	 *
@@ -46,7 +46,7 @@ class LogFrontEnd
 	 * @param   fireOnce  Whether you only want to log the Data in case it hasn't been added already
 	 */
 	@:haxe.warning("-WDeprecated")
-	public function advanced(data:Any, ?style:LogStyle, fireOnce = false):Void
+	public function advanced(data:Any, ?style:LogStyle, fireOnce = false, ?pos:PosInfos):Void
 	{
 		if (style == null)
 			style = LogStyle.NORMAL;
@@ -81,7 +81,7 @@ class LogFrontEnd
 		if (onLogs != null)
 			onLogs(data, style, fireOnce);
 		
-		style.onLog.dispatch(data);
+		style.onLog.dispatch(data, pos);
 		
 		if (style.throwException)
 			throw style.toLogString(arrayData);

@@ -93,7 +93,7 @@ class FlxObject extends FlxBasic
 	 * @since 5.6.0
 	 */
 	public static var defaultMoves:Bool = true;
-
+	
 	/**
 	 * Generic value for "left". Used by `facing`, `allowCollisions`, and `touching`.
 	 * Note: This exists for backwards compatibility, prefer using `FlxDirectionFlags.LEFT` directly.
@@ -971,11 +971,10 @@ class FlxObject extends FlxBasic
 	 * If the group has a LOT of things in it, it might be faster to use `FlxG.overlap()`.
 	 * WARNING: Currently tilemaps do NOT support screen space overlap checks!
 	 *
-	 * @param   objectOrGroup   The object or group being tested.
-	 * @param   inScreenSpace   Whether to take scroll factors into account when checking for overlap.
-	 *                          Default is `false`, or "only compare in world space."
-	 * @param   camera          Specify which game camera you want.
-	 *                          If `null`, it will just grab the first global camera.
+	 * @param   objectOrGroup  The object or group being tested.
+	 * @param   inScreenSpace  Whether to take scroll factors into account when checking for overlap.
+	 *                         Default is `false`, or "only compare in world space."
+	 * @param   camera         The desired "screen" space. If `null`, `getDefaultCamera()` is used
 	 * @return  Whether or not the two objects overlap.
 	 */
 	@:access(flixel.group.FlxTypedGroup)
@@ -1002,9 +1001,8 @@ class FlxObject extends FlxBasic
 		}
 
 		if (camera == null)
-		{
-			camera = FlxG.camera;
-		}
+			camera = getDefaultCamera();
+		
 		var objectScreenPos:FlxPoint = object.getScreenPosition(null, camera);
 		getScreenPosition(_point, camera);
 		return (objectScreenPos.x + object.width > _point.x)
@@ -1026,15 +1024,14 @@ class FlxObject extends FlxBasic
 	 * rather than taking the object's size into account.
 	 * WARNING: Currently tilemaps do NOT support screen space overlap checks!
 	 *
-	 * @param   x               The X position you want to check.
-	 *                          Pretends this object (the caller, not the parameter) is located here.
-	 * @param   y               The Y position you want to check.
-	 *                          Pretends this object (the caller, not the parameter) is located here.
-	 * @param   objectOrGroup   The object or group being tested.
-	 * @param   inScreenSpace   Whether to take scroll factors into account when checking for overlap.
-	 *                          Default is `false`, or "only compare in world space."
-	 * @param   camera          Specify which game camera you want.
-	 *                          If `null`, it will just grab the first global camera.
+	 * @param   x              The X position you want to check.
+	 *                         Pretends this object (the caller, not the parameter) is located here.
+	 * @param   y              The Y position you want to check.
+	 *                         Pretends this object (the caller, not the parameter) is located here.
+	 * @param   objectOrGroup  The object or group being tested.
+	 * @param   inScreenSpace  Whether to take scroll factors into account when checking for overlap.
+	 *                         Default is `false`, or "only compare in world space."
+	 * @param   camera         The desired "screen" space. If `null`, `getDefaultCamera()` is used
 	 * @return  Whether or not the two objects overlap.
 	 */
 	@:access(flixel.group.FlxTypedGroup)
@@ -1063,9 +1060,8 @@ class FlxObject extends FlxBasic
 		}
 
 		if (camera == null)
-		{
-			camera = FlxG.camera;
-		}
+			camera = getDefaultCamera();
+		
 		var objectScreenPos:FlxPoint = object.getScreenPosition(null, camera);
 		getScreenPosition(_point, camera);
 		return (objectScreenPos.x + object.width > _point.x)
@@ -1083,10 +1079,9 @@ class FlxObject extends FlxBasic
 	/**
 	 * Checks to see if a point in 2D world space overlaps this `FlxObject`.
 	 *
-	 * @param   point           The point in world space you want to check.
-	 * @param   inScreenSpace   Whether to take scroll factors into account when checking for overlap.
-	 * @param   camera          Specify which game camera you want.
-	 *                          If `null`, it will just grab the first global camera.
+	 * @param   point          The point in world space you want to check.
+	 * @param   inScreenSpace  Whether to take scroll factors into account when checking for overlap.
+	 * @param   camera         The desired "screen" space. If `null`, `getDefaultCamera()` is used
 	 * @return  Whether or not the point overlaps this object.
 	 */
 	public function overlapsPoint(point:FlxPoint, inScreenSpace = false, ?camera:FlxCamera):Bool
@@ -1097,11 +1092,10 @@ class FlxObject extends FlxBasic
 		}
 
 		if (camera == null)
-		{
-			camera = FlxG.camera;
-		}
-		var xPos:Float = point.x - camera.scroll.x;
-		var yPos:Float = point.y - camera.scroll.y;
+			camera = getDefaultCamera();
+		
+		final xPos:Float = point.x - camera.scroll.x;
+		final yPos:Float = point.y - camera.scroll.y;
 		getScreenPosition(_point, camera);
 		point.putWeak();
 		return (xPos >= _point.x) && (xPos < _point.x + width) && (yPos >= _point.y) && (yPos < _point.y + height);
@@ -1122,7 +1116,7 @@ class FlxObject extends FlxBasic
 	 * Returns the screen position of this object.
 	 *
 	 * @param   result  Optional arg for the returning point
-	 * @param   camera  The desired "screen" coordinate space. If `null`, `FlxG.camera` is used.
+	 * @param   camera  The desired "screen" coordinate space. If `null`, `getDefaultCamera()` is used.
 	 * @return  The screen position of this object.
 	 */
 	public function getScreenPosition(?result:FlxPoint, ?camera:FlxCamera):FlxPoint
@@ -1131,7 +1125,7 @@ class FlxObject extends FlxBasic
 			result = FlxPoint.get();
 
 		if (camera == null)
-			camera = FlxG.camera;
+			camera = getDefaultCamera();
 
 		result.set(x, y);
 		if (pixelPerfectPosition)
@@ -1180,8 +1174,8 @@ class FlxObject extends FlxBasic
 	 * Handy function for reviving game objects.
 	 * Resets their existence flags and position.
 	 *
-	 * @param   x   The new X position of this object.
-	 * @param   y   The new Y position of this object.
+	 * @param   x  The new X position of this object.
+	 * @param   y  The new Y position of this object.
 	 */
 	public function reset(x:Float, y:Float):Void
 	{
@@ -1198,8 +1192,7 @@ class FlxObject extends FlxBasic
 	/**
 	 * Check and see if this object is currently on screen.
 	 *
-	 * @param   camera   Specify which game camera you want.
-	 *                   If `null`, it will just grab the first global camera.
+	 * @param   camera  Specify which game camera you want. If `null`, `getDefaultCamera()` is used
 	 * @return  Whether the object is on screen or not.
 	 */
 	public function isOnScreen(?camera:FlxCamera):Bool
@@ -1208,7 +1201,7 @@ class FlxObject extends FlxBasic
 			return true;
 
 		if (camera == null)
-			camera = FlxG.camera;
+			camera = getDefaultCamera();
 
 		getScreenPosition(_point, camera);
 		return camera.containsPoint(_point, width, height);
@@ -1220,7 +1213,7 @@ class FlxObject extends FlxBasic
 	public function isPixelPerfectRender(?camera:FlxCamera):Bool
 	{
 		if (camera == null)
-			camera = FlxG.camera;
+			camera = getDefaultCamera();
 		return pixelPerfectRender == null ? camera.pixelPerfectRender : pixelPerfectRender;
 	}
 
@@ -1340,14 +1333,14 @@ class FlxObject extends FlxBasic
 		endDrawDebug(camera);
 	}
 
-	function drawDebugBoundingBox(gfx:Graphics, rect:FlxRect, allowCollisions:Int, partial:Bool)
+	function drawDebugBoundingBox(gfx:Graphics, rect:FlxRect, allowCollisions:FlxDirectionFlags, partial:Bool)
 	{
 		// Find the color to use
 		final color = getDebugBoundingBoxColor(allowCollisions);
 		drawDebugBoundingBoxColor(gfx, rect, color);
 	}
 	
-	function getDebugBoundingBoxColor(allowCollisions:Int)
+	function getDebugBoundingBoxColor(allowCollisions:FlxDirectionFlags)
 	{
 		if (debugBoundingBoxColor != null)
 			return debugBoundingBoxColor;

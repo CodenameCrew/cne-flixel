@@ -632,9 +632,25 @@ class FlxFrame implements IFlxDestroyable
 		}
 		else
 		{
-			type = FlxFrameType.REGULAR;
-			offset.add(frameRect.x, frameRect.y);
-			
+			clippedFrame.type = FlxFrameType.REGULAR;
+			clippedFrame.offset.set(frameRect.x, frameRect.y).add(offset);
+
+			var p1 = FlxPoint.weak(frameRect.x, frameRect.y);
+			var p2 = FlxPoint.weak(frameRect.right, frameRect.bottom);
+
+			_matrix.identity();
+
+			if (angle == FlxFrameAngle.ANGLE_NEG_90)
+			{
+				_matrix.rotateByPositive90();
+				_matrix.translate(frame.width, 0);
+			}
+			else if (angle == FlxFrameAngle.ANGLE_90)
+			{
+				_matrix.rotateByNegative90();
+				_matrix.translate(0, frame.height);
+			}
+
 			if (angle != FlxFrameAngle.ANGLE_0)
 			{
 				final p1 = FlxPoint.weak(frameRect.x, frameRect.y);
