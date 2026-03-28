@@ -6,6 +6,7 @@ import openfl.display.BitmapData;
 import openfl.display.DisplayObject;
 import openfl.display.Graphics;
 import openfl.display.Sprite;
+import openfl.display.OpenGLRenderer;
 import openfl.display.TriangleCulling;
 import openfl.display3D.Context3DWrapMode;
 import openfl.display3D.Context3DCompareMode;
@@ -14,6 +15,7 @@ import openfl.filters.ShaderFilter;
 import openfl.geom.ColorTransform;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
+import openfl.Vector;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
@@ -31,7 +33,6 @@ import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxSpriteUtil;
-import openfl.Vector;
 
 using flixel.util.FlxColorTransformUtil;
 
@@ -682,9 +683,27 @@ class FlxCamera extends FlxBasic
 		return pos;
 	}
 
-	@:noCompletion
-	public function startQuadBatch(graphic:FlxGraphic, colored:Bool, hasColorOffsets:Bool = false, ?blend:BlendMode, smooth:Bool = false, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode)
+	// Can't batch complex non-coherent blends, so this is needed to check if its should start a new batch everytime or not
+	inline static function isCoherentBlendMode(blend:BlendMode):Bool
 	{
+		@:privateAccess
+		return switch (blend)
+		{
+			case DARKEN, DIFFERENCE, HARDLIGHT, OVERLAY, COLORDODGE, COLORBURN, SOFTLIGHT, EXCLUSION, HUE, SATURATION, COLOR, LUMINOSITY:
+				//!OpenGLRenderer.__complexBlendsSupported != OpenGLRenderer.__coherentBlendsSupported;
+				OpenGLRenderer.__coherentBlendsSupported;
+			default:
+				true;
+		}
+	}
+
+	@:noCompletion
+	public function startQuadBatch(graphic:FlxGraphic, colored:Bool, hasColorOffsets:Bool = false, ?blend:BlendMode, smooth:Bool = false,
+			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode):FlxDrawQuadsItem
+	{
+		// TODO: catch this error when the dev actually messes up, not in the draw phase
+		//if (graphic.isDestroyed) throw 'Cannot queue ${graphic.key}. This sprite was destroyed.';
+
 		if (blend == null) blend = NORMAL;
 		if (wrapMode == null) wrapMode = CLAMP;
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
@@ -694,7 +713,7 @@ class FlxCamera extends FlxBasic
 			&& _headTiles.graphics == graphic
 			&& _headTiles.colored == colored
 			&& _headTiles.hasColorOffsets == hasColorOffsets
-			&& _headTiles.blend == blend
+			&& (_headTiles.blend == blend && isCoherentBlendMode(blend))
 			&& _headTiles.antialiasing == smooth
 			&& _headTiles.shader == shader
 			&& _headTiles.wrapMode == wrapMode
@@ -727,8 +746,12 @@ class FlxCamera extends FlxBasic
 	}
 
 	@:noCompletion
-	public function startTrianglesBatch(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):FlxDrawTrianglesItem
+	public function startTrianglesBatch(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool,
+			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):FlxDrawTrianglesItem
 	{
+		// TODO: catch this error when the dev actually messes up, not in the draw phase
+		//if (graphic.isDestroyed) throw 'Cannot queue ${graphic.key}. This sprite was destroyed.';
+
 		if (blend == null) blend = NORMAL;
 		if (wrapMode == null) wrapMode = CLAMP;
 		if (depthCompareMode == null) depthCompareMode = ALWAYS;
@@ -738,7 +761,7 @@ class FlxCamera extends FlxBasic
 			&& _headTriangles.graphics == graphic
 			&& _headTriangles.antialiasing == smoothing
 			&& _headTriangles.colored == isColored
-			&& _headTriangles.blend == blend
+			&& (_headTriangles.blend == blend && isCoherentBlendMode(blend))
 			&& _headTriangles.hasColorOffsets == hasColorOffsets
 			&& _headTriangles.shader == shader
 			&& _headTriangles.culling == culling
@@ -856,10 +879,10 @@ class FlxCamera extends FlxBasic
 			}
 
 			#if FLX_RENDER_TRIANGLE
-			var drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
+			final drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
 				wrapMode, depthCompareMode);
 			#else
-			var drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
+			final drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
 				wrapMode, depthCompareMode);
 			#end
 			drawItem.addQuad(frame, matrix, transform);

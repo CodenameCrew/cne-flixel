@@ -24,36 +24,42 @@ uniform vec2 openfl_TextureSize;
 attribute float alpha;
 attribute vec4 colorMultiplier;
 attribute vec4 colorOffset;
-
 uniform bool hasColorTransform;")
 
 	@:glVertexBody("openfl_TextureCoordv = openfl_TextureCoord;
 
-if (hasColorTransform) {
+if (hasColorTransform)
+{
 	openfl_Alphav = openfl_Alpha * colorMultiplier.a;
-	if (openfl_HasColorTransform) {
+	if (openfl_HasColorTransform)
+	{
 		openfl_ColorOffsetv = (openfl_ColorOffset / 255.0 * colorMultiplier) + (colorOffset / 255.0);
 		openfl_ColorMultiplierv = openfl_ColorMultiplier * vec4(colorMultiplier.rgb, 1.0);
 	}
-	else {
+	else
+	{
 		openfl_ColorOffsetv = colorOffset / 255.0;
 		openfl_ColorMultiplierv = vec4(colorMultiplier.rgb, 1.0);
 	}
 }
-else {
+else
+{
 	openfl_Alphav = openfl_Alpha * alpha;
-	if (openfl_HasColorTransform) {
+	if (openfl_HasColorTransform)
+	{
 		openfl_ColorOffsetv = (openfl_ColorOffset + colorOffset) / 255.0;
 		openfl_ColorMultiplierv = openfl_ColorMultiplier;
 	}
-	else {
+	else
+	{
 		openfl_ColorOffsetv = colorOffset / 255.0;
 		openfl_ColorMultiplierv = vec4(1.0);
 	}
 }")
 
 	@:glVertexSource("#pragma header
-void main(void) {
+void main(void)
+{
 	#pragma body
 	gl_Position = openfl_Matrix * openfl_Position;
 }")
@@ -66,22 +72,26 @@ varying vec2 openfl_TextureCoordv;
 uniform bool openfl_HasColorTransform;
 uniform vec2 openfl_TextureSize;
 uniform sampler2D bitmap;
-
 uniform bool hasTransform;
 uniform bool hasColorTransform;
+uniform bool premultiplyAlpha;
 
-vec4 apply_flixel_transform(vec4 color) {
+vec4 apply_flixel_transform(vec4 color)
+{
 	if (!hasTransform) return color;
 	else if (color.a <= 0.0 || openfl_Alphav == 0.0) return vec4(0.0);
 
-	color.rgb /= color.a;
+	// this is just solely for ASTC compressed textures.
+	// ...also in flixel_texture2D, it also converts to linear alpha anyway.
+	if (!premultiplyAlpha) color.rgb /= color.a;
+
 	color = clamp(openfl_ColorOffsetv + (color * openfl_ColorMultiplierv), 0.0, 1.0);
 	return vec4(color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
 }
-
 #define applyFlixelEffects(color) apply_flixel_transform(color)
 
-vec4 flixel_texture2D(sampler2D bitmap, vec2 coord) {
+vec4 flixel_texture2D(sampler2D bitmap, vec2 coord)
+{
 	return apply_flixel_transform(texture2D(bitmap, coord));
 }
 
@@ -107,7 +117,8 @@ vec4 textureCam(sampler2D bitmap, vec2 pos) {
 if (gl_FragColor.a == 0.0) discard;")
 
 	@:glFragmentSource("#pragma header
-void main(void) {
+void main(void)
+{
 	#pragma body
 }")
 	public function new() {

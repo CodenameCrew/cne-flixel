@@ -38,9 +38,9 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	// unused in this fork
-	@:deprecated("verticesPosition is deprecated in cne-flixel")
+	@:deprecated("verticesPosition is deprecated in flixel-funkin")
 	public var verticesPosition:Int = 0;
-	@:deprecated("indicesPosition is deprecated in cne-flixel")
+	@:deprecated("indicesPosition is deprecated in flixel-funkin")
 	public var indicesPosition:Int = 0;
 	@:deprecated("colorsPosition is deprecated")
 	public var colorsPosition:Int = 0;
@@ -223,7 +223,6 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 
 		final shader = shader ?? graphics.shader;
 		bindToShader(camera, shader);
-		//shader.frameRect.value = untyped (uvtData).__array;
 
 		camera.canvas.graphics.drawTriangles(vertices, indices, uvtData, culling);
 		camera.canvas.graphics.endFill();

@@ -102,6 +102,9 @@ class FlxDrawBaseItem<T> {
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored);
 
+		@:privateAccess
+		setParameterValue(shader.premultiplyAlpha, !graphics.bitmap.readable && graphics.bitmap.__texture != null && graphics.bitmap.__texture.__premultiplyAlpha);
+
 		shader.alpha.value = colored ? null : alphas;
 		shader.colorMultiplier.value = colored ? colorMultipliers : null;
 		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
