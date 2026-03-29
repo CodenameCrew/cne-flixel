@@ -761,7 +761,7 @@ enum abstract FlxFrameAngle(Int) from Int to Int
  * `bottom`. This is for optimization reasons, to reduce arithmetic when drawing vertices
  */
 @:forward(put)
-abstract FlxUVRect(FlxRect) from FlxRect to flixel.util.FlxPool.IFlxPooled
+abstract FlxUVRect(FlxRect) from FlxRect to FlxRect
 {
 	public var x(get, set):Float;
 	inline function get_x():Float { return this.x; }
@@ -826,6 +826,11 @@ abstract FlxUVRect(FlxRect) from FlxRect to flixel.util.FlxPool.IFlxPooled
 			LabelValuePair.weak("r", right),
 			LabelValuePair.weak("b", bottom)
 		]);
+	}
+
+	public inline function put()
+	{
+		this.put();
 	}
 	
 	public static function get(l = 0.0, t = 0.0, r = 0.0, b = 0.0)

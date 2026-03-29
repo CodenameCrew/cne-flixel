@@ -219,6 +219,13 @@ class FlxDefines
 		defineInversion(FLX_TRACK_POOLS, FLX_NO_TRACK_POOLS);
 		defineInversion(FLX_DEFAULT_SOUND_EXT, FLX_NO_DEFAULT_SOUND_EXT);
 		// defineInversion(FLX_TRACK_GRAPHICS, FLX_NO_TRACK_GRAPHICS); // special case
+		// defineInversion(FLX_NO_HEALTH, FLX_HEALTH);
+		if (!defined(FLX_NO_HEALTH) && !defined(FLX_HEALTH))
+		{
+			define(FLX_HEALTH_NOT_DEFINED);
+			define(FLX_HEALTH);
+		}
+
 		defineInversion(FLX_NO_GENERIC, FLX_GENERIC);
 	}
 

@@ -764,17 +764,15 @@ class FlxGame extends Sprite
 	{
 		if (FlxG.fixedTimestep)
 		{
-			FlxG.elapsed = FlxG.timeScale * _stepSeconds; // fixed timestep
-			FlxG.rawElapsed = _stepSeconds;
+			FlxG.rawElapsed = 1.0 / FlxG.updateFramerate; // fixed timestep
 		}
 		else
 		{
-			FlxG.rawElapsed = _elapsedMS / 1000; // variable timestep
-			if (FlxG.rawElapsed > FlxG.maxElapsed)
-				FlxG.rawElapsed = FlxG.maxElapsed;
-
-			FlxG.elapsed = FlxG.timeScale * FlxG.rawElapsed;
+			FlxG.rawElapsed = deltaTime / 1000.0; // variable timestep
+			if (FlxG.rawElapsed > FlxG.maxElapsed) FlxG.rawElapsed = FlxG.maxElapsed;
 		}
+
+		FlxG.elapsed = FlxG.timeScale * FlxG.rawElapsed;
 	}
 
 	function updateInput():Void

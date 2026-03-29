@@ -121,7 +121,8 @@ void main(void)
 {
 	#pragma body
 }")
-	public function new() {
+	public function new()
+	{
 		super();
 	}
 
