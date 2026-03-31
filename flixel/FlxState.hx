@@ -120,7 +120,7 @@ class FlxState extends FlxContainer
 		created = true;
 	}
 
-	override public function draw():Void
+	override function draw():Void
 	{
 		if (persistentDraw || subState == null)
 			super.draw();

@@ -218,7 +218,7 @@ class FlxBasic implements IFlxDestroyable
 	 * default draw cameras are returned.
 	 * @since 5.7.0
 	 */
-	public function getCameras()
+	public function getCameras():Array<FlxCamera>
 	{
 		return if (_cameras != null)
 				_cameras;

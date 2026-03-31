@@ -10,7 +10,6 @@ import flixel.addons.system.macros.FlxAddonDefines;
 //#end
 #end
 
-
 using StringTools;
 
 enum UserDefines
@@ -84,7 +83,6 @@ enum HelperDefines
 	FLX_NATIVE_CURSOR;
 	FLX_SOUND_TRAY;
 	FLX_POINTER_INPUT;
-	FLX_POST_PROCESS;
 	FLX_JOYSTICK_API;
 	FLX_GAMEINPUT_API;
 	FLX_ACCELEROMETER;
@@ -147,11 +145,11 @@ class FlxDefines
 		checkOpenFLVersions();
 		#end
 		
-		#if (flixel_addons < version("3.0.2"))
-		abortVersion("Flixel Addons", "3.0.2 or newer", "flixel-addons", (macro null).pos);
+		#if (flixel_addons < version("3.3.0"))
+		abortVersion("Flixel Addons", "3.3.0 or newer", "flixel-addons", (macro null).pos);
 		#end
-		#if (flixel_ui < version("2.4.0"))
-		abortVersion("Flixel UI", "2.4.0 or newer", "flixel-addons", (macro null).pos);
+		#if (flixel_ui < version("2.6.2"))
+		abortVersion("Flixel UI", "2.6.2 or newer", "flixel_ui", (macro null).pos);
 		#end
 	}
 
@@ -234,12 +232,8 @@ class FlxDefines
 		if (!defined(FLX_NO_SOUND_SYSTEM) && !defined(FLX_NO_SOUND_TRAY))
 			define(FLX_SOUND_TRAY);
 
-		#if (lime >= "8.0.0")
 		if (defined(FLX_NO_SOUND_SYSTEM) || defined("flash"))
 			define(FLX_NO_PITCH);
-		#else
-		define(FLX_NO_PITCH);
-		#end
 
 		if (!defined(FLX_NO_PITCH))
 			define(FLX_PITCH);
@@ -258,11 +252,6 @@ class FlxDefines
 
 		if (!defined(FLX_NO_TOUCH) || !defined(FLX_NO_MOUSE))
 			define(FLX_POINTER_INPUT);
-
-		#if (openfl < "4.0.0")
-		if (defined("cpp") || defined("neko"))
-			define(FLX_POST_PROCESS);
-		#end
 
 		if (defined("cpp") && defined("steamwrap"))
 			define(FLX_STEAMWRAP);

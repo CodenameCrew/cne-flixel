@@ -135,10 +135,10 @@ class FlxCamera extends FlxBasic
 	public var targetOffset(default, null):FlxPoint = FlxPoint.get();
 
 	/**
-	 * Used to smoothly track the camera as it follows:
-	 * The percent of the distance to the follow `target` the camera moves per 1/60 sec.
-	 * Values are bounded between `0.0` and `60 / FlxG.updateFramerate` for consistency across framerates.
-	 * The maximum value means no camera easing. A value of `0` means the camera does not move.
+	 * The ratio of the distance to the follow `target` the camera moves per 1/60 sec.
+	 * Valid values range from `0.0` to `1.0`. `1.0` means the camera always snaps to its target
+	 * position. `0.5` means the camera always travels halfway to the target position, `0.0` means
+	 * the camera does not move. Generally, the lower the value, the more smooth.
 	 */
 	public var followEnabled:Bool = true;
 	public var followLerp:Float = 1.0;
@@ -1091,8 +1091,9 @@ class FlxCamera extends FlxBasic
 		this.x = x;
 		this.y = y;
 
-		if (zoom == 0) zoom = defaultZoom;
-
+		if (zoom == 0)
+			zoom = defaultZoom;
+		
 		// Use the game dimensions if width / height are <= 0
 		if (width <= 0) width = FlxG.width;
 		if (height <= 0) height = FlxG.height;
@@ -1306,14 +1307,14 @@ class FlxCamera extends FlxBasic
 	 */
 	public function bindScrollPos(scrollPos:FlxPoint)
 	{
-		var minX:Null<Float> = minScrollX == null ? null : minScrollX - (zoom - 1) * width / (2 * zoom);
-		var maxX:Null<Float> = maxScrollX == null ? null : maxScrollX + (zoom - 1) * width / (2 * zoom);
-		var minY:Null<Float> = minScrollY == null ? null : minScrollY - (zoom - 1) * height / (2 * zoom);
-		var maxY:Null<Float> = maxScrollY == null ? null : maxScrollY + (zoom - 1) * height / (2 * zoom);
+		final minX:Null<Float> = minScrollX == null ? null : minScrollX - viewMarginLeft;
+		final maxX:Null<Float> = maxScrollX == null ? null : maxScrollX - viewMarginRight;
+		final minY:Null<Float> = minScrollY == null ? null : minScrollY - viewMarginTop;
+		final maxY:Null<Float> = maxScrollY == null ? null : maxScrollY - viewMarginBottom;
 
-		// keep point with bounds
-		scrollPos.x = FlxMath.bound(scrollPos.x, minX, (maxX != null) ? maxX - width : null);
-		scrollPos.y = FlxMath.bound(scrollPos.y, minY, (maxY != null) ? maxY - height : null);
+		// keep point within bounds
+		scrollPos.x = FlxMath.bound(scrollPos.x, minX, maxX);
+		scrollPos.y = FlxMath.bound(scrollPos.y, minY, maxY);
 		return scrollPos;
 	}
 
@@ -1328,7 +1329,7 @@ class FlxCamera extends FlxBasic
 		if (deadzone == null)
 		{
 			target.getMidpoint(_point);
-			_point.addPoint(targetOffset);
+			_point.add(targetOffset);
 			_scrollTarget.set(_point.x - width * 0.5, _point.y - height * 0.5);
 		}
 		else
@@ -1834,9 +1835,7 @@ class FlxCamera extends FlxBasic
 
 			final targetGraphics = (graphics == null) ? canvas.graphics : graphics;
 
-			#if (openfl > "8.7.0")
 			targetGraphics.overrideBlendMode(null);
-			#end
 			targetGraphics.beginFill(Color, FxAlpha);
 			// i'm drawing rect with these parameters to avoid light lines at the top and left of the camera,
 			// which could appear while cameras fading
