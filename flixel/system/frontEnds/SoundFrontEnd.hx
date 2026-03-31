@@ -30,7 +30,13 @@ class SoundFrontEnd
 	/**
 	 * Whether or not the game sounds are muted.
 	 */
-	public var muted:Bool = false;
+	public var muted(default, set):Bool = false;
+	
+	public function set_muted(v:Bool):Bool
+	{
+		return muted = #if mobile false #else v #end;
+	}
+
 
 	/**
 	 * Set this hook to get a callback whenever the volume changes.
@@ -74,14 +80,14 @@ class SoundFrontEnd
 	 * volumeUp-, volumeDown- or muteKeys is pressed.
 	 */
 	public var soundTrayEnabled:Bool = true;
-
+	
 	#if FLX_SOUND_TRAY
 	/**
 	 * The sound tray display container.
 	 * A getter for `FlxG.game.soundTray`.
 	 */
 	public var soundTray(get, never):FlxSoundTray;
-
+	
 	inline function get_soundTray()
 	{
 		return FlxG.game.soundTray;
@@ -122,7 +128,7 @@ class SoundFrontEnd
 	/**
 	 * Set up and play a looping background soundtrack.
 	 *
-	 * **Note:** If the `FLX_SOUND_ADD_EXT` flag is enabled, you may omit the file extension
+	 * **Note:** If the `FLX_DEFAULT_SOUND_EXT` flag is enabled, you may omit the file extension
 	 *
 	 * @param   embeddedMusic  The sound file you want to loop in the background.
 	 * @param   volume         How loud the sound should be, from 0 to 1.
@@ -153,7 +159,7 @@ class SoundFrontEnd
 	/**
 	 * Creates a new FlxSound object.
 	 *
-	 * **Note:** If the `FLX_SOUND_ADD_EXT` flag is enabled, you may omit the file extension
+	 * **Note:** If the `FLX_DEFAULT_SOUND_EXT` flag is enabled, you may omit the file extension
 	 *
 	 * @param   embeddedSound   The embedded sound resource you want to play.  To stream, use the optional URL parameter instead.
 	 * @param   volume          How loud to play it (0 to 1).
@@ -253,7 +259,7 @@ class SoundFrontEnd
 	/**
 	 * Plays a sound from an embedded sound. Tries to recycle a cached sound first.
 	 *
-	 * **Note:** If the `FLX_SOUND_ADD_EXT` flag is enabled, you may omit the file extension
+	 * **Note:** If the `FLX_DEFAULT_SOUND_EXT` flag is enabled, you may omit the file extension
 	 *
 	 * @param   embeddedSound  The embedded sound resource you want to play.
 	 * @param   volume         How loud to play it (0 to 1).
@@ -398,11 +404,42 @@ class SoundFrontEnd
 		#if FLX_SOUND_TRAY
 		if (FlxG.game.soundTray != null && soundTrayEnabled)
 		{
-			FlxG.game.soundTray.show(up);
+			if (up)
+				FlxG.game.soundTray.showIncrement();
+			else
+				FlxG.game.soundTray.showDecrement();
 		}
 		#end
 	}
-
+	
+	/**
+	 * Takes the volume scale used by Flixel fields and gives the final transformed volume that is
+	 * actually used to play the sound. To reverse this operation, use `reverseSoundCurve`. This
+	 * field is `dynamic` and can be overwritten. 
+	 */
+	public dynamic function applySoundCurve(volume:Float)
+	{
+		return volume;
+		
+		// Example of linear to logarithmic sound curve:
+		// final clampedVolume = Math.max(0, Math.min(1, volume));
+		// return Math.exp(Math.log(0.001) * (1 - clampedVolume));
+	}
+	
+	/**
+	 * Takes a transformed volume and returns the corresponding volume scale used by Flixel fields.
+	 * Used to reverse the operation of `applySoundCurve`. This field is `dynamic` and can be
+	 * set to a custom function.
+	 */
+	public dynamic function reverseSoundCurve(curvedVolume:Float)
+	{
+		return curvedVolume;
+		
+		// Example of logarithmic to linear sound curve:
+		// final clampedVolume = Math.max(minValue, Math.min(1, x));
+		// return 1 - (Math.log(clampedVolume) / Math.log(0.001));
+	}
+	
 	function new()
 	{
 		#if FLX_SAVE
@@ -494,16 +531,17 @@ class SoundFrontEnd
 	@:haxe.warning("-WDeprecated")
 	function set_volume(Volume:Float):Float
 	{
-		Volume = FlxMath.bound(Volume, 0, 1);
+		#if mobile Volume = 1; #end
+		volume = FlxMath.bound(Volume, 0, 1);
 
 		if (volumeHandler != null)
 		{
-			volumeHandler(muted ? 0 : Volume);
+			volumeHandler(muted ? 0 : volume);
 		}
 
-		onVolumeChange.dispatch(muted ? 0 : Volume);
+		onVolumeChange.dispatch(muted ? 0 : volume);
 
-		return volume = Volume;
+		return volume;
 	}
 }
 #end

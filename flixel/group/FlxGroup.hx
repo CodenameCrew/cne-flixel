@@ -127,11 +127,6 @@ class FlxTypedGroup<T:FlxBasic> extends FlxBasic
 	 */
 	override public function destroy():Void
 	{
-		super.destroy();
-		
-		FlxDestroyUtil.destroy(_memberAdded);
-		FlxDestroyUtil.destroy(_memberRemoved);
-		
 		if (members != null)
 		{
 			/* Note: basic.destroy() will remove it from it's container, which may be this group.
@@ -147,6 +142,11 @@ class FlxTypedGroup<T:FlxBasic> extends FlxBasic
 			
 			members = null;
 		}
+		
+		FlxDestroyUtil.destroy(_memberAdded);
+		FlxDestroyUtil.destroy(_memberRemoved);
+
+		super.destroy();
 	}
 
 	/**

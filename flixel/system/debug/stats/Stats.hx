@@ -43,9 +43,9 @@ class Stats extends Window
 	var _leftTextField:TextField;
 	var _rightTextField:TextField;
 
-	var _itvTime:Int = 0;
+	var _itvTime:Float = 0;
 	var _frameCount:Int;
-	var _currentTime:Int;
+	var _currentTime:Float;
 
 	var fpsGraph:StatsGraph;
 	var memoryGraph:StatsGraph;
@@ -55,17 +55,17 @@ class Stats extends Window
 	var flashPlayerFramerate:Float = 0;
 	var visibleCount:Int = 0;
 	var activeCount:Int = 0;
-	var updateTime:Int = 0;
-	var drawTime:Int = 0;
+	var updateTime:Float = 0;
+	var drawTime:Float = 0;
 	var drawCallsCount:Int = 0;
 
-	var _lastTime:Int = 0;
-	var _updateTimer:Int = 0;
+	var _lastTime:Float = 0;
+	var _updateTimer:Float = 0;
 
-	var _update:Array<Int> = [];
+	var _update:Array<Float> = [];
 	var _updateMarker:Int = 0;
 
-	var _draw:Array<Int> = [];
+	var _draw:Array<Float> = [];
 	var _drawMarker:Int = 0;
 
 	var _drawCalls:Array<Int> = [];
@@ -220,9 +220,9 @@ class Stats extends Window
 		{
 			return;
 		}
-		var time:Int = _currentTime = FlxG.game.ticks;
+		var time:Float = _currentTime = FlxG.game.ticks;
 
-		var elapsed:Int = time - _lastTime;
+		var elapsed:Float = time - _lastTime;
 
 		if (elapsed > UPDATE_DELAY)
 		{
@@ -335,7 +335,7 @@ class Stats extends Window
 	 *
 	 * @param 	Time	How long this update took.
 	 */
-	public function flixelUpdate(Time:Int):Void
+	public function flixelUpdate(Time:Float):Void
 	{
 		if (_paused)
 			return;
@@ -347,7 +347,7 @@ class Stats extends Window
 	 *
 	 * @param	Time	How long this render took.
 	 */
-	public function flixelDraw(Time:Int):Void
+	public function flixelDraw(Time:Float):Void
 	{
 		if (_paused)
 			return;

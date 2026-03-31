@@ -46,6 +46,9 @@ import flixel.input.android.FlxAndroidKeys;
 #if FLX_ACCELEROMETER
 import flixel.input.FlxAccelerometer;
 #end
+#if FLX_GYROSCOPE
+import flixel.input.FlxGyroscope;
+#end
 #if FLX_POINTER_INPUT
 import flixel.input.FlxSwipe;
 #end
@@ -66,8 +69,9 @@ class FlxG
 	public static var autoPause:Bool = true;
 
 	/**
-	 * WARNING: Changing this can lead to issues with physics and the recording system. Setting this to
-	 * `false` might lead to smoother animations (even at lower fps) at the cost of physics accuracy.
+	 * WARNING: Changing this can lead to issues with physics and the recording system. Setting this to `false` might lead to smoother animations (even at lower fps) at the cost of physics accuracy.
+	 * 
+	 * UPDATE: The new mainloop inside lime should no longer require this and so rn it does nothing.
 	 */
 	public static var fixedTimestep:Bool = true;
 
@@ -75,7 +79,7 @@ class FlxG
 	 * How fast or slow time should pass in the game; default is `1.0`.
 	 */
 	public static var timeScale:Float = 1.0;
-	
+
 	/**
 	 * How fast or slow animations should pass in the game; default is `1.0`.
 	 * @since 5.5.0
@@ -260,6 +264,13 @@ class FlxG
 	public static var accelerometer(default, null):FlxAccelerometer;
 	#end
 
+	#if FLX_GYROSCOPE
+	/**
+	 * Provides access to the accelerometer data of mobile devices as `pitch`/`roll`/`yaw` values.
+	 */
+	public static var gyroscope(default, null):FlxGyroscope;
+	#end
+
 	#if js
 	/**
 	 * Has some HTML5-specific things like browser detection, browser dimensions etc...
@@ -343,7 +354,7 @@ class FlxG
 	 * @since 5.9.0
 	 */
 	public static var assets(default, null):AssetFrontEnd = new AssetFrontEnd();
-	
+
 	/**
 	 * Resizes the game within the window by reapplying the current scale mode.
 	 */
@@ -553,9 +564,13 @@ class FlxG
 	 */
 	public static inline function openURL(url:String, target = "_blank"):Void
 	{
-		// if the url does not already start with a protocol, add it.
-		if (!~/^.\w+?:\/*/.match(url))
-			url = "https://" + url;
+		// Ensure you can't open protocols such as steam://, file://, etc
+		var protocol:Array<String> = url.split("://");
+		if (protocol.length == 1)
+			url = 'https://${url}';
+		else if (protocol[0] != 'http' && protocol[0] != 'https')
+			throw "openURL can only open http and https links.";
+
 		Lib.getURL(new URLRequest(url), target);
 	}
 
@@ -569,7 +584,7 @@ class FlxG
 			width = -width;
 		if (height < 0)
 			height = -height;
-		
+
 		FlxG.game = game;
 		FlxG.width = width;
 		FlxG.height = height;
@@ -608,6 +623,10 @@ class FlxG
 
 		#if FLX_ACCELEROMETER
 		accelerometer = new FlxAccelerometer();
+		#end
+
+		#if FLX_GYROSCOPE
+		gyroscope = new FlxGyroscope();
 		#end
 
 		#if FLX_SAVE
@@ -678,7 +697,6 @@ class FlxG
 		sound.destroy(true);
 		#end
 		autoPause = true;
-		fixedTimestep = true;
 		timeScale = 1.0;
 		animationTimeScale = 1.0;
 		elapsed = 0;
@@ -703,7 +721,7 @@ class FlxG
 			mouse = inputs.addUniqueType(newMouse);
 			return mouse;
 		}
-		
+
 		// replace existing mouse
 		final oldMouse:FlxMouse = mouse;
 		final result:FlxMouse = inputs.replace(oldMouse, newMouse, true);
@@ -712,7 +730,7 @@ class FlxG
 			mouse = result;
 			return newMouse;
 		}
-		
+
 		return oldMouse;
 	}
 	#end
@@ -724,12 +742,6 @@ class FlxG
 
 		updateFramerate = value;
 
-		game._stepMS = Math.abs(1000 / value);
-		game._stepSeconds = game._stepMS / 1000;
-
-		if (game._maxAccumulation < game._stepMS)
-			game._maxAccumulation = game._stepMS;
-
 		return value;
 	}
 
@@ -738,15 +750,10 @@ class FlxG
 		if (value > updateFramerate)
 			log.warn("FlxG.drawFramerate: the update framerate shouldn't be smaller than the draw framerate," + " since it can stop your game from updating.");
 
-		drawFramerate = Std.int(Math.abs(value));
+		drawFramerate = value;
 
 		if (game.stage != null)
 			game.stage.frameRate = drawFramerate;
-
-		game._maxAccumulation = 2000 / drawFramerate - 1;
-
-		if (game._maxAccumulation < game._stepMS)
-			game._maxAccumulation = game._stepMS;
 
 		return value;
 	}

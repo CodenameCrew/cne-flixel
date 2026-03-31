@@ -286,7 +286,7 @@ class FlxInputText extends FlxText implements IFlxInputText
 	/**
 	 * Stores the last time that this text field was pressed on, which helps to check for double-presses.
 	 */
-	var _lastPressTime:Int = 0;
+	var _lastPressTime:Float = 0;
 	
 	/**
 	 * Timer for the text field to scroll vertically when dragging over it.

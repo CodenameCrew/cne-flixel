@@ -30,7 +30,6 @@ class FlxSplash extends FlxState
 	var _functions:Array<Void->Void>;
 	var _curPart:Int = 0;
 	var _cachedBgColor:FlxColor;
-	var _cachedTimestep:Bool;
 	var _cachedAutoPause:Bool;
 	
 	var nextState:NextState;
@@ -45,10 +44,6 @@ class FlxSplash extends FlxState
 	{
 		_cachedBgColor = FlxG.cameras.bgColor;
 		FlxG.cameras.bgColor = FlxColor.BLACK;
-
-		// This is required for sound and animation to synch up properly
-		_cachedTimestep = FlxG.fixedTimestep;
-		FlxG.fixedTimestep = false;
 
 		_cachedAutoPause = FlxG.autoPause;
 		FlxG.autoPause = false;
@@ -204,7 +199,6 @@ class FlxSplash extends FlxState
 	override function startOutro(onOutroComplete:() -> Void)
 	{
 		FlxG.cameras.bgColor = _cachedBgColor;
-		FlxG.fixedTimestep = _cachedTimestep;
 		FlxG.autoPause = _cachedAutoPause;
 		#if FLX_KEYBOARD
 		FlxG.keys.enabled = true;

@@ -84,7 +84,11 @@ class Tracker extends Watch
 
 			addProfile(new TrackerProfile(FlxG, [
 				"width", "height", "worldBounds.x", "worldBounds.y", "worldBounds.width", "worldBounds.height", "worldDivisions", "updateFramerate",
-				"drawFramerate", "elapsed", "maxElapsed", "autoPause", "fixedTimestep", "timeScale"
+				"drawFramerate",
+				"elapsed",
+				"maxElapsed",
+				"autoPause",
+				"timeScale"
 			]));
 
 			addProfile(new TrackerProfile(FlxBasePoint, ["x", "y"]));

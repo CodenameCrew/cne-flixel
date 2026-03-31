@@ -1,5 +1,6 @@
 package flixel.input.gamepad;
 
+import flixel.util.FlxColor;
 import flixel.input.FlxInput.FlxInputState;
 import flixel.input.gamepad.FlxGamepadMappedInput;
 import flixel.input.gamepad.lists.FlxGamepadAnalogList;
@@ -892,6 +893,34 @@ class FlxGamepad implements IFlxDestroyable
 	public function getMappedInput(id:FlxGamepadInputID):FlxGamepadMappedInput
 	{
 		return mapping.getMappedInput(id);
+	}
+
+	/**
+	 * Start a rumble effect.
+	 *
+	 * @param	lowFrequency  The intensity of the low frequency (left) rumble motor
+	 * @param	highFrequency The intensity of the high frequency (right) rumble motor
+	 * @param	duration      The length of the rumble effect in milliseconds
+	 */
+	public function rumble(lowFrequency:Float, highFrequency:Float, duration:Int):Void
+	{
+		#if FLX_GAMEINPUT_API
+		if (_device != null)
+			_device.rumble(lowFrequency, highFrequency, duration);
+		#end
+	}
+	
+	/**
+	 * Update the LED color.
+	 * 
+	 * @param color The intensity of the color.
+	 */
+	public function setLED(color:FlxColor):Void
+	{
+		#if FLX_GAMEINPUT_API
+		if (_device != null)
+			_device.setLED(color.red, color.green, color.blue);
+		#end
 	}
 
 	public function toString():String

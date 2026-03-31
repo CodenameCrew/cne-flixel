@@ -58,7 +58,7 @@ class FlxState extends FlxContainer
 	 * The natural background color the cameras default to. In `AARRGGBB` format.
 	 */
 	public var bgColor(get, set):FlxColor;
-	
+
 	/**
 	 * The specific argument that was passed into `switchState` or `FlxGame.new`
 	 */
@@ -103,12 +103,12 @@ class FlxState extends FlxContainer
 
 	@:noCompletion
 	var _subStateClosed:FlxTypedSignal<FlxSubState->Void>;
-	
+
 	public function new ()
 	{
 		super(0);
 	}
-	
+
 	/**
 	 * This function is called after the game engine successfully switches states.
 	 * Override this function, NOT the constructor, to initialize or set up your game state.
@@ -206,7 +206,7 @@ class FlxState extends FlxContainer
 		};
 		FlxDestroyUtil.destroy(_subStateOpened);
 		FlxDestroyUtil.destroy(_subStateClosed);
-		
+
 		if (subState != null)
 		{
 			subState.destroy();
@@ -230,9 +230,9 @@ class FlxState extends FlxContainer
 	/**
 	 * Called from `FlxG.switchState()`, when `onOutroComplete` is called, the actual state
 	 * switching will happen.
-	 * 
+	 *
 	 * Note: Calling `super.startOutro(onOutroComplete)` will call `onOutroComplete`.
-	 * 
+	 *
 	 * @param   onOutroComplete  Called when the outro is complete.
 	 * @since 5.3.0
 	 */
