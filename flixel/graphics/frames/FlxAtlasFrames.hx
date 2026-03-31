@@ -438,7 +438,7 @@ class FlxAtlasFrames extends FlxFramesCollection
 	}
 	
 	/**
-	 * Adds all ofthe frames from the specified collection
+	 * Adds all of the frames from the specified collection
 	 * 
 	 * @param   collection     The frames to add. Note: calling destroy() on this collection
 	 *                         after it has been added can cause crashes.

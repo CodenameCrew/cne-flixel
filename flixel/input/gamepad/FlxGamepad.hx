@@ -826,7 +826,7 @@ class FlxGamepad implements IFlxDestroyable
 		{
 			case LOGITECH: new LogitechMapping(attachment);
 			case OUYA: new OUYAMapping(attachment);
-			case PS4: new PS4Mapping(attachment);
+			case PS4 | PS5: new PS4Mapping(attachment);
 			case PSVITA: new PSVitaMapping(attachment);
 			case XINPUT: new XInputMapping(attachment);
 			case MAYFLASH_WII_REMOTE: new MayflashWiiRemoteMapping(attachment);
@@ -924,6 +924,7 @@ enum FlxGamepadModel
 	LOGITECH;
 	OUYA;
 	PS4;
+	PS5;
 	PSVITA;
 	XINPUT;
 	MAYFLASH_WII_REMOTE;
