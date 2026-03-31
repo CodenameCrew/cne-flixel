@@ -15,15 +15,15 @@ class ConsoleHistory
 		#if FLX_SAVE
 		if (FlxDebugger.save.isBound)
 		{
-			if (save.data.history != null)
+			if (FlxDebugger.save.data.history != null)
 			{
-				commands = save.data.history;
+				commands = FlxDebugger.save.data.history;
 				index = commands.length;
 			}
 			else
 			{
 				commands = [];
-				save.data.history = commands;
+				FlxDebugger.save.data.history = commands;
 			}
 		}
 		else

@@ -1041,13 +1041,15 @@ class FlxBasePoint implements IFlxPooled
 
 	public static var EPSILON_LENGTH:Float = FlxPoint.EPSILON * FlxMath.SQUARE_ROOT_OF_TWO;
 
+	#if FLX_POINT_POOL
+	static var pool:FlxPool<FlxBasePoint> = new FlxPool(FlxBasePoint.new.bind(0, 0));
+	#end
+
 	static var _point1 = new FlxPoint();
 
 	// UNUSED
 	static var _point2 = new FlxPoint();
 	static var _point3 = new FlxPoint();
-
-	public static var EPSILON_LENGTH:Float = FlxPoint.EPSILON * FlxMath.SQUARE_ROOT_OF_TWO;
 
 	/**
 	 * Recycle or create a new FlxBasePoint.

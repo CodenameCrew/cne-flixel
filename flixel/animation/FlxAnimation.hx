@@ -118,14 +118,6 @@ class FlxAnimation extends FlxBaseAnimation
 	 */
 	var _frameFinishedEndTimer:Float = 0;
 
-	/**
-	 * How fast or slow time should pass for this animation.
-	 *
-	 * Similar to `FlxAnimationController`'s `timeScale`, but won't effect other animations.
-	 * @since 5.4.1
-	 */
-	public var timeScale:Float = 1.0;
-
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onPlay:FlxTypedSignal<String->Bool->Bool->Int->Void> = new FlxTypedSignal();

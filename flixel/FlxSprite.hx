@@ -21,6 +21,7 @@ import flixel.util.FlxDirectionFlags;
 import flixel.FlxTypes;
 import openfl.display.BitmapData;
 import openfl.display.BlendMode;
+import openfl.display3D.Context3DWrapMode;
 import openfl.geom.ColorTransform;
 import openfl.geom.Point;
 import openfl.geom.Rectangle;
@@ -300,6 +301,11 @@ class FlxSprite extends FlxObject
 	 * Set to `null` to discard graphic frame clipping.
 	 */
 	public var clipRect(default, set):FlxRect;
+
+    /**
+     * How the graphic behaves when the coordinates bypass the edge of the image.
+     */
+    public var wrapMode:Context3DWrapMode;
 
 	/**
 	 * Clipping rectangle for this sprite.
@@ -936,7 +942,7 @@ class FlxSprite extends FlxObject
 			_point.floor();
 
 		_point.copyToFlash(_flashPoint);
-		camera.copyPixels(_frame, framePixels, _flashRect, _flashPoint, colorTransform, blend, antialiasing);
+		camera.copyPixels(_frame, framePixels, _flashRect, _flashPoint, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 	}
 
 	@:noCompletion
@@ -981,9 +987,9 @@ class FlxSprite extends FlxObject
 		doAdditionalMatrixStuff(_matrix, camera);
 
 		if (layer != null)
-			layer.drawPixels(this, camera, _frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
+			layer.drawPixels(this, camera, _frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 		else
-			camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
+			camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 	}
 
 	/**

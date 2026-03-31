@@ -1,11 +1,13 @@
 package flixel.system.macros;
 
 import haxe.io.Path;
+#if macro
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr.Position;
-#if (flixel_addons >= "3.2.2")
+//#if (flixel_addons >= "3.2.2")
 import flixel.addons.system.macros.FlxAddonDefines;
+//#end
 #end
 
 
@@ -114,6 +116,7 @@ enum HelperDefines
 
 class FlxDefines
 {
+	#if macro
 	public static function run()
 	{
 		#if !display
@@ -308,6 +311,8 @@ class FlxDefines
 		}
 		else // define boolean inversion
 			define(FLX_STANDARD_ASSETS_DIRECTORY);
+
+		define(FLX_CNE_FORK);
 	}
 
 	static function defineInversion(userDefine:UserDefines, invertedDefine:HelperDefines)
@@ -354,4 +359,5 @@ class FlxDefines
 	{
 		Context.fatalError(message, pos);
 	}
+	#end
 }

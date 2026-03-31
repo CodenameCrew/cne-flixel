@@ -338,7 +338,7 @@ class FlxGraphic implements IFlxDestroyable
 	/**
 	 * Usage counter for this `FlxGraphic` object.
 	 */
-	public var useCount(default, null):Int = 0;
+	public var useCount(default, set):Int = 0;
 
 	/**
 	 * `FlxImageFrame` object for the whole bitmap.
@@ -590,14 +590,15 @@ class FlxGraphic implements IFlxDestroyable
 		return shader == null;
 	}
 
-	inline function get_isDestroyed()
-	{
-		return shader == null;
-	}
-
 	inline function get_canBeDumped():Bool
 	{
 		return assetsClass != null || assetsKey != null;
+	}
+
+	inline function set_useCount(v:Int):Int
+	{
+		if (useCount > (useCount = v)) checkUseCount();
+		return v;
 	}
 	
 	public function incrementUseCount()

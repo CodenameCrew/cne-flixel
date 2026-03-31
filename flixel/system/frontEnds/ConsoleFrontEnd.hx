@@ -107,19 +107,6 @@ class ConsoleFrontEnd
 	 * @param   c  The class to remove.
 	 * @since 5.4.0
 	 */
-	public inline function removeClass(c:Class<Dynamic>):Void
-	{
-		#if FLX_DEBUG
-		FlxG.game.debugger.console.removeClass(c);
-		#end
-	}
-
-	/**
-	 * Removes a class from the command registry.
-	 *
-	 * @param   c  The class to remove.
-	 * @since 5.4.0
-	 */
 	public inline function removeClass(c:Class<Dynamic>)
 	{
 		#if FLX_DEBUG
