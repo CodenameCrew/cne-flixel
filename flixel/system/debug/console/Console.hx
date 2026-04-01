@@ -1,15 +1,14 @@
 package flixel.system.debug.console;
 
 #if FLX_DEBUG
-import openfl.text.TextField;
-import openfl.text.TextFormat;
 import flixel.FlxG;
 import flixel.FlxObject;
-import flixel.system.debug.FlxDebugger.GraphicConsole;
-import flixel.system.debug.completion.CompletionList;
 import flixel.system.debug.completion.CompletionHandler;
+import flixel.system.debug.completion.CompletionList;
 import flixel.util.FlxStringUtil;
-#if (!next && sys)
+import openfl.text.TextField;
+import openfl.text.TextFormat;
+#if sys
 import openfl.events.MouseEvent;
 #end
 #if hscript
@@ -58,7 +57,7 @@ class Console extends Window
 	 */
 	var input:TextField;
 
-	#if (!next && sys)
+	#if sys
 	var inputMouseDown:Bool = false;
 	var stageMouseDown:Bool = false;
 	#end
@@ -72,7 +71,7 @@ class Console extends Window
 	 */
 	public function new(completionList:CompletionList)
 	{
-		super("Console", new GraphicConsole(0, 0), 0, 0, false);
+		super("Console", Icon.console, 0, 0, false);
 		this.completionList = completionList;
 		completionList.setY(y + Window.HEADER_HEIGHT);
 
@@ -123,7 +122,7 @@ class Console extends Window
 		#end
 		#end
 
-		#if (!next && sys) // workaround for broken TextField focus on native
+		#if sys // workaround for broken TextField focus on native
 		input.addEventListener(MouseEvent.MOUSE_DOWN, function(_)
 		{
 			inputMouseDown = true;
@@ -135,7 +134,7 @@ class Console extends Window
 		#end
 	}
 
-	#if (!next && sys)
+	#if sys
 	@:access(flixel.FlxGame.onFocus)
 	override public function update()
 	{
@@ -218,6 +217,24 @@ class Console extends Window
 				if (!history.isEmpty)
 					setText(history.getPreviousCommand());
 
+			#if (html5 && FLX_KEYBOARD)
+			// FlxKeyboard.preventDefaultKeys adds "preventDefault" on HTML5
+			// so it ends up not fully propegating our inputs to the stage/event listeners
+			// we do this small work around so we don't need to mess around with lime/openfl events
+			// todo: support the modifier keys
+			case Keyboard.RIGHT:
+				if (FlxG.keys.preventDefaultKeys.contains(Keyboard.RIGHT))
+				{
+					@:privateAccess
+					input.window_onKeyDown(RIGHT, 0);
+				}
+			case Keyboard.LEFT:
+				if (FlxG.keys.preventDefaultKeys.contains(Keyboard.LEFT))
+				{
+					@:privateAccess
+					input.window_onKeyDown(LEFT, 0);
+				}
+			#end
 			case Keyboard.DOWN:
 				if (!history.isEmpty)
 					setText(history.getNextCommand());
@@ -294,9 +311,9 @@ class Console extends Window
 	/**
 	 * Register a new function to use in any command.
 	 *
-	 * @param 	FunctionAlias	The name with which you want to access the function.
-	 * @param 	Function		The function to register.
-	 * @param 	HelpText		An optional string to trace to the console using the "help" command.
+	 * @param   alias     The name with which you want to access the function.
+	 * @param   func      The function to register.
+	 * @param   helpText  An optional string to trace to the console using the "help" command.
 	 */
 	public function registerFunction(alias:String, func:Dynamic, ?helpText:String)
 	{
@@ -312,8 +329,8 @@ class Console extends Window
 	/**
 	 * Register a new object to use in any command.
 	 *
-	 * @param 	ObjectAlias		The name with which you want to access the object.
-	 * @param 	AnyObject		The object to register.
+	 * @param   alias   The name with which you want to access the object.
+	 * @param   object  The object to register.
 	 */
 	public function registerObject(alias:String, object:Dynamic)
 	{
@@ -387,11 +404,11 @@ class Console extends Window
 	/**
 	 * Register a new class to use in any command.
 	 *
-	 * @param	cl	The class to register.
+	 * @param   c  The class to register.
 	 */
-	public inline function registerClass(cl:Class<Dynamic>)
+	public inline function registerClass(c:Class<Dynamic>)
 	{
-		registerObject(FlxStringUtil.getClassName(cl, true), cl);
+		registerObject(FlxStringUtil.getClassName(c, true), c);
 	}
 
 	/**
@@ -408,7 +425,7 @@ class Console extends Window
 	/**
 	 * Register a new enum to use in any command.
 	 *
-	 * @param	e	The enum to register.
+	 * @param   e  The enum to register.
 	 * @since 4.4.0
 	 */
 	public inline function registerEnum(e:Enum<Dynamic>)

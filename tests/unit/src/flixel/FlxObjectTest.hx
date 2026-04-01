@@ -1,14 +1,15 @@
 package flixel;
 
-import openfl.display.BitmapData;
+import flixel.FlxObject;
 import flixel.graphics.FlxGraphic;
-import flixel.math.FlxPoint;
 import flixel.math.FlxMath;
+import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxDirectionFlags;
-import massive.munit.Assert;
 import haxe.PosInfos;
+import massive.munit.Assert;
+import openfl.display.BitmapData;
 
 class FlxObjectTest extends FlxTest
 {
@@ -77,7 +78,204 @@ class FlxObjectTest extends FlxTest
 		step(60);
 		Assert.isFalse(FlxG.overlap(object1, object2));
 	}
-
+	
+	@Test
+	function testSeparateX():Void
+	{
+		final object1 = new FlxObject(5, 0, 10, 10);
+		object1.last.x = 10;
+		final object2 = new FlxObject(0, 0, 10, 10);
+		object2.last.x = -5;
+		
+		Assert.areEqual(-5, FlxObject.computeOverlapX(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		Assert.isTrue(FlxG.overlap(object1, object2));
+		
+		Assert.isTrue(FlxObject.separateX(object1, object2));
+		
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		Assert.isFalse(FlxG.overlap(object1, object2));
+		Assert.isTrue(object1.x > object2.x);
+	}
+	
+	@Test
+	function testSeparateY():Void
+	{
+		final object1 = new FlxObject(0, 5, 10, 10);
+		object1.last.y = 10;
+		final object2 = new FlxObject(0, 0, 10, 10);
+		object2.last.y = -5;
+		
+		Assert.areEqual(-5, FlxObject.computeOverlapY(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		
+		Assert.isTrue(FlxObject.separateY(object1, object2));
+		
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		Assert.isFalse(FlxG.overlap(object1, object2));
+		Assert.isTrue(object1.y > object2.y);
+	}
+	
+	/** Object moving down onto platform moving right */
+	@Test
+	function testImmovDragY():Void
+	{
+		final object1 = new FlxObject(5, 0, 10, 10);
+		object1.y = 5;
+		object1.collisionXDrag = IMMOVABLE;
+		final object2 = new FlxObject(0, 10, 10, 10);
+		object2.immovable = true;
+		object2.x = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should move right with object2
+		Assert.areEqual(10, object1.x);
+	}
+	
+	
+	/** Object moving right onto object moving down */
+	@Test
+	function testImmovDragX():Void
+	{
+		final object1 = new FlxObject(0, 5, 10, 10);
+		object1.x = 5;
+		object1.collisionYDrag = IMMOVABLE;
+		final object2 = new FlxObject(10, 0, 10, 10);
+		object2.immovable = true;
+		object2.y = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should move down with object2
+		Assert.areEqual(10, object1.y);
+	}
+	
+	/** Object moving down onto platform moving right */
+	@Test
+	function testMovingDragY():Void
+	{
+		final object1 = new FlxObject(5, 0, 10, 10);
+		object1.y = 5;
+		object1.collisionXDrag = ALWAYS;
+		final object2 = new FlxObject(0, 10, 10, 10);
+		object2.x = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should move right with object2
+		Assert.areEqual(10, object1.x);
+	}
+	
+	/** Object moving right onto object moving down */
+	@Test
+	function testMovingDragX():Void
+	{
+		final object1 = new FlxObject(0, 5, 10, 10);
+		object1.x = 5;
+		object1.collisionYDrag = ALWAYS;
+		final object2 = new FlxObject(10, 0, 10, 10);
+		object2.y = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should move down with object2
+		Assert.areEqual(10, object1.y);
+	}
+	
+	@Test
+	function testMovingNoDragY():Void
+	{
+		final object1 = new FlxObject(5, 0, 10, 10);
+		object1.y = 5;
+		object1.collisionXDrag = NEVER;
+		final object2 = new FlxObject(0, 10, 10, 10);
+		object2.x = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should NOT move right with object2
+		Assert.areEqual(5, object1.x);
+	}
+	
+	@Test
+	function testMovingNoDragX():Void
+	{
+		final object1 = new FlxObject(0, 5, 10, 10);
+		object1.x = 5;
+		object1.collisionYDrag = NEVER;
+		final object2 = new FlxObject(10, 0, 10, 10);
+		object2.y = 5;
+		
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// object1 should NOT move down with object2
+		Assert.areEqual(5, object1.y);
+	}
+	
+	@Ignore("Reverted #3418 as it breaks moving platforms")
+	@Test
+	function testSeparateOnBothAxisNewlyOverlapping():Void
+	{
+		final object1 = new FlxObject(0, 0, 10, 10);
+		final object2 = new FlxObject(11, 11, 10, 10);
+		object2.immovable = true;
+		Assert.isFalse(FlxObject.separate(object1, object2));
+		
+		object1.setPosition(5, 5);
+		
+		// FlxObject.separate(object1, object2);
+		// Assert.areEqual(5, FlxObject.computeOverlapX(object1, object2));
+		// Assert.areEqual(5, FlxObject.computeOverlapY(object1, object2));
+		Assert.isTrue(FlxObject.separate(object1, object2));
+		// X-axis resolves first and no collision
+		Assert.areEqual(5, object1.x);
+		// Y-axis resolves second and is stopped by collision
+		Assert.areEqual(0, object1.y);
+	}
+	
+	@Test
+	function testSeparateXFromOpposite():Void
+	{
+		/*
+		 * NOTE: An odd y value on either may result in a rounding error where the second
+		 * computeOverlapY is 0 but FlxG.overlap returns true
+		 */
+		final object1 = new FlxObject(20, 0, 10, 10);
+		object1.last.x = object1.x - 30;
+		final object2 = new FlxObject(0, 0, 10, 10);
+		object2.last.x = object2.x + 30;
+		
+		Assert.areEqual(30, FlxObject.computeOverlapX(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		
+		Assert.isTrue(FlxObject.separateX(object1, object2));
+		
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		Assert.isFalse(FlxG.overlap(object1, object2));
+		Assert.isTrue(object1.x < object2.x);
+	}
+	
+	@Test
+	function testSeparateYFromOpposite():Void
+	{
+		/*
+		 * NOTE: An odd y value on either may result in a rounding error where the second
+		 * computeOverlapY is 0 but FlxG.overlap returns true
+		 */
+		final object1 = new FlxObject(0, 20, 10, 10);
+		object1.last.y = object1.y - 30;
+		final object2 = new FlxObject(0, 0, 10, 10);
+		object2.last.y = object2.y + 30;
+		
+		Assert.areEqual(30, FlxObject.computeOverlapY(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		
+		Assert.isTrue(FlxObject.separateY(object1, object2));
+		
+		Assert.areEqual(0, FlxObject.computeOverlapY(object1, object2));
+		Assert.areEqual(0, FlxObject.computeOverlapX(object1, object2));
+		Assert.isFalse(FlxG.overlap(object1, object2));
+		Assert.isTrue(object1.y < object2.y);
+	}
+	
 	@Test // closes #1564, tests #1561
 	function testSeparateYAfterX():Void
 	{
@@ -159,7 +357,7 @@ class FlxObjectTest extends FlxTest
 
 	function velocityCollidingWith(ground:FlxObject)
 	{
-		switchState(new CollisionState());
+		switchState(CollisionState.new);
 
 		ground.setPosition(0, 10);
 		object1.setSize(10, 10);
@@ -189,9 +387,14 @@ class FlxObjectTest extends FlxTest
 	}
 
 	@Test
-	function testOverlapsPoint()
+	function testOverlapsPointInScreenSpace()
 	{
 		overlapsPointInScreenSpace(true);
+	}
+	
+	@Test
+	function testOverlapsPointNotInScreenSpace()
+	{
 		overlapsPointInScreenSpace(false);
 	}
 
@@ -280,7 +483,7 @@ class FlxObjectTest extends FlxTest
 	}
 
 	@Test
-	function testgetRotatedBounds()
+	function testGetRotatedBounds()
 	{
 		var expected = FlxRect.get();
 		var rect = FlxRect.get();

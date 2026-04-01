@@ -91,6 +91,7 @@ class FlxImageFrame extends FlxFramesCollection
 	 */
 	public static function fromGraphic(graphic:FlxGraphic, ?region:FlxRect):FlxImageFrame
 	{
+		// TODO: look into this
 		if (graphic == null || graphic.isDestroyed)
 			return null;
 
@@ -98,6 +99,7 @@ class FlxImageFrame extends FlxFramesCollection
 		final checkRegion = FlxRect.get(0, 0, graphic.width, graphic.height);
 		if (region != null)
 			region.copyTo(checkRegion);
+		
 
 		final imageFrame:FlxImageFrame = FlxImageFrame.findFrame(graphic, checkRegion);
 		checkRegion.put();
@@ -105,6 +107,7 @@ class FlxImageFrame extends FlxFramesCollection
 		{
 			if (region != null)
 				region.putWeak();
+			
 
 			return imageFrame;
 		}
@@ -197,13 +200,14 @@ class FlxImageFrame extends FlxFramesCollection
 	{
 		if (frameBorder == null)
 			frameBorder = FlxPoint.weak();
-
+		
 		var imageFrames:Array<FlxImageFrame> = cast graphic.getFramesCollections(FlxFrameCollectionType.IMAGE);
 		for (imageFrame in imageFrames)
 		{
 			if (imageFrame.equals(frameRect, frameBorder) && imageFrame.frame.type != FlxFrameType.EMPTY)
 				return imageFrame;
 		}
+		
 
 		frameBorder.putWeak();
 		frameRect.putWeak();
@@ -241,7 +245,7 @@ class FlxImageFrame extends FlxFramesCollection
 
 	override public function addBorder(border:FlxPoint):FlxImageFrame
 	{
-		var resultBorder:FlxPoint = FlxPoint.weak().addPoint(this.border).addPoint(border);
+		var resultBorder:FlxPoint = FlxPoint.weak().add(this.border).add(border);
 
 		var imageFrame:FlxImageFrame = FlxImageFrame.findFrame(parent, frame.frame, resultBorder);
 		if (imageFrame != null)

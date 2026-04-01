@@ -3,6 +3,7 @@
 	xsi:schemaLocation="http://lime.openfl.org/project/1.0.4 http://lime.openfl.org/xsd/project-1.0.4.xsd">
 
 	<icon path="assets/images/logo/HaxeFlixel.svg" priority="-10" />
+	<define name="flixel-cne" />
 
 	<section unless="unit-test">
 		<assets path="assets/sounds" rename="flixel/sounds" include="*.mp3" if="web || air" embed="true" />
@@ -16,9 +17,7 @@
 		<assets path="assets/images/ui/button.png" rename="flixel/images/ui/button.png" embed="true" />
 		<assets path="assets/images/logo/default.png" rename="flixel/images/logo/default.png" embed="true" />
 	</section>
-
-	<set name="legacy" unless="next" />
-
+	
 	<haxelib name="openfl" unless="create" />
 	<haxelib name="hscript" unless="create || coverage2" optional="true" />
 

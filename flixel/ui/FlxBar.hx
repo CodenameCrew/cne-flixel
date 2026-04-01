@@ -108,7 +108,7 @@ class FlxBar extends FlxSprite
 	public var filledCallback:Void->Void;
 
 	/**
-	 * Object to track value from/
+	 * Object to track value from
 	 */
 	public var parent:Dynamic;
 
@@ -138,7 +138,7 @@ class FlxBar extends FlxSprite
 	var _fillHorizontal:Bool;
 
 	/**
-	 * FlxSprite which is used for rendering front graphics of bar (showing value) in tile render mode.
+	 * FlxFrame which is used for rendering front graphics of bar (showing value) in tile render mode.
 	 */
 	var _frontFrame:FlxFrame;
 
@@ -168,7 +168,7 @@ class FlxBar extends FlxSprite
 	 * @param	variable	The variable of the object that is used to determine the bar position. For example if the parent was an FlxSprite this could be "health" to track the health value
 	 * @param	min			The minimum value. I.e. for a progress bar this would be zero (nothing loaded yet)
 	 * @param	max			The maximum value the bar can reach. I.e. for a progress bar this would typically be 100.
-	 * @param	showBorder	Include a 1px border around the bar? (if true it adds +2 to width and height to accommodate it)
+	 * @param	showBorder	Should the bar be outlined with a solid border?
 	 */
 	public function new(x:Float = 0, y:Float = 0, ?direction:FlxBarFillDirection, width:Int = 100, height:Int = 10, ?parentRef:Dynamic, variable:String = "",
 			min:Float = 0, max:Float = 100, showBorder:Bool = false)
@@ -208,17 +208,17 @@ class FlxBar extends FlxSprite
 	{
 		positionOffset = FlxDestroyUtil.put(positionOffset);
 
-		if (FlxG.renderBlit)
+		if (FlxG.renderTile)
+		{
+			frontFrames = null;
+			_filledFlxRect = FlxDestroyUtil.put(_filledFlxRect);
+		}
+		else
 		{
 			_emptyBarRect = null;
 			_zeroOffset = null;
 			_emptyBar = FlxDestroyUtil.dispose(_emptyBar);
 			_filledBar = FlxDestroyUtil.dispose(_filledBar);
-		}
-		else
-		{
-			_frontFrame = null;
-			_filledFlxRect = FlxDestroyUtil.put(_filledFlxRect);
 		}
 		_filledBarRect = null;
 		_filledBarPoint = null;
@@ -335,37 +335,39 @@ class FlxBar extends FlxSprite
 	}
 
 	/**
-	 * Creates a solid-colour filled health bar in the given colours, with optional 1px thick border.
+	 * Creates a solid-colour filled health bar in the given colours, with optional border.
 	 * All colour values are in 0xAARRGGBB format, so if you want a slightly transparent health bar give it lower AA values.
 	 *
 	 * @param	empty		The color of the bar when empty in 0xAARRGGBB format (the background colour)
 	 * @param	fill		The color of the bar when full in 0xAARRGGBB format (the foreground colour)
-	 * @param	showBorder	Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder	Should the bar be outlined with a solid border?
 	 * @param	border		The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return	This FlxBar object with generated images for front and background.
 	 */
-	public function createFilledBar(empty:FlxColor, fill:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE):FlxBar
+	public function createFilledBar(empty:FlxColor, fill:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
-		createColoredEmptyBar(empty, showBorder, border);
-		createColoredFilledBar(fill, showBorder, border);
+		createColoredEmptyBar(empty, showBorder, border, borderSize);
+		createColoredFilledBar(fill, showBorder, border, borderSize);
 		return this;
 	}
 
 	/**
-	 * Creates a solid-colour filled background for health bar in the given colour, with optional 1px thick border.
+	 * Creates a solid-colour filled background for health bar in the given colour, with optional border.
 	 *
 	 * @param	empty			The color of the bar when empty in 0xAARRGGBB format (the background colour)
-	 * @param	showBorder		Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder		Should the bar be outlined with a solid border?
 	 * @param	border			The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return	This FlxBar object with generated image for rendering health bar background.
 	 */
-	public function createColoredEmptyBar(empty:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE):FlxBar
+	public function createColoredEmptyBar(empty:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
 		if (FlxG.renderTile)
 		{
 			var emptyKey:String = "empty: " + barWidth + "x" + barHeight + ":" + empty.toHexString();
 			if (showBorder)
-				emptyKey += ",border: " + border.toHexString();
+				emptyKey += ",border: " + border.toHexString() + "borderSize: " + borderSize;
 
 			if (!FlxG.bitmap.checkCache(emptyKey))
 			{
@@ -374,7 +376,7 @@ class FlxBar extends FlxSprite
 				if (showBorder)
 				{
 					emptyBar = new BitmapData(barWidth, barHeight, true, border);
-					emptyBar.fillRect(new Rectangle(1, 1, barWidth - 2, barHeight - 2), empty);
+					emptyBar.fillRect(new Rectangle(borderSize, borderSize, barWidth - borderSize * 2, barHeight - borderSize * 2), empty);
 				}
 				else
 				{
@@ -391,7 +393,7 @@ class FlxBar extends FlxSprite
 			if (showBorder)
 			{
 				_emptyBar = new BitmapData(barWidth, barHeight, true, border);
-				_emptyBar.fillRect(new Rectangle(1, 1, barWidth - 2, barHeight - 2), empty);
+				_emptyBar.fillRect(new Rectangle(borderSize, borderSize, barWidth - borderSize * 2, barHeight - borderSize * 2), empty);
 			}
 			else
 			{
@@ -406,19 +408,20 @@ class FlxBar extends FlxSprite
 	}
 
 	/**
-	 * Creates a solid-colour filled foreground for health bar in the given colour, with optional 1px thick border.
+	 * Creates a solid-colour filled foreground for health bar in the given colour, with optional border.
 	 * @param	fill		The color of the bar when full in 0xAARRGGBB format (the foreground colour)
-	 * @param	showBorder	Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder	Should the bar be outlined with a solid border?
 	 * @param	border		The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return	This FlxBar object with generated image for rendering actual values.
 	 */
-	public function createColoredFilledBar(fill:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE):FlxBar
+	public function createColoredFilledBar(fill:FlxColor, showBorder:Bool = false, border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
 		if (FlxG.renderTile)
 		{
 			var filledKey:String = "filled: " + barWidth + "x" + barHeight + ":" + fill.toHexString();
 			if (showBorder)
-				filledKey += ",border: " + border.toHexString();
+				filledKey += ",border: " + border.toHexString() + "borderSize: " + borderSize;
 
 			if (!FlxG.bitmap.checkCache(filledKey))
 			{
@@ -427,7 +430,7 @@ class FlxBar extends FlxSprite
 				if (showBorder)
 				{
 					filledBar = new BitmapData(barWidth, barHeight, true, border);
-					filledBar.fillRect(new Rectangle(1, 1, barWidth - 2, barHeight - 2), fill);
+					filledBar.fillRect(new Rectangle(borderSize, borderSize, barWidth - borderSize * 2, barHeight - borderSize * 2), fill);
 				}
 				else
 				{
@@ -444,7 +447,7 @@ class FlxBar extends FlxSprite
 			if (showBorder)
 			{
 				_filledBar = new BitmapData(barWidth, barHeight, true, border);
-				_filledBar.fillRect(new Rectangle(1, 1, barWidth - 2, barHeight - 2), fill);
+				_filledBar.fillRect(new Rectangle(borderSize, borderSize, barWidth - borderSize * 2, barHeight - borderSize * 2), fill);
 			}
 			else
 			{
@@ -458,37 +461,39 @@ class FlxBar extends FlxSprite
 	}
 
 	/**
-	 * Creates a gradient filled health bar using the given colour ranges, with optional 1px thick border.
+	 * Creates a gradient filled health bar using the given colour ranges, with optional border.
 	 * All colour values are in 0xAARRGGBB format, so if you want a slightly transparent health bar give it lower AA values.
 	 *
 	 * @param	empty		Array of colour values used to create the gradient of the health bar when empty, each colour must be in 0xAARRGGBB format (the background colour)
 	 * @param	fill		Array of colour values used to create the gradient of the health bar when full, each colour must be in 0xAARRGGBB format (the foreground colour)
 	 * @param	chunkSize	If you want a more old-skool looking chunky gradient, increase this value!
 	 * @param	rotation	Angle of the gradient in degrees. 90 = top to bottom, 180 = left to right. Any angle is valid
-	 * @param	showBorder	Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder	Should the bar be outlined with a solid border?
 	 * @param	border		The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return 	This FlxBar object with generated images for front and background.
 	 */
 	public function createGradientBar(empty:Array<FlxColor>, fill:Array<FlxColor>, chunkSize:Int = 1, rotation:Int = 180, showBorder:Bool = false,
-			border:FlxColor = FlxColor.WHITE):FlxBar
+			border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
-		createGradientEmptyBar(empty, chunkSize, rotation, showBorder, border);
-		createGradientFilledBar(fill, chunkSize, rotation, showBorder, border);
+		createGradientEmptyBar(empty, chunkSize, rotation, showBorder, border, borderSize);
+		createGradientFilledBar(fill, chunkSize, rotation, showBorder, border, borderSize);
 		return this;
 	}
 
 	/**
-	 * Creates a gradient filled background for health bar using the given colour range, with optional 1px thick border.
+	 * Creates a gradient filled background for health bar using the given colour range, with optional border.
 	 *
 	 * @param	empty			Array of colour values used to create the gradient of the health bar when empty, each colour must be in 0xAARRGGBB format (the background colour)
 	 * @param	chunkSize		If you want a more old-skool looking chunky gradient, increase this value!
 	 * @param	rotation		Angle of the gradient in degrees. 90 = top to bottom, 180 = left to right. Any angle is valid
-	 * @param	showBorder		Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder		Should the bar be outlined with a solid border?
 	 * @param	border			The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return 	This FlxBar object with generated image for background rendering.
 	 */
 	public function createGradientEmptyBar(empty:Array<FlxColor>, chunkSize:Int = 1, rotation:Int = 180, showBorder:Bool = false,
-			border:FlxColor = FlxColor.WHITE):FlxBar
+			border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
 		if (FlxG.renderTile)
 		{
@@ -501,7 +506,7 @@ class FlxBar extends FlxSprite
 
 			if (showBorder)
 			{
-				emptyKey += ",border: " + border.toHexString();
+				emptyKey += ",border: " + border.toHexString() + "borderSize: " + borderSize;
 			}
 
 			if (!FlxG.bitmap.checkCache(emptyKey))
@@ -511,7 +516,8 @@ class FlxBar extends FlxSprite
 				if (showBorder)
 				{
 					emptyBar = new BitmapData(barWidth, barHeight, true, border);
-					FlxGradient.overlayGradientOnBitmapData(emptyBar, barWidth - 2, barHeight - 2, empty, 1, 1, chunkSize, rotation);
+					FlxGradient.overlayGradientOnBitmapData(emptyBar, barWidth - borderSize * 2, barHeight - borderSize * 2, empty, borderSize, borderSize,
+						chunkSize, rotation);
 				}
 				else
 				{
@@ -528,7 +534,8 @@ class FlxBar extends FlxSprite
 			if (showBorder)
 			{
 				_emptyBar = new BitmapData(barWidth, barHeight, true, border);
-				FlxGradient.overlayGradientOnBitmapData(_emptyBar, barWidth - 2, barHeight - 2, empty, 1, 1, chunkSize, rotation);
+				FlxGradient.overlayGradientOnBitmapData(_emptyBar, barWidth - borderSize * 2, barHeight - borderSize * 2, empty, borderSize, borderSize,
+					chunkSize, rotation);
 			}
 			else
 			{
@@ -543,17 +550,18 @@ class FlxBar extends FlxSprite
 	}
 
 	/**
-	 * Creates a gradient filled foreground for health bar using the given colour range, with optional 1px thick border.
+	 * Creates a gradient filled foreground for health bar using the given colour range, with optional border.
 	 *
 	 * @param	fill		Array of colour values used to create the gradient of the health bar when full, each colour must be in 0xAARRGGBB format (the foreground colour)
 	 * @param	chunkSize	If you want a more old-skool looking chunky gradient, increase this value!
 	 * @param	rotation	Angle of the gradient in degrees. 90 = top to bottom, 180 = left to right. Any angle is valid
-	 * @param	showBorder	Should the bar be outlined with a 1px solid border?
+	 * @param	showBorder	Should the bar be outlined with a solid border?
 	 * @param	border		The border colour in 0xAARRGGBB format
+	 * @param   borderSize  The size of the border, in pixels.
 	 * @return 	This FlxBar object with generated image for rendering actual values.
 	 */
 	public function createGradientFilledBar(fill:Array<FlxColor>, chunkSize:Int = 1, rotation:Int = 180, showBorder:Bool = false,
-			border:FlxColor = FlxColor.WHITE):FlxBar
+			border:FlxColor = FlxColor.WHITE, borderSize:Int = 1):FlxBar
 	{
 		if (FlxG.renderTile)
 		{
@@ -566,7 +574,7 @@ class FlxBar extends FlxSprite
 
 			if (showBorder)
 			{
-				filledKey += ",border: " + border.toHexString();
+				filledKey += ",border: " + border.toHexString() + "borderSize: " + borderSize;
 			}
 
 			if (!FlxG.bitmap.checkCache(filledKey))
@@ -576,7 +584,8 @@ class FlxBar extends FlxSprite
 				if (showBorder)
 				{
 					filledBar = new BitmapData(barWidth, barHeight, true, border);
-					FlxGradient.overlayGradientOnBitmapData(filledBar, barWidth - 2, barHeight - 2, fill, 1, 1, chunkSize, rotation);
+					FlxGradient.overlayGradientOnBitmapData(filledBar, barWidth - borderSize * 2, barHeight - borderSize * 2, fill, borderSize, borderSize,
+						chunkSize, rotation);
 				}
 				else
 				{
@@ -593,7 +602,8 @@ class FlxBar extends FlxSprite
 			if (showBorder)
 			{
 				_filledBar = new BitmapData(barWidth, barHeight, true, border);
-				FlxGradient.overlayGradientOnBitmapData(_filledBar, barWidth - 2, barHeight - 2, fill, 1, 1, chunkSize, rotation);
+				FlxGradient.overlayGradientOnBitmapData(_filledBar, barWidth - borderSize * 2, barHeight - borderSize * 2, fill, borderSize, borderSize,
+					chunkSize, rotation);
 			}
 			else
 			{
@@ -766,7 +776,7 @@ class FlxBar extends FlxSprite
 		var interval:Float = continuous ? {
 			fraction * maxScale;
 		} : {
-			var scaleInterval:Float = maxScale / numDivisions;
+		var scaleInterval:Float = maxScale / numDivisions;
 			Math.round(Std.int(fraction * maxScale / scaleInterval) * scaleInterval);
 			}
 
@@ -784,7 +794,7 @@ class FlxBar extends FlxSprite
 			switch (fillDirection)
 			{
 				case LEFT_TO_RIGHT, TOP_TO_BOTTOM:
-					//	Already handled above
+				//	Already handled above
 
 				case BOTTOM_TO_TOP:
 					_filledBarRect.y = barHeight - _filledBarRect.height;
@@ -820,7 +830,7 @@ class FlxBar extends FlxSprite
 				if (frontFrames != null)
 				{
 					_filledFlxRect.copyFromFlash(_filledBarRect); // .round();
-					_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
+						_frontFrame = frontFrames.frame.clipTo(_filledFlxRect, _frontFrame);
 				}
 			}
 		}
@@ -853,58 +863,59 @@ class FlxBar extends FlxSprite
 	override public function draw():Void
 	{
 		super.draw();
-
+		
 		if (!FlxG.renderTile)
 			return;
-
+		
 		if (alpha == 0)
 			return;
-
+		
 		if (percent > 0 && _frontFrame.type != FlxFrameType.EMPTY)
 		{
-			for (camera in cameras)
+			for (camera in getCamerasLegacy())
 			{
 				if (!camera.visible || !camera.exists || !isOnScreen(camera))
 				{
 					continue;
 				}
-
+				
 				_frontFrame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
 				_matrix.translate(-origin.x, -origin.y);
 				_matrix.scale(scale.x, scale.y);
-
+				
 				// rotate matrix if sprite's graphic isn't prerotated
 				if (bakedRotationAngle <= 0)
 				{
 					updateTrig();
-
+					
 					if (angle != 0)
 						_matrix.rotateWithTrig(_cosAngle, _sinAngle);
 				}
-
-				getScreenPosition(_point, camera).subtractPoint(offset);
+				
+				getScreenPosition(_point, camera).subtract(offset);
 				_point.add(origin.x, origin.y);
 				_matrix.translate(_point.x, _point.y);
+				
 				if (isPixelPerfectRender(camera))
 				{
 					_matrix.tx = Math.floor(_matrix.tx);
 					_matrix.ty = Math.floor(_matrix.ty);
 				}
-
+				
 				camera.drawPixels(_frontFrame, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null);
 			}
 		}
 	}
 
-	override function set_pixels(Pixels:BitmapData):BitmapData
+	override function set_pixels(pixels:BitmapData):BitmapData
 	{
 		if (FlxG.renderTile)
 		{
-			return Pixels; // hack
+			return pixels; // hack
 		}
 		else
 		{
-			return super.set_pixels(Pixels);
+			return super.set_pixels(pixels);
 		}
 	}
 
@@ -1004,8 +1015,14 @@ class FlxBar extends FlxSprite
 	{
 		if (FlxG.renderTile)
 		{
+			if (value != null && value.parent != null)
+				value.parent.incrementUseCount();
+				
+			if (frontFrames != null && frontFrames.parent != null)
+				frontFrames.parent.decrementUseCount();
+
 			frontFrames = value;
-			_frontFrame = (value != null) ? value.frame.copyTo(_frontFrame) : null;
+			_frontFrame = (value != null) ? value.frame.copyTo(_frontFrame) : FlxDestroyUtil.destroy(_frontFrame);
 		}
 		else
 		{

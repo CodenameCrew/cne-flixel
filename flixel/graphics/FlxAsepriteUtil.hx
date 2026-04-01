@@ -28,7 +28,7 @@ class FlxAsepriteUtil
 		sprite.frames = FlxAtlasFrames.fromAseprite(graphic, data);
 		return sprite;
 	}
-
+	
 	/**
 	 * Helper for parsing Aseprite atlas json files. Reads frame data via `loadAseAtlas`,
 	 * then, adds animations for any tags listed, via `addAseAtlasTagsByPrefix`.
@@ -59,7 +59,7 @@ class FlxAsepriteUtil
 		loadAseAtlas(sprite, graphic, data);
 		return addAseAtlasTagsByPrefix(sprite, data, tagSuffix, excludeTags);
 	}
-
+	
 	/**
 	 * Loops through the given ase atlas's tags and adds animations for each, to the given sprite.
 	 * Uses the frame names to determine which tag they belong to.
@@ -88,10 +88,10 @@ class FlxAsepriteUtil
 		addByPrefixHelper(sprite.animation, data, tagSuffix, excludeTags);
 		return sprite;
 	}
-
+	
 	// TODO: overload addAseAtlasTagsByPrefix to take FlxAnimationController?
 	// This might mess with codeclimate
-
+	
 	static function addByPrefixHelper(animations:FlxAnimationController, data:FlxAsepriteJsonAsset, tagSuffix = ":", excludeTags:Null<Array<String>>)
 	{
 		final aseData = data.getData();
@@ -115,7 +115,7 @@ class FlxAsepriteUtil
 			}
 		}
 	}
-
+	
 	/**
 	 * Helper for parsing Aseprite atlas json files. Reads frame data via `loadAseAtlas`,
 	 * then, adds animations for any tags listed, via `addAseAtlasTagsByIndex`.
@@ -140,7 +140,7 @@ class FlxAsepriteUtil
 		loadAseAtlas(sprite, graphic, data);
 		return addAseAtlasTagsByIndex(sprite, data, excludeTags);
 	}
-
+	
 	/**
 	 * Loops through the given ase atlas's tags and adds animations for each, to the given sprite.
 	 * Uses the tag's `to` and `from` fields to determine.
@@ -163,10 +163,10 @@ class FlxAsepriteUtil
 		addByIndexHelper(sprite.animation, data, excludeTags);
 		return sprite;
 	}
-
+	
 	// TODO: overload addAseAtlasTagsByIndex to take FlxAnimationController?
 	// This might mess with codeclimate
-
+	
 	static function addByIndexHelper(animations:FlxAnimationController, data:FlxAsepriteJsonAsset, excludeTags:Null<Array<String>>)
 	{
 		final aseData = data.getData();
@@ -179,7 +179,7 @@ class FlxAsepriteUtil
 					+ 'frame number ($maxFrameNumber). Some animations may not be loaded correctly. '
 					+ 'Was the atlas exported with "Ignore Empty"/--ignore-empty?');
 			}
-
+			
 			final toFrame = FlxMath.minInt(frameTag.to, maxFrameNumber);
 			final frames = [for (i in frameTag.from...toFrame + 1) i];
 			setFramesDirection(frames, frameTag.direction);
@@ -188,19 +188,21 @@ class FlxAsepriteUtil
 			animations.add(frameTag.name, frames, 30, frameTag.repeat.loops);
 		}
 	}
-
+	
 	static function setFramesDirection(frames:Array<Int>, direction:AseAtlasTagDirection)
 	{
-		switch (direction)
+		switch(direction)
 		{
-			case FORWARD: // do nothing
+			case FORWARD:// do nothing
 			case REVERSE:
+				
 				frames.reverse();
 			case PINGPONG | PINGPONG_REVERSE:
+				
 				if (direction == PINGPONG_REVERSE)
 					frames.reverse();
-
-				var i = frames.length - 1; // skip last frame
+				
+				var i = frames.length - 1;// skip last frame
 				while (i-- > 1) // skip first frame too
 					frames.push(frames[i]);
 		}

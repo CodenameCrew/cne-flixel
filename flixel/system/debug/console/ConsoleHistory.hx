@@ -12,24 +12,27 @@ class ConsoleHistory
 
 	public function new()
 	{
-		var save = FlxDebugger.save;
-		if (save.isBound)
+		#if FLX_SAVE
+		if (FlxG.save.isBound)
 		{
-			if (save.data.history != null)
+			if (FlxG.save.data.history != null)
 			{
-				commands = save.data.history;
+				commands = FlxG.save.data.history;
 				index = commands.length;
 			}
 			else
 			{
 				commands = [];
-				save.data.history = commands;
+				FlxG.save.data.history = commands;
 			}
 		}
 		else
 		{
 			commands = [];
 		}
+		#else
+		commands = [];
+		#end
 	}
 
 	public function getPreviousCommand():String
@@ -52,8 +55,11 @@ class ConsoleHistory
 		if (isEmpty || getPreviousCommand() != command)
 		{
 			commands.push(command);
-			if (FlxDebugger.save.isBound)
-				FlxDebugger.save.flush();
+			
+			#if FLX_SAVE
+			if (FlxG.save.isBound)
+				FlxG.save.flush();
+			#end
 
 			if (commands.length > MAX_LENGTH)
 				commands.shift();
@@ -65,7 +71,10 @@ class ConsoleHistory
 	public function clear()
 	{
 		commands.splice(0, commands.length);
-		FlxDebugger.save.flush();
+		
+		#if FLX_SAVE
+		FlxG.save.flush();
+		#end
 	}
 
 	function get_isEmpty():Bool

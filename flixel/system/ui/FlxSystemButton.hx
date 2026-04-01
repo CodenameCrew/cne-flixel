@@ -8,7 +8,7 @@ import flixel.system.debug.DebuggerUtil;
 import flixel.util.FlxDestroyUtil.IFlxDestroyable;
 
 /**
- * A basic button for the debugger, extends flash.display.Sprite.
+ * A basic button for the debugger, extends openfl.display.Sprite.
  * Cannot be used in a FlxState.
  */
 class FlxSystemButton extends Sprite implements IFlxDestroyable

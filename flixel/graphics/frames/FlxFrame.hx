@@ -1,10 +1,7 @@
 package flixel.graphics.frames;
 
-import flixel.FlxTypes;
-import openfl.display.BitmapData;
-import openfl.geom.Point;
-import openfl.geom.Rectangle;
 import flixel.graphics.FlxGraphic;
+import flixel.math.FlxMath;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
@@ -13,39 +10,90 @@ import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxStringUtil;
 import haxe.ds.ArraySort;
 import haxe.ds.Vector;
+import openfl.display.BitmapData;
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
 
 /**
  * Base class for all frame types
  */
 class FlxFrame implements IFlxDestroyable
 {
-	static var point1:Point = new Point();
-	static var point2:Point = new Point();
-	static var rect:Rectangle = new Rectangle();
-	static var matrix:FlxMatrix = new FlxMatrix();
-
 	/**
-	 * Sorts an array of `FlxFrame` objects by their name, e.g.
-	 * `["tiles-001.png", "tiles-003.png", "tiles-002.png"]`
-	 * with `"tiles-".length == prefixLength` and `".png".length == postfixLength`.
+	 * Temp point helper, used internally
 	 */
-	public static function sort(frames:Array<FlxFrame>, prefixLength:Int, postfixLength:Int):Void
+	static var _point = new Point();
+	
+	/**
+	 * Temp rect helper, used internally
+	 */
+	static var _rect = new Rectangle();
+	
+	/**
+	 * Temp matrix helper, used internally
+	 */
+	static var _matrix = new FlxMatrix();
+	
+	/**
+	 * Sorts frames based on the value of the frames' name between the prefix and suffix.
+	 * Uses `Std.parseInt` to parse the value, if the result is `null`, 0 is used, if the result
+	 * is a negative number, the absolute valute is used.
+	 * 
+	 * @param frames  The list of frames to sort
+	 * @param prefix  Everything in the frames' name *before* the order
+	 * @param suffix  Everything in the frames' name *after* the order
+	 * @param warn    Whether to warn on invalid names
+	 */
+	public static inline function sortFrames(frames:Array<FlxFrame>, prefix:String, ?suffix:String, warn = false):Void
 	{
-		ArraySort.sort(frames, sortByName.bind(_, _, prefixLength, postfixLength));
+		sortHelper(frames, prefix.length, suffix == null ? 0 : suffix.length, warn);
 	}
-
-	public static function sortByName(frame1:FlxFrame, frame2:FlxFrame, prefixLength:Int, postfixLength:Int):Int
+	
+	/**
+	 * Sorts frames based on the value of the frames' name between the prefix and suffix.
+	 * Uses `Std.parseInt` to parse the value, if the result is `null`, 0 is used, if the result
+	 * is a negative number, the absolute valute is used.
+	 * 
+	 * @param frames  The list of frames to sort
+	 * @param prefix  Everything in the frames' name *before* the order
+	 * @param suffix  Everything in the frames' name *after* the order
+	 * @param warn    Whether to warn on invalid names
+	 */
+	public static function sort(frames:Array<FlxFrame>, prefixLength:Int, suffixLength:Int, warn = false):Void
 	{
-		var name1:String = frame1.name;
-		var name2:String = frame2.name;
-		var num1:Null<Int> = Std.parseInt(name1.substring(prefixLength, name1.length - postfixLength));
-		var num2:Null<Int> = Std.parseInt(name2.substring(prefixLength, name2.length - postfixLength));
-		if (num1 == null)
-			num1 = 0;
-		if (num2 == null)
-			num2 = 0;
-
-		return num1 - num2;
+		sortHelper(frames, prefixLength, suffixLength, warn);
+	}
+	
+	static function sortHelper(frames:Array<FlxFrame>, prefixLength:Int, suffixLength:Int, warn = false):Void
+	{
+		if (warn)
+		{
+			for (frame in frames)
+				checkValidName(frame.name, prefixLength, suffixLength);
+		}
+		
+		ArraySort.sort(frames, sortByName.bind(_, _, prefixLength, suffixLength));
+	}
+	
+	static inline function checkValidName(name:String, prefixLength:Int, suffixLength:Int)
+	{
+		final nameSub = name.substring(prefixLength, name.length - suffixLength);
+		final num:Null<Int> = Std.parseInt(nameSub);
+		if (num == null)
+			FlxG.log.warn('Could not parse frame number of "$nameSub" in frame named "$name"');
+		else if (num < 0)
+			FlxG.log.warn('Found negative frame number "$nameSub" in frame named "$name"');
+	}
+	
+	public static function sortByName(frame1:FlxFrame, frame2:FlxFrame, prefixLength:Int, suffixLength:Int):Int
+	{
+		inline function getNameOrder(name:String):Int
+		{
+			final num:Null<Int> = Std.parseInt(name.substring(prefixLength, name.length - suffixLength));
+			return if (num == null) 0 else FlxMath.absInt(num);
+		}
+		
+		return getNameOrder(frame1.name) - getNameOrder(frame2.name);
 	}
 
 	public var name:String;
@@ -57,10 +105,8 @@ class FlxFrame implements IFlxDestroyable
 
 	/**
 	 * UV coordinates for this frame.
-	 * WARNING: For optimization purposes, width and height of this rect
-	 * contain right and bottom coordinates (`x + width` and `y + height`).
 	 */
-	public var uv:FlxRect;
+	public var uv:FlxUVRect;
 
 	public var parent:FlxGraphic;
 
@@ -93,13 +139,13 @@ class FlxFrame implements IFlxDestroyable
 	 */
 	public var type:FlxFrameType;
 
-	var tileMatrix:Vector<Float>;
+	/** Internal cache used to draw this frame **/
+	var tileMatrix:MatrixVector;
+	
+	/** Internal cache used to draw this frame **/
+	var blitMatrix:MatrixVector;
 
-	var blitMatrix:Vector<Float>;
-
-	@:allow(flixel.graphics.FlxGraphic)
-	@:allow(flixel.graphics.frames.FlxFramesCollection)
-	function new(parent:FlxGraphic, angle = FlxFrameAngle.ANGLE_0, flipX = false, flipY = false, duration = 0.0)
+	public function new(parent:FlxGraphic, angle = FlxFrameAngle.ANGLE_0, flipX = false, flipY = false, duration = 0.0)
 	{
 		this.parent = parent;
 		this.angle = angle;
@@ -112,35 +158,21 @@ class FlxFrame implements IFlxDestroyable
 		sourceSize = FlxPoint.get();
 		offset = FlxPoint.get();
 
-		blitMatrix = new Vector<Float>(6);
+		blitMatrix = new MatrixVector();
 		if (FlxG.renderTile)
-			tileMatrix = new Vector<Float>(6);
+			tileMatrix = new MatrixVector();
 	}
 
 	@:allow(flixel.graphics.frames.FlxFramesCollection)
 	@:allow(flixel.graphics.frames.FlxBitmapFont)
 	function cacheFrameMatrix():Void
 	{
-		prepareBlitMatrix(matrix, true);
-		blitMatrix[0] = matrix.a;
-		blitMatrix[1] = matrix.b;
-		blitMatrix[2] = matrix.c;
-		blitMatrix[3] = matrix.d;
-		blitMatrix[4] = matrix.tx;
-		blitMatrix[5] = matrix.ty;
+		blitMatrix.copyFrom(this, true);
 
 		if (FlxG.renderTile)
-		{
-			prepareBlitMatrix(matrix, false);
-			tileMatrix[0] = matrix.a;
-			tileMatrix[1] = matrix.b;
-			tileMatrix[2] = matrix.c;
-			tileMatrix[3] = matrix.d;
-			tileMatrix[4] = matrix.tx;
-			tileMatrix[5] = matrix.ty;
-		}
+			tileMatrix.copyFrom(this, false);
 	}
-
+	
 	/**
 	 * Applies frame rotation to the specified matrix, which should be used for tiling or blitting.
 	 * Required for rotated frame support.
@@ -149,7 +181,7 @@ class FlxFrame implements IFlxDestroyable
 	 * @param   blit   Whether specified matrix will be used for blitting or for tile rendering.
 	 * @return  Transformed matrix.
 	 */
-	inline function prepareBlitMatrix(mat:FlxMatrix, blit:Bool = true):FlxMatrix
+	inline function prepareBlitMatrix(mat:FlxMatrix, blit = true):FlxMatrix
 	{
 		mat.identity();
 
@@ -172,7 +204,7 @@ class FlxFrame implements IFlxDestroyable
 	}
 
 	/**
-	 * Rotates and flips matrix. This method expects matrix which was prepared by `prepareBlitMatrix()`.
+	 * Rotates and flips matrix. This method expects matrix which was prepared by `MatrixVector.copyTo()`.
 	 * Internal use only.
 	 *
 	 * @param   mat        Matrix to transform
@@ -232,7 +264,7 @@ class FlxFrame implements IFlxDestroyable
 	 */
 	function prepareTransformedBlitMatrix(mat:FlxMatrix, rotation:FlxFrameAngle = FlxFrameAngle.ANGLE_0, flipX:Bool = false, flipY:Bool = false):FlxMatrix
 	{
-		mat = fillBlitMatrix(mat);
+		blitMatrix.copyTo(mat);
 		return rotateAndFlip(mat, rotation, flipX, flipY);
 	}
 
@@ -253,12 +285,7 @@ class FlxFrame implements IFlxDestroyable
 			return mat;
 		}
 
-		mat.a = tileMatrix[0];
-		mat.b = tileMatrix[1];
-		mat.c = tileMatrix[2];
-		mat.d = tileMatrix[3];
-		mat.tx = tileMatrix[4];
-		mat.ty = tileMatrix[5];
+		tileMatrix.copyTo(mat);
 
 		var doFlipX = flipX != this.flipX;
 		var doFlipY = flipY != this.flipY;
@@ -267,17 +294,6 @@ class FlxFrame implements IFlxDestroyable
 			return mat;
 
 		return rotateAndFlip(mat, rotation, doFlipX, doFlipY);
-	}
-
-	inline function fillBlitMatrix(mat:FlxMatrix):FlxMatrix
-	{
-		mat.a = blitMatrix[0];
-		mat.b = blitMatrix[1];
-		mat.c = blitMatrix[2];
-		mat.d = blitMatrix[3];
-		mat.tx = blitMatrix[4];
-		mat.ty = blitMatrix[5];
-		return mat;
 	}
 
 	/**
@@ -292,14 +308,8 @@ class FlxFrame implements IFlxDestroyable
 	 *                              equal to frame's original size (`sourceSize`)
 	 * @return  Modified or newly created `BitmapData` with frame image on it.
 	 */
-	public function paint(?bmd:BitmapData, ?point:Point, mergeAlpha:Bool = false, disposeIfNotEqual:Bool = false):BitmapData
+	public function paint(?bmd:BitmapData, ?point:Point, mergeAlpha = false, disposeIfNotEqual = false):BitmapData
 	{
-		if (point == null)
-		{
-			point = point1;
-			point.setTo(0, 0);
-		}
-
 		bmd = checkInputBitmap(bmd, point, FlxFrameAngle.ANGLE_0, mergeAlpha, disposeIfNotEqual);
 
 		if (type == FlxFrameType.EMPTY)
@@ -307,17 +317,19 @@ class FlxFrame implements IFlxDestroyable
 
 		if (angle == FlxFrameAngle.ANGLE_0)
 		{
-			offset.copyToFlash(point2);
-			point2.x += point.x;
-			point2.y += point.y;
-			bmd.copyPixels(parent.bitmap, frame.copyToFlash(rect), point2, null, null, mergeAlpha);
+			offset.copyTo(_point);
+			if (point != null)
+				_point.offset(point.x, point.y);
+				
+			bmd.copyPixels(parent.bitmap, frame.copyToFlash(_rect), _point, null, null, mergeAlpha);
 		}
 		else
 		{
-			fillBlitMatrix(matrix);
-			matrix.translate(point.x, point.y);
-			var rect:Rectangle = getDrawFrameRect(matrix);
-			bmd.draw(parent.bitmap, matrix, null, null, rect);
+			blitMatrix.copyTo(_matrix);
+			if (point != null)
+				_matrix.translate(point.x, point.y);
+				
+			bmd.draw(parent.bitmap, _matrix, null, null, getDrawFrameRect(_matrix, _rect));
 		}
 
 		return bmd;
@@ -344,24 +356,20 @@ class FlxFrame implements IFlxDestroyable
 		if (type == FlxFrameType.EMPTY && rotation == FlxFrameAngle.ANGLE_0)
 			return paint(bmd, point, mergeAlpha, disposeIfNotEqual);
 
-		if (point == null)
-		{
-			point = point2;
-			point.setTo(0, 0);
-		}
-
 		bmd = checkInputBitmap(bmd, point, rotation, mergeAlpha, disposeIfNotEqual);
 
 		if (type == FlxFrameType.EMPTY)
 			return bmd;
 
-		var doFlipX = flipX != this.flipX;
-		var doFlipY = flipY != this.flipY;
-
-		prepareTransformedBlitMatrix(matrix, rotation, doFlipX, doFlipY);
-		matrix.translate(point.x, point.y);
-		var rect:Rectangle = getDrawFrameRect(matrix);
-		bmd.draw(parent.bitmap, matrix, null, null, rect);
+		final doFlipX = flipX != this.flipX;
+		final doFlipY = flipY != this.flipY;
+		
+		prepareTransformedBlitMatrix(_matrix, rotation, doFlipX, doFlipY);
+		
+		if (point != null)
+			_matrix.translate(point.x, point.y);
+			
+		bmd.draw(parent.bitmap, _matrix, null, null, getDrawFrameRect(_matrix, _rect));
 		return bmd;
 	}
 
@@ -378,8 +386,7 @@ class FlxFrame implements IFlxDestroyable
 	 *                              equal to frame's original size (`sourceSize`).
 	 * @return  Prepared `BitmapData` for further frame blitting. Output `BitmapData` could be a different object.
 	 */
-	inline function checkInputBitmap(?bmd:BitmapData, ?point:Point, rotation:FlxFrameAngle = FlxFrameAngle.ANGLE_0, mergeAlpha:Bool = false,
-			disposeIfNotEqual:Bool = false):BitmapData
+	inline function checkInputBitmap(?bmd:BitmapData, ?point:Point, rotation = FlxFrameAngle.ANGLE_0, mergeAlpha = false, disposeIfNotEqual = false):BitmapData
 	{
 		final flipXY = rotation != FlxFrameAngle.ANGLE_0;
 		final w = Std.int(flipXY ? sourceSize.y : sourceSize.x);
@@ -391,10 +398,11 @@ class FlxFrame implements IFlxDestroyable
 		if (bmd != null && !mergeAlpha)
 		{
 			if (point != null)
-				rect.setTo(point.x, point.y, w, h);
+				_rect.setTo(point.x, point.y, w, h);
 			else
-				rect.setTo(0, 0, w, h);
-			bmd.fillRect(rect, FlxColor.TRANSPARENT);
+				_rect.setTo(0, 0, w, h);
+				
+			bmd.fillRect(_rect, FlxColor.TRANSPARENT);
 		}
 		else if (bmd == null)
 		{
@@ -409,17 +417,18 @@ class FlxFrame implements IFlxDestroyable
 	 * Required for rotated frames support.
 	 *
 	 * @param   mat   Frame transformation matrix (rotated / flipped / translated).
+	 * @param   rect  The output rectangle
 	 * @return  Clipping rectangle which will be used for frame blitting.
 	 */
-	inline function getDrawFrameRect(mat:FlxMatrix):Rectangle
+	inline function getDrawFrameRect(mat:FlxMatrix, rect:Rectangle):Rectangle
 	{
-		var p1:FlxPoint = FlxPoint.weak(frame.x, frame.y);
-		var p2:FlxPoint = FlxPoint.weak(frame.right, frame.bottom);
+		final p1 = FlxPoint.weak(frame.x, frame.y);
+		final p2 = FlxPoint.weak(frame.right, frame.bottom);
 
 		p1.transform(mat);
 		p2.transform(mat);
 
-		var flxRect = FlxRect.get().fromTwoPoints(p1, p2);
+		final flxRect = FlxRect.get().fromTwoPoints(p1, p2);
 		flxRect.copyToFlash(rect);
 		flxRect.put();
 		return rect;
@@ -480,28 +489,28 @@ class FlxFrame implements IFlxDestroyable
 		else
 		{
 			frameToFill.type = FlxFrameType.REGULAR;
-			frameToFill.offset.set(frameRect.x, frameRect.y).subtract(rect.x, rect.y).addPoint(offset);
+			frameToFill.offset.set(frameRect.x, frameRect.y).subtract(rect.x, rect.y).add(offset);
 
-			var p1 = FlxPoint.weak(frameRect.x, frameRect.y);
-			var p2 = FlxPoint.weak(frameRect.right, frameRect.bottom);
+			final p1 = FlxPoint.weak(frameRect.x, frameRect.y);
+			final p2 = FlxPoint.weak(frameRect.right, frameRect.bottom);
 
-			matrix.identity();
+			_matrix.identity();
 
 			if (angle == FlxFrameAngle.ANGLE_NEG_90)
 			{
-				matrix.rotateByPositive90();
-				matrix.translate(frame.width, 0);
+				_matrix.rotateByPositive90();
+				_matrix.translate(frame.width, 0);
 			}
 			else if (angle == FlxFrameAngle.ANGLE_90)
 			{
-				matrix.rotateByNegative90();
-				matrix.translate(0, frame.height);
+				_matrix.rotateByNegative90();
+				_matrix.translate(0, frame.height);
 			}
 
 			if (angle != FlxFrameAngle.ANGLE_0)
 			{
-				p1.transform(matrix);
-				p2.transform(matrix);
+				p1.transform(_matrix);
+				p2.transform(_matrix);
 			}
 
 			frameRect.fromTwoPoints(p1, p2);
@@ -522,10 +531,10 @@ class FlxFrame implements IFlxDestroyable
 	 */
 	public function setBorderTo(border:FlxPoint, ?frameToFill:FlxFrame):FlxFrame
 	{
-		var rect = FlxRect.get(border.x, border.y, sourceSize.x - 2 * border.x, sourceSize.y - 2 * border.y);
+		final rect = FlxRect.get(border.x, border.y, sourceSize.x - 2 * border.x, sourceSize.y - 2 * border.y);
 		frameToFill = this.subFrameTo(rect, frameToFill);
 		frameToFill.name = name;
-		rect = FlxDestroyUtil.put(rect);
+		FlxDestroyUtil.put(rect);
 		return frameToFill;
 	}
 
@@ -537,83 +546,127 @@ class FlxFrame implements IFlxDestroyable
 	 *                         If `null`, a new frame will be created.
 	 * @return  Result of applying frame clipping
 	 */
-	public function clipTo(clip:FlxRect, ?clippedFrame:FlxFrame):FlxFrame
+	public function clipTo(rect:FlxRect, ?clippedFrame:FlxFrame):FlxFrame
 	{
 		if (clippedFrame == null)
-		{
 			clippedFrame = new FlxFrame(parent, angle);
-		}
-		else
-		{
-			clippedFrame.parent = parent;
-			clippedFrame.angle = angle;
-			clippedFrame.frame = FlxDestroyUtil.put(clippedFrame.frame);
-		}
 
-		clippedFrame.sourceSize.copyFrom(sourceSize);
-		clippedFrame.name = name;
-
+		copyTo(clippedFrame);
+		return clippedFrame.clip(rect);
+	}
+	
+	/**
+	 * Whether there is any overlap between this frame and the given rect. If clipping this frame to
+	 * the given rect would result in an empty frame, the result is `false`
+	 * @since 6.1.0
+	 */
+	public function overlaps(rect:FlxRect)
+	{
+		rect.x += frame.x - offset.x;
+		rect.y += frame.y - offset.y;
+		final result = rect.overlaps(frame);
+		rect.x -= frame.x - offset.x;
+		rect.y -= frame.y - offset.y;
+		return result;
+	}
+	
+	
+	/**
+	 * Whether this frame fully contains the given rect. If clipping this frame to
+	 * the given rect would result in a smaller frame, the result is `false`
+	 * @since 6.1.0
+	 */
+	public function contains(rect:FlxRect)
+	{
+		rect.x += frame.x - offset.x;
+		rect.y += frame.y - offset.y;
+		final result = frame.contains(rect);
+		rect.x -= frame.x - offset.x;
+		rect.y -= frame.y - offset.y;
+		return result;
+	}
+	
+	/**
+	 * Whether this frame is fully contained by the given rect. If clipping this frame to
+	 * the given rect would result in a smaller frame, the result is `false`
+	 * @since 6.1.0
+	 */
+	public function isContained(rect:FlxRect)
+	{
+		rect.x += frame.x - offset.x;
+		rect.y += frame.y - offset.y;
+		final result = rect.contains(frame);
+		rect.x -= frame.x - offset.x;
+		rect.y -= frame.y - offset.y;
+		return result;
+	}
+	
+	/**
+	 * Clips this frame to the desired rect
+	 *
+	 * @param   rect  Clipping rectangle to apply
+	 */
+	public function clip(rect:FlxRect)
+	{
 		// no need to make all calculations if original frame is empty...
 		if (type == FlxFrameType.EMPTY)
-		{
-			clippedFrame.type = FlxFrameType.EMPTY;
-			clippedFrame.offset.set(0, 0);
-			return clippedFrame;
-		}
-
-		var clippedRect:FlxRect = FlxRect.get(0, 0).setSize(frame.width, frame.height);
+			return this;
+		
+		final clippedRect = FlxRect.get(0, 0, frame.width, frame.height);
 		if (angle != FlxFrameAngle.ANGLE_0)
 		{
 			clippedRect.width = frame.height;
 			clippedRect.height = frame.width;
 		}
-
-		clip.offset(-offset.x, -offset.y);
-		var frameRect:FlxRect = clippedRect.intersection(clip);
-		clippedRect = FlxDestroyUtil.put(clippedRect);
-
+		
+		rect.offset(-offset.x, -offset.y);
+		final frameRect:FlxRect = clippedRect.intersection(rect);
+		rect.offset(offset.x, offset.y);
+		clippedRect.put();
+		
 		if (frameRect.isEmpty)
 		{
-			clippedFrame.type = FlxFrameType.EMPTY;
-			frameRect.set(0, 0, 0, 0);
-			clippedFrame.frame = frameRect;
-			clippedFrame.offset.set(0, 0);
+			type = FlxFrameType.EMPTY;
+			frame.set(0, 0, 0, 0);
+			offset.set(0, 0);
 		}
 		else
 		{
-			clippedFrame.type = FlxFrameType.REGULAR;
-			clippedFrame.offset.set(frameRect.x, frameRect.y).addPoint(offset);
-
-			var p1 = FlxPoint.weak(frameRect.x, frameRect.y);
-			var p2 = FlxPoint.weak(frameRect.right, frameRect.bottom);
-
-			matrix.identity();
-
-			if (angle == FlxFrameAngle.ANGLE_NEG_90)
-			{
-				matrix.rotateByPositive90();
-				matrix.translate(frame.width, 0);
-			}
-			else if (angle == FlxFrameAngle.ANGLE_90)
-			{
-				matrix.rotateByNegative90();
-				matrix.translate(0, frame.height);
-			}
-
+			type = FlxFrameType.REGULAR;
+			offset.add(frameRect.x, frameRect.y);
+			
 			if (angle != FlxFrameAngle.ANGLE_0)
 			{
-				p1.transform(matrix);
-				p2.transform(matrix);
+				final p1 = FlxPoint.weak(frameRect.x, frameRect.y);
+				final p2 = FlxPoint.weak(frameRect.right, frameRect.bottom);
+				
+				_matrix.identity();
+				
+				if (angle == FlxFrameAngle.ANGLE_NEG_90)
+				{
+					_matrix.rotateByPositive90();
+					_matrix.translate(frame.width, 0);
+				}
+				else if (angle == FlxFrameAngle.ANGLE_90)
+				{
+					_matrix.rotateByNegative90();
+					_matrix.translate(0, frame.height);
+				}
+				
+				p1.transform(_matrix);
+				p2.transform(_matrix);
+				frameRect.fromTwoPoints(p1, p2);
 			}
-
-			frameRect.fromTwoPoints(p1, p2);
+			
 			frameRect.offset(frame.x, frame.y);
-			clippedFrame.frame = frameRect;
-			clippedFrame.cacheFrameMatrix();
+			frame.copyFrom(frameRect);
+			cacheFrameMatrix();
 		}
-
-		clip.offset(offset.x, offset.y);
-		return clippedFrame;
+		
+		updateUV();
+		
+		frameRect.put();
+		return this;
 	}
 
 	/**
@@ -642,6 +695,7 @@ class FlxFrame implements IFlxDestroyable
 		clone.frame = FlxRect.get().copyFrom(frame);
 		clone.type = type;
 		clone.name = name;
+		clone.duration = duration;
 		clone.cacheFrameMatrix();
 		return clone;
 	}
@@ -665,15 +719,21 @@ class FlxFrame implements IFlxDestroyable
 
 	function set_frame(value:FlxRect):FlxRect
 	{
-		if (value != null)
-		{
-			if (uv == null)
-				uv = FlxRect.get();
+		frame = value;
+		updateUV();
+		
+		return value;
+	}
+	
+	function updateUV()
+	{
+		if (frame == null)
+			return;
+		
+		if (uv == null)
+			uv = FlxUVRect.get();
 
-			uv.set(value.x / parent.width, value.y / parent.height, value.right / parent.width, value.bottom / parent.height);
-		}
-
-		return frame = value;
+		uv.setFromFrameRect(frame, parent);
 	}
 }
 
@@ -681,17 +741,221 @@ class FlxFrame implements IFlxDestroyable
  * Just enumeration of all types of frames.
  * Added for faster type detection with less usage of casting.
  */
-enum abstract FlxFrameType(ByteInt)
+enum abstract FlxFrameType(Int)
 {
 	var REGULAR = 0;
 	var EMPTY = 2;
 	var GLYPH = 3;
 }
 
-enum abstract FlxFrameAngle(ByteInt) from ByteInt to ByteInt
+enum abstract FlxFrameAngle(Int) from Int to Int
 {
 	var ANGLE_0 = 0;
 	var ANGLE_90 = 90;
 	var ANGLE_NEG_90 = -90;
 	var ANGLE_270 = -90;
+}
+
+/**
+ * FlxRect, but instead of `x`, `y`, `width` and `height`, it takes a `left`, `right`, `top` and
+ * `bottom`. This is for optimization reasons, to reduce arithmetic when drawing vertices
+ */
+@:forward(put)
+abstract FlxUVRect(FlxRect) from FlxRect to FlxRect
+{
+	public var x(get, set):Float;
+	inline function get_x():Float { return this.x; }
+	inline function set_x(value):Float { return this.x = value; }
+
+	public var y(get, set):Float;
+	inline function get_y():Float { return this.y; }
+	inline function set_y(value):Float { return this.y = value; }
+
+	public var width(get, set):Float;
+	inline function get_width():Float { return this.width; }
+	inline function set_width(value):Float { return this.width = value; }
+
+	public var height(get, set):Float;
+	inline function get_height():Float { return this.height; }
+	inline function set_height(value):Float { return this.height = value; }
+
+	public var left(get, set):Float;
+	inline function get_left():Float { return this.x; }
+	inline function set_left(value):Float { return this.x = value; }
+	
+	/** Top */
+	public var right(get, set):Float;
+	inline function get_right():Float { return this.width; }
+	inline function set_right(value):Float { return this.width = value; }
+	
+	/** Right */
+	public var top(get, set):Float;
+	inline function get_top():Float { return this.y; }
+	inline function set_top(value):Float { return this.y = value; }
+	
+	/** Bottom */
+	public var bottom(get, set):Float;
+	inline function get_bottom():Float { return this.height; }
+	inline function set_bottom(value):Float { return this.height = value; }
+	
+	public inline function set(l, t, r, b)
+	{
+		this.set(l, t, r, b);
+	}
+	
+	public inline function setFromFrameRect(frame:FlxRect, parent:FlxGraphic)
+	{
+		this.set(frame.x / parent.width, frame.y / parent.height, frame.right / parent.width, frame.bottom / parent.height);
+	}
+	
+	public inline function copyTo(uv:FlxUVRect)
+	{
+		uv.set(left, top, right, bottom);
+	}
+	
+	public inline function copyFrom(uv:FlxUVRect)
+	{
+		set(uv.left, uv.top, uv.right, uv.bottom);
+	}
+	
+	public inline function toString()
+	{
+		return return FlxStringUtil.getDebugString([
+			LabelValuePair.weak("l", left),
+			LabelValuePair.weak("t", top),
+			LabelValuePair.weak("r", right),
+			LabelValuePair.weak("b", bottom)
+		]);
+	}
+
+	public inline function put()
+	{
+		this.put();
+	}
+	
+	public static function get(l = 0.0, t = 0.0, r = 0.0, b = 0.0)
+	{
+		return FlxRect.get(l, t, r, b);
+	}
+}
+
+/**
+ * Used internally instead of a FlxMatrix, for some unknown reason.
+ * Perhaps improves performance, tbh, I'm skeptical
+ */
+abstract MatrixVector(Vector<Float>)
+{
+	public var a(get, set):Float;
+	inline function get_a() return this[0];
+	inline function set_a(value:Float) return this[0] = value;
+	
+	public var b(get, set):Float;
+	inline function get_b() return this[1];
+	inline function set_b(value:Float) return this[1] = value;
+	
+	public var c(get, set):Float;
+	inline function get_c() return this[2];
+	inline function set_c(value:Float) return this[2] = value;
+	
+	public var d(get, set):Float;
+	inline function get_d() return this[3];
+	inline function set_d(value:Float) return this[3] = value;
+	
+	public var tx(get, set):Float;
+	inline function get_tx() return this[4];
+	inline function set_tx(value:Float) return this[4] = value;
+	
+	public var ty(get, set):Float;
+	inline function get_ty() return this[5];
+	inline function set_ty(value:Float) return this[5] = value;
+	
+	
+	public inline function new ()
+	{
+		this = new Vector<Float>(6);
+		identity();
+	}
+	
+	public inline function identity()
+	{
+		a = 1;
+		b = 0;
+		c = 0;
+		d = 1;
+		tx = 0;
+		ty = 0;
+	}
+	
+	public #if !hl inline #end function set(a = 1.0, b = 0.0, c = 0.0, d = 1.0, tx = 0.0, ty = 0.0)
+	{
+		set_a(a);
+		set_b(b);
+		set_c(c);
+		set_d(d);
+		set_tx(tx);
+		set_ty(ty);
+		return this;
+	}
+	
+	public inline function translate(dx:Float, dy:Float)
+	{
+		tx += dx;
+		ty += dy;
+		return this;
+	}
+	
+	public inline function scale(sx:Float, sy:Float)
+	{
+		a *= sx;
+		b *= sy;
+		c *= sx;
+		d *= sy;
+		tx *= sx;
+		ty *= sy;
+		return this;
+	}
+	
+	overload public inline extern function copyFrom(frame:FlxFrame, forBlit = true):MatrixVector
+	{
+		identity();
+
+		if (forBlit)
+			translate(-frame.frame.x, -frame.frame.y);
+
+		if (frame.angle == FlxFrameAngle.ANGLE_90)
+		{
+			set(-b, a, -d, c, -ty, tx);
+			translate(frame.frame.height, 0);
+		}
+		else if (frame.angle == FlxFrameAngle.ANGLE_NEG_90)
+		{
+			set(b, -a, d, -c, ty, -tx);
+			translate(0, frame.frame.width);
+		}
+
+		translate(frame.offset.x, frame.offset.y);
+		return cast this;
+	}
+	
+	overload public inline extern function copyFrom(mat:FlxMatrix):MatrixVector
+	{
+		a = mat.a;
+		b = mat.b;
+		c = mat.c;
+		d = mat.d;
+		tx = mat.tx;
+		ty = mat.ty;
+		return cast this;
+	}
+	
+	public inline function copyTo(mat:FlxMatrix):FlxMatrix
+	{
+		mat.a = a;
+		mat.b = b;
+		mat.c = c;
+		mat.d = d;
+		mat.tx = tx;
+		mat.ty = ty;
+		return mat;
+	}
 }

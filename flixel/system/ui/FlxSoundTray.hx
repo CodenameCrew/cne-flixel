@@ -242,7 +242,7 @@ class FlxSoundTray extends Sprite
 		}
 		else if (y > -height)
 		{
-			y -= (MS / 1000) * FlxG.height * 2;
+			y -= (MS / 1000) * height * 0.5;
 
 			if (y <= -height)
 			{
@@ -255,11 +255,19 @@ class FlxSoundTray extends Sprite
 
 	public function saveSoundPreferences():Void
 	{
+		#if FLX_SAVE
 		var save = SoundFrontEnd.save;
-		save.data.mute = FlxG.sound.muted;
-		save.data.volume = FlxG.sound.volume;
-		save.flush();
+		if (save.isBound)
+		{
+			save.data.mute = FlxG.sound.muted;
+			save.data.volume = FlxG.sound.volume;
+			save.flush();
+		}
+		#end
 	}
+
+	public inline function showIncrement():Void show(true);
+	public inline function showDecrement():Void show(false);
 
 	/**
 	 * Makes the little volume tray slide out.

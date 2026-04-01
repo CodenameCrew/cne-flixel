@@ -23,8 +23,8 @@ class ConsoleFrontEnd
 	/**
 	 * Register a new function to use in any command.
 	 *
-	 * @param 	alias		The name with which you want to access the function.
-	 * @param 	func		The function to register.
+	 * @param   alias  The name with which you want to access the function.
+	 * @param   func   The function to register.
 	 */
 	public inline function registerFunction(alias:String, func:Dynamic):Void
 	{
@@ -36,8 +36,8 @@ class ConsoleFrontEnd
 	/**
 	 * Register a new object to use in any command.
 	 *
-	 * @param 	alias		The name with which you want to access the object.
-	 * @param 	object		The object to register.
+	 * @param   alias   The name with which you want to access the object.
+	 * @param   object  The object to register.
 	 */
 	public inline function registerObject(alias:String, object:Dynamic):Void
 	{
@@ -75,7 +75,7 @@ class ConsoleFrontEnd
 		FlxG.game.debugger.console.removeFunction(func);
 		#end
 	}
-
+	
 	/**
 	 * Removes an alias from the command registry.
 	 *
@@ -92,12 +92,12 @@ class ConsoleFrontEnd
 	/**
 	 * Register a new class to use in any command.
 	 *
-	 * @param	cl	The class to register.
+	 * @param   c  The class to register.
 	 */
-	public inline function registerClass(cl:Class<Dynamic>):Void
+	public inline function registerClass(c:Class<Dynamic>):Void
 	{
 		#if FLX_DEBUG
-		FlxG.game.debugger.console.registerClass(cl);
+		FlxG.game.debugger.console.registerClass(c);
 		#end
 	}
 
@@ -117,7 +117,7 @@ class ConsoleFrontEnd
 	/**
 	 * Register a new enum to use in any command.
 	 *
-	 * @param	e	The enum to register.
+	 * @param   e  The enum to register.
 	 * @since 4.4.0
 	 */
 	public inline function registerEnum(e:Enum<Dynamic>):Void

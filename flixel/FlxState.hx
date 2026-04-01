@@ -1,33 +1,40 @@
 package flixel;
 
-import flixel.group.FlxGroup;
+import flixel.group.FlxContainer;
 import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
-import flixel.util.FlxSignal.FlxTypedSignal;
+import flixel.util.FlxSignal;
+import flixel.util.typeLimit.NextState;
 
 /**
  * This is the basic game "state" object - e.g. in a simple game you might have a menu state and a play state.
- * It is for all intents and purpose a fancy `FlxGroup`. And really, it's not even that fancy.
+ * It is for all intents and purpose a fancy `FlxContainer`. And really, it's not even that fancy.
  */
 @:keepSub // workaround for HaxeFoundation/haxe#3749
-class FlxState extends FlxGroup
+#if FLX_NO_UNIT_TEST
+@:autoBuild(flixel.system.macros.FlxMacroUtil.deprecateOverride("switchTo", "switchTo is deprecated, use startOutro"))
+#end
+// show deprecation warning when `switchTo` is overriden in dereived classes
+class FlxState extends FlxContainer
 {
 	/**
-	 * Determines whether or not this state is updated even when it is not the active state.
-	 * For example, if you have your game state first, and then you push a menu state on top of it,
-	 * if this is set to `true`, the game state would continue to update in the background.
-	 * By default this is `false`, so background states will be "paused" when they are not active.
+	 * Determines whether the current state is updated, even when it is not the active state.
+	 * For example, if you have your game state open first, and then you push a pause state on top of it,
+	 * if this is set to `true`, the game state would still continue to be updated in the background.
+	 *
+	 * By default, this is set to `false`, so the background states will continue to be "paused" when they are not active.
 	 */
 	public var persistentUpdate:Bool = false;
 
 	/**
-	 * Determines whether or not this state is updated even when it is not the active state.
-	 * For example, if you have your game state first, and then you push a menu state on top of it,
-	 * if this is set to `true`, the game state would continue to be drawn behind the pause state.
-	 * By default this is `true`, so background states will continue to be drawn behind the current state.
+	 * Determines whether the current state is drawn, even when it is not the active state.
+	 * For example, if you have your game state open first, and then you push a pause state on top of it,
+	 * if this is set to `true`, the game state would still continue to be drawn behind that pause state.
 	 *
-	 * If background states are not `visible` when you have a different state on top,
-	 * you should set this to `false` for improved performance.
+	 * By default, this is set to `true`, so the background states will continue to be "drawn" behind the current state.
+	 *
+	 * If you do not want background states to be `visible` when you have a different state on top,
+	 * then you should set this to `false` for improved performance.
 	 */
 	public var persistentDraw:Bool = true;
 
@@ -52,6 +59,13 @@ class FlxState extends FlxGroup
 	 */
 	public var bgColor(get, set):FlxColor;
 
+	/**
+	 * The specific argument that was passed into `switchState` or `FlxGame.new`
+	 */
+	@:allow(flixel.FlxGame)
+	@:allow(flixel.FlxG)
+	var _constructor:NextState;
+	
 	/**
 	 * Current substate. Substates also can be nested.
 	 */
@@ -90,6 +104,11 @@ class FlxState extends FlxGroup
 	@:noCompletion
 	var _subStateClosed:FlxTypedSignal<FlxSubState->Void>;
 
+	public function new ()
+	{
+		super(0);
+	}
+
 	/**
 	 * This function is called after the game engine successfully switches states.
 	 * Override this function, NOT the constructor, to initialize or set up your game state.
@@ -101,7 +120,7 @@ class FlxState extends FlxGroup
 		created = true;
 	}
 
-	override public function draw():Void
+	override function draw():Void
 	{
 		if (persistentDraw || subState == null)
 			super.draw();
@@ -179,8 +198,12 @@ class FlxState extends FlxGroup
 		}
 	}
 
-	override public function destroy():Void
+	override function destroy():Void
 	{
+		_constructor = function():FlxState
+		{
+			throw "Attempting to resetState while the current state is destroyed";
+		};
 		FlxDestroyUtil.destroy(_subStateOpened);
 		FlxDestroyUtil.destroy(_subStateClosed);
 
@@ -198,9 +221,24 @@ class FlxState extends FlxGroup
 	 *
 	 * Useful for customizing state switches, e.g. for transition effects.
 	 */
+	@:deprecated("switchTo is deprecated, use startOutro")
 	public function switchTo(nextState:FlxState):Bool
 	{
 		return true;
+	}
+	
+	/**
+	 * Called from `FlxG.switchState()`, when `onOutroComplete` is called, the actual state
+	 * switching will happen.
+	 *
+	 * Note: Calling `super.startOutro(onOutroComplete)` will call `onOutroComplete`.
+	 *
+	 * @param   onOutroComplete  Called when the outro is complete.
+	 * @since 5.3.0
+	 */
+	public function startOutro(onOutroComplete:()->Void)
+	{
+		onOutroComplete();
 	}
 
 	/**

@@ -1,9 +1,5 @@
 package flixel.tile;
 
-import openfl.display.BitmapData;
-import openfl.display.Graphics;
-import openfl.geom.Point;
-import openfl.geom.Rectangle;
 import flixel.FlxBasic;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -24,13 +20,12 @@ import flixel.util.FlxColor;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDirectionFlags;
 import flixel.util.FlxSpriteUtil;
+import openfl.display.BitmapData;
 import openfl.display.BlendMode;
+import openfl.display.Graphics;
 import openfl.geom.ColorTransform;
-#if (haxe_ver >= 4.2)
-import Std.isOfType;
-#else
-import Std.is as isOfType;
-#end
+import openfl.geom.Point;
+import openfl.geom.Rectangle;
 
 using flixel.util.FlxColorTransformUtil;
 
@@ -116,21 +111,63 @@ class GraphicAutoFull extends BitmapData {}
  * numbers and then associates those values with tiles from the sheet you pass in. It also includes
  * some handy static parsers that can convert arrays or images into strings that can be loaded.
  */
-class FlxTilemap extends FlxBaseTilemap<FlxTile>
+class FlxTilemap extends FlxTypedTilemap<FlxTile>
 {
 	/**
-	 * Eliminates tearing on tilemaps by extruding each tile frame's edge out by the specified
-	 * number of pixels. Ignored if <= 0
+	 * The default frame padding tilemaps will use when their own `framePadding` is not set
+	 * 
+	 * @see FlxTypedTilemap.framePadding
+	 * @since 5.0.0
+	 */
+	public static var defaultFramePadding(get, set):Int;
+	
+	static inline function get_defaultFramePadding()
+	{
+		return FlxTypedTilemap.defaultFramePadding;
+	}
+	
+	static inline function set_defaultFramePadding(value:Int)
+	{
+		return FlxTypedTilemap.defaultFramePadding = value;
+	}
+	
+	public function new ()
+	{
+		super();
+	}
+	
+	override function createTile(index:Int, width, height):FlxTile
+	{
+		final visible = index >= _drawIndex;
+		final allowCollisions = index >= _collideIndex ? this.allowCollisions : NONE;
+		return new FlxTile(this, index, width, height, visible, allowCollisions);
+	}
+}
+
+/**
+ * This is a traditional tilemap display and collision class. It takes a string of comma-separated
+ * numbers and then associates those values with tiles from the sheet you pass in. It also includes
+ * some handy static parsers that can convert arrays or images into strings that can be loaded.
+ */
+class FlxTypedTilemap<Tile:FlxTile> extends FlxBaseTilemap<Tile>
+{
+	/**
+	 * The default frame padding tilemaps will use when their own `framePadding` is not set
+	 * 
+	 * @see FlxTypedTilemap.framePadding
+	 * @since 5.0.0
 	 */
 	public static var defaultFramePadding = 2;
-
+	
 	/**
-	 * DISABLED, the static var `defaultFramePadding` fixes the tearing issue in a more performant
-	 * and visually appealing way.
+	 * Eliminates tearing on tilemaps by extruding each tile frame's edge out by the specified
+	 * number of pixels. Ignored if <= 0. If `null`, `defaultFramePadding` is used
+	 * 
+	 * Note: Changing this only affects future loadMap calls.
+	 * @see FlxTypedTilemap.defaultFramePadding
+	 * @since 5.4.0
 	 */
-	@:deprecated("useScaleHaxe is no longer needed")
-	@:noCompletion
-	public var useScaleHack:Bool = false;
+	public var framePadding:Null<Int> = null;
 
 	/**
 	 * Changes the size of this tilemap. Default is (1, 1).
@@ -251,7 +288,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	 */
 	var _checkBufferChanges:Bool = false;
 
-	public function new()
+	function new()
 	{
 		super();
 
@@ -282,7 +319,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	/**
 	 * Clean up memory.
 	 */
-	override public function destroy():Void
+	override function destroy():Void
 	{
 		_flashPoint = null;
 		_flashRect = null;
@@ -328,7 +365,35 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 		super.destroy();
 	}
+	
+	override function initTileObjects():Void
+	{
+		if (frames == null)
+			return;
 
+		_tileObjects = FlxDestroyUtil.destroyArray(_tileObjects);
+		// Create some tile objects that we'll use for overlap checks (one for each tile)
+		_tileObjects = [];
+
+		var length:Int = frames.numFrames;
+		length += _startingIndex;
+
+		for (i in 0...length)
+			_tileObjects[i] = createTile(i, tileWidth, tileHeight);
+
+		// Create debug tiles for rendering bounding boxes on demand
+		#if FLX_DEBUG
+		updateDebugTileBoundingBoxSolid();
+		updateDebugTileBoundingBoxNotSolid();
+		updateDebugTileBoundingBoxPartial();
+		#end
+	}
+	
+	function createTile(index, width, height):Tile
+	{
+		throw "createTile not implemented";
+	}
+	
 	function set_frames(value:FlxFramesCollection):FlxFramesCollection
 	{
 		frames = value;
@@ -345,16 +410,24 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		return value;
 	}
 
-	function onGameResized(_, _):Void
+	function onGameResized(w:Int, h:Int):Void
 	{
 		_checkBufferChanges = true;
 	}
 
-	function onCameraChanged(_):Void
+	function onCameraChanged(cam:FlxCamera):Void
 	{
 		_checkBufferChanges = true;
 	}
-
+	
+	override function loadMapHelper(tileGraphic, tileWidth = 0, tileHeight = 0, ?autoTile, startingIndex = 0, drawIndex = 1, collideIndex = 1)
+	{
+		// redraw buffers, fixes https://github.com/HaxeFlixel/flixel/issues/2882
+		_checkBufferChanges = true;
+		
+		super.loadMapHelper(tileGraphic, tileWidth, tileHeight, autoTile, startingIndex, drawIndex, collideIndex);
+	}
+	
 	override function cacheGraphics(tileWidth:Int, tileHeight:Int, tileGraphic:FlxTilemapGraphicAsset):Void
 	{
 		if ((tileGraphic is FlxFramesCollection))
@@ -376,27 +449,28 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 		this.tileWidth = tileWidth;
 		this.tileHeight = tileHeight;
-
-		if (defaultFramePadding > 0 && graph.isLoaded)
-			frames = padTileFrames(tileWidth, tileHeight, graph, defaultFramePadding);
+		
+		final actualFramePadding = framePadding == null ? defaultFramePadding : framePadding;
+		if (actualFramePadding > 0 && graph.isLoaded)
+			frames = padTileFrames(tileWidth, tileHeight, graph, actualFramePadding);
 		else
 		{
 			#if html5
 			/* if Using tile graphics like GraphicAuto or others defined above, they will not
 			 * load immediately. Track their loading and apply frame padding after.
 			**/
-			if (!graph.isLoaded && isOfType(graph.bitmap, IEmbeddedBitmapData))
+			if (!graph.isLoaded && Std.isOfType(graph.bitmap, IEmbeddedBitmapData))
 			{
 				var futureBitmap:IEmbeddedBitmapData = cast graph.bitmap;
 				futureBitmap.onLoad = function()
 				{
-					frames = padTileFrames(tileWidth, tileHeight, graph, defaultFramePadding);
+					frames = padTileFrames(tileWidth, tileHeight, graph, actualFramePadding);
 				}
 			}
-			else if (defaultFramePadding > 0 && !graph.isLoaded)
+			else if (actualFramePadding > 0 && !graph.isLoaded)
 			{
-				FlxG.log.warn('defaultFramePadding not applied to "${graph.key}" because it is loading asynchronously.'
-					+ "using `@:bitmap` assets on html5 is not recommended");
+				FlxG.log.warn('Frame padding not applied to "${graph.key}" because it is loading asynchronously.'
+					+ "Using `@:bitmap` assets on html5 is not recommended");
 			}
 			#end
 			frames = FlxTileFrames.fromGraphic(graph, FlxPoint.get(tileWidth, tileHeight));
@@ -406,29 +480,6 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	function padTileFrames(tileWidth:Int, tileHeight:Int, graphic:FlxGraphic, padding:Int)
 	{
 		return FlxTileFrames.fromBitmapAddSpacesAndBorders(graphic, FlxPoint.get(tileWidth, tileHeight), null, FlxPoint.get(padding, padding));
-	}
-
-	override function initTileObjects():Void
-	{
-		if (frames == null)
-			return;
-
-		_tileObjects = FlxDestroyUtil.destroyArray(_tileObjects);
-		// Create some tile objects that we'll use for overlap checks (one for each tile)
-		_tileObjects = new Array<FlxTile>();
-
-		var length:Int = frames.numFrames;
-		length += _startingIndex;
-
-		for (i in 0...length)
-			_tileObjects[i] = new FlxTile(this, i, tileWidth, tileHeight, (i >= _drawIndex), (i >= _collideIndex) ? allowCollisions : NONE);
-
-		// Create debug tiles for rendering bounding boxes on demand
-		#if FLX_DEBUG
-		updateDebugTileBoundingBoxSolid();
-		updateDebugTileBoundingBoxNotSolid();
-		updateDebugTileBoundingBoxPartial();
-		#end
 	}
 
 	#if FLX_DEBUG
@@ -461,10 +512,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		if (tileBitmap == null)
 			tileBitmap = makeDebugTile(color);
 		else
-		{
-			tileBitmap.fillRect(tileBitmap.rect, FlxColor.TRANSPARENT);
 			drawDebugTile(tileBitmap, color);
-		}
 
 		setDirty();
 		return tileBitmap;
@@ -493,7 +541,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	}
 
 	#if FLX_DEBUG
-	override public function drawDebugOnCamera(camera:FlxCamera):Void
+	override function drawDebugOnCamera(camera:FlxCamera):Void
 	{
 		if (!FlxG.renderTile)
 			return;
@@ -512,54 +560,50 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 		if (buffer == null)
 			return;
-
-		// Copied from getScreenPosition()
-		_helperPoint.x = x - camera.scroll.x * scrollFactor.x;
-		_helperPoint.y = y - camera.scroll.y * scrollFactor.y;
-
-		var rectWidth:Float = scaledTileWidth;
-		var rectHeight:Float = scaledTileHeight;
-		var rect = FlxRect.get(0, 0, rectWidth, rectHeight);
-
-		// Copy tile images into the tile buffer
-		// Modified from getScreenPosition()
-		_point.x = (camera.scroll.x * scrollFactor.x) - x;
-		_point.y = (camera.scroll.y * scrollFactor.y) - y;
-		var screenXInTiles:Int = Math.floor(_point.x / scaledTileWidth);
-		var screenYInTiles:Int = Math.floor(_point.y / scaledTileHeight);
-		var screenRows:Int = buffer.rows;
-		var screenColumns:Int = buffer.columns;
-
-		// Bound the upper left corner
-		screenXInTiles = Std.int(FlxMath.bound(screenXInTiles, 0, widthInTiles - screenColumns));
-		screenYInTiles = Std.int(FlxMath.bound(screenYInTiles, 0, heightInTiles - screenRows));
-
-		var rowIndex:Int = screenYInTiles * widthInTiles + screenXInTiles;
-		var columnIndex:Int;
-		var tile:FlxTile;
-
-		for (row in 0...screenRows)
+		
+		inline function bindInt(value:Int, min:Int, max:Int)
 		{
-			columnIndex = rowIndex;
-
-			for (column in 0...screenColumns)
-			{
-				tile = _tileObjects[_data[columnIndex]];
-
-				if (tile != null && tile.visible)
-				{
-					rect.x = _helperPoint.x + (columnIndex % widthInTiles) * rectWidth;
-					rect.y = _helperPoint.y + Math.floor(columnIndex / widthInTiles) * rectHeight;
-					drawDebugBoundingBox(camera.debugLayer.graphics, rect, tile.allowCollisions, tile.allowCollisions != ANY);
-				}
-
-				columnIndex++;
-			}
-
-			rowIndex += widthInTiles;
+			return Std.int(FlxMath.bound(value, min, max));
 		}
+		
+		// Figure out what tiles we need to check against, and bind them by the map edges
+		final screenPos = getScreenPosition(camera);
+		// Get the screen offset caused by scrollFactor
+		final scrollOffsetX = screenPos.x + camera.scroll.x - x;
+		final scrollOffsetY = screenPos.y + camera.scroll.y - y;
+		final minTileX = getColumnAt(camera.viewLeft - scrollOffsetX, true);
+		final minTileY = getRowAt(camera.viewTop - scrollOffsetY, true);
+		final maxTileX = getColumnAt(camera.viewRight - scrollOffsetX, true);
+		final maxTileY = getRowAt(camera.viewBottom - scrollOffsetY, true);
+		// TODO: add forEachInBounds/Rect or something
+		
+		final rect = FlxRect.get(0, 0, scaledTileWidth, scaledTileHeight);
+		for (row in minTileY...maxTileY + 1)
+		{
+			for (column in minTileX...maxTileX + 1)
+			{
+				final tile = getTileData(column, row);
 
+				if (tile != null && tile.visible && !tile.ignoreDrawDebug)
+				{
+					rect.x = screenPos.x + column * rect.width;
+					rect.y = screenPos.y + row * rect.height;
+					
+					final color = tile.debugBoundingBoxColor != null
+						? tile.debugBoundingBoxColor
+						: getDebugBoundingBoxColor(tile.allowCollisions);
+					
+					if (color != null)
+					{
+						final colStr = color.toHexString();
+						drawDebugBoundingBoxColor(camera.debugLayer.graphics, rect, color);
+					}
+				}
+			}
+		}
+		
 		rect.put();
+		screenPos.put();
 	}
 	#end
 
@@ -570,13 +614,13 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	 * @param   camera  Specify which game camera you want. If `null`, it will just grab the first global camera.
 	 * @return  Whether the object is on screen or not.
 	 */
-	override public function isOnScreen(?camera:FlxCamera):Bool
+	override function isOnScreen(?camera:FlxCamera):Bool
 	{
 		if (forceIsOnScreen)
 			return true;
 
 		if (camera == null)
-			camera = FlxG.camera;
+			camera = getDefaultCamera();
 
 		var minX:Float = x - offset.x - camera.scroll.x * scrollFactor.x;
 		var minY:Float = y - offset.y - camera.scroll.y * scrollFactor.y;
@@ -588,7 +632,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	/**
 	 * Draws the tilemap buffers to the cameras.
 	 */
-	override public function draw():Void
+	override function draw():Void
 	{
 		// don't try to render a tilemap that isn't loaded yet
 		if (graphic == null)
@@ -599,14 +643,14 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			refreshBuffers();
 			_checkBufferChanges = false;
 		}
-
-		var camera:FlxCamera;
+		
+		final cameras = getCamerasLegacy();
 		var buffer:FlxTilemapBuffer;
 		var l:Int = cameras.length;
 
 		for (i in 0...l)
 		{
-			camera = cameras[i];
+			final camera = cameras[i];
 
 			if (!camera.visible || !camera.exists || !isOnScreen(camera))
 				continue;
@@ -621,7 +665,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 				if (buffer.isDirty(this, camera))
 					drawTilemap(buffer, camera);
 
-				getScreenPosition(_point, camera).subtractPoint(offset).add(buffer.x, buffer.y).copyToFlash(_flashPoint);
+				getScreenPosition(_point, camera).subtract(offset).add(buffer.x, buffer.y).copyTo(_flashPoint);
 				buffer.draw(camera, _flashPoint, scale.x, scale.y);
 			}
 			else
@@ -642,6 +686,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 	function refreshBuffers():Void
 	{
+		final cameras = getCamerasLegacy();
 		for (i in 0...cameras.length)
 		{
 			var camera = cameras[i];
@@ -661,7 +706,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	 *
 	 * @param   dirty  Whether to flag the tilemap buffers as dirty or not.
 	 */
-	override public function setDirty(dirty:Bool = true):Void
+	override function setDirty(dirty:Bool = true):Void
 	{
 		if (FlxG.renderTile)
 			return;
@@ -670,143 +715,132 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			if (buffer != null)
 				buffer.dirty = dirty;
 	}
-
-	/**
-	 * Checks if the Object overlaps any tiles with any collision flags set,
-	 * and calls the specified callback function (if there is one).
-	 * Also calls the tile's registered callback if the filter matches.
-	 *
-	 * @param   object              The FlxObject you are checking for overlaps against.
-	 * @param   callback            An optional function that takes the form "myCallback(Object1:FlxObject,Object2:FlxObject)", where Object1 is a FlxTile object, and Object2 is the object passed in in the first parameter of this method.
-	 * @param   flipCallbackParams  Used to preserve A-B list ordering from FlxObject.separate() - returns the FlxTile object as the second parameter instead.
-	 * @param   position            Optional, specify a custom position for the tilemap (useful for overlapsAt()-type functionality).
-	 * @return  Whether there were overlaps, or if a callback was specified, whatever the return value of the callback was.
-	 */
-	override public function overlapsWithCallback(object:FlxObject, ?callback:FlxObject->FlxObject->Bool, flipCallbackParams:Bool = false,
-			?position:FlxPoint):Bool
+	
+	override function isOverlappingTile(object:FlxObject, ?filter:(tile:Tile)->Bool, ?position:FlxPoint)
 	{
-		var results:Bool = false;
-
-		var xPos:Float = x;
-		var yPos:Float = y;
-
+		return forEachOverlappingTileHelper(object, filter, position, true);
+	}
+	
+	override function forEachOverlappingTile(object:FlxObject, func:(tile:Tile)->Void, ?position:FlxPoint):Bool
+	{
+		function filter(tile)
+		{
+			// call func on every overlapping tile
+			func(tile);
+			
+			// return true, since an overlapping tile was found
+			return true;
+		}
+		
+		return forEachOverlappingTileHelper(object, filter, position, false);
+	}
+	
+	function forEachOverlappingTileHelper(object:FlxObject, ?filter:(tile:Tile)->Bool, ?position:FlxPoint, stopAtFirst:Bool):Bool
+	{
+		var xPos = x;
+		var yPos = y;
+		
 		if (position != null)
 		{
 			xPos = position.x;
 			yPos = position.y;
 			position.putWeak();
 		}
-
-		// Figure out what tiles we need to check against
-		var selectionX:Int = Math.floor((object.x - xPos) / scaledTileWidth);
-		var selectionY:Int = Math.floor((object.y - yPos) / scaledTileHeight);
-		var selectionWidth:Int = selectionX + Math.ceil(object.width / scaledTileWidth) + 1;
-		var selectionHeight:Int = selectionY + Math.ceil(object.height / scaledTileHeight) + 1;
-
-		// Then bound these coordinates by the map edges
-		selectionX = Std.int(FlxMath.bound(selectionX, 0, widthInTiles));
-		selectionY = Std.int(FlxMath.bound(selectionY, 0, heightInTiles));
-		selectionWidth = Std.int(FlxMath.bound(selectionWidth, 0, widthInTiles));
-		selectionHeight = Std.int(FlxMath.bound(selectionHeight, 0, heightInTiles));
-
-		// Then loop through this selection of tiles
-		var rowStart:Int = selectionY * widthInTiles;
-		var column:Int;
-		var tile:FlxTile;
-		var overlapFound:Bool;
-		var deltaX:Float = xPos - last.x;
-		var deltaY:Float = yPos - last.y;
-
-		for (row in selectionY...selectionHeight)
+		
+		inline function bindInt(value:Int, min:Int, max:Int)
 		{
-			column = selectionX;
-
-			while (column < selectionWidth)
-			{
-				var index:Int = rowStart + column;
-				if (index < 0 || index > _data.length - 1)
-				{
-					column++;
-					continue;
-				}
-
-				var dataIndex:Int = _data[index];
-				if (dataIndex < 0)
-				{
-					column++;
-					continue;
-				}
-
-				tile = _tileObjects[dataIndex];
-				tile.width = scaledTileWidth;
-				tile.height = scaledTileHeight;
-				tile.x = xPos + column * tile.width;
-				tile.y = yPos + row * tile.height;
-				tile.last.x = tile.x - deltaX;
-				tile.last.y = tile.y - deltaY;
-
-				overlapFound = ((object.x + object.width) > tile.x)
-					&& (object.x < (tile.x + tile.width))
-					&& ((object.y + object.height) > tile.y)
-					&& (object.y < (tile.y + tile.height));
-
-				if (tile.allowCollisions != NONE)
-				{
-					if (callback != null)
-					{
-						if (flipCallbackParams)
-						{
-							overlapFound = callback(object, tile);
-						}
-						else
-						{
-							overlapFound = callback(tile, object);
-						}
-					}
-				}
-
-				if (overlapFound)
-				{
-					if (tile.callbackFunction != null && (tile.filter == null || isOfType(object, tile.filter)))
-					{
-						tile.mapIndex = rowStart + column;
-						tile.callbackFunction(tile, object);
-					}
-
-					if (tile.allowCollisions != NONE)
-						results = true;
-				}
-
-				column++;
-			}
-
-			rowStart += widthInTiles;
+			return Std.int(FlxMath.bound(value, min, max));
 		}
-
+		
+		// Figure out what tiles we need to check against, and bind them by the map edges
+		final minTileX:Int = bindInt(Math.floor((object.x - xPos) / scaledTileWidth), 0, widthInTiles);
+		final minTileY:Int = bindInt(Math.floor((object.y - yPos) / scaledTileHeight), 0, heightInTiles);
+		final maxTileX:Int = bindInt(Math.ceil((object.x + object.width - xPos) / scaledTileWidth), 0, widthInTiles);
+		final maxTileY:Int = bindInt(Math.ceil((object.y + object.height - yPos) / scaledTileHeight), 0, heightInTiles);
+		
+		var result = false;
+		for (row in minTileY...maxTileY)
+		{
+			for (column in minTileX...maxTileX)
+			{
+				final tile = getTileData(column, row);
+				if (tile == null)
+					continue;
+				tile.orientAt(xPos, yPos, column, row);
+				if (tile.overlapsObject(object) && (filter == null || filter(tile)))
+				{
+					if (stopAtFirst)
+						return true;
+					
+					result = true;
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	override function objectOverlapsTiles<TObj:FlxObject>(object:TObj, ?callback:(Tile, TObj)->Bool, ?position:FlxPoint, isCollision = true):Bool
+	{
+		var results = false;
+		
+		function each(tile:Tile)
+		{
+			var overlapFound = tile.solid || !isCollision;
+			if (overlapFound && callback != null)
+			{
+				overlapFound = callback(tile, object);
+			}
+			
+			if (overlapFound)
+			{
+				if (tile.callbackFunction != null)
+				{
+					tile.callbackFunction(tile, object);
+				}
+				
+				// check again in case callback changed it (for backwards compatibility)
+				if (tile.solid || !isCollision)
+				{
+					tile.onCollide.dispatch(tile, object);
+					results = true;
+				}
+			}
+		}
+		
+		forEachOverlappingTile(object, each, position);
+		
 		return results;
 	}
-
-	override public function getTileIndexByCoords(coord:FlxPoint):Int
+	
+	override function getColumnAt(worldX:Float, bind = false):Int
 	{
-		var localX = coord.x - x;
-		var localY = coord.y - y;
-		coord.putWeak();
-
-		if ((localX < 0) || (localY < 0) || (localX >= scaledWidth) || (localY >= scaledHeight))
-			return -1;
-
-		return Std.int(localY / scaledTileHeight) * widthInTiles + Std.int(localX / scaledTileWidth);
+		final result = Math.floor((worldX - x) / scaledTileWidth);
+		
+		if (bind)
+			return result < 0 ? 0 : (result >= widthInTiles ? widthInTiles - 1 : result);
+		
+		return result;
+	}
+	
+	override function getRowAt(worldY:Float, bind = false):Int
+	{
+		final result = Math.floor((worldY - y) / scaledTileHeight);
+		
+		if (bind)
+			return result < 0 ? 0 : (result >= heightInTiles ? heightInTiles -1 : result);
+		
+		return result;
+	}
+	
+	override function getColumnPos(column:Float, midpoint = false):Float
+	{
+		return x + column * scaledTileWidth + (midpoint ? scaledTileWidth * 0.5 : 0);
 	}
 
-	override public function getTileCoordsByIndex(index:Int, midpoint = true):FlxPoint
+	override function getRowPos(row:Int, midpoint = false):Float
 	{
-		var point = FlxPoint.get(x + (index % widthInTiles) * scaledTileWidth, y + Std.int(index / widthInTiles) * scaledTileHeight);
-		if (midpoint)
-		{
-			point.x += scaledTileWidth * 0.5;
-			point.y += scaledTileHeight * 0.5;
-		}
-		return point;
+		return y + row * scaledTileHeight + (midpoint ? scaledTileHeight * 0.5 : 0);
 	}
 
 	/**
@@ -816,47 +850,25 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	 * @param   midpoint  Whether to return the coordinates of the tile midpoint, or upper left corner. Default is true, return midpoint.
 	 * @return  An Array with a list of all the coordinates of that tile type.
 	 */
-	public function getTileCoords(index:Int, midpoint = true):Array<FlxPoint>
+	@:deprecated("getTileCoords is deprecated, use getAllTilePos, instead")
+	public function getTileCoords(tileIndex:Int, midpoint = true):Array<FlxPoint>
 	{
-		var array:Array<FlxPoint> = null;
-
-		var point:FlxPoint;
-		var l:Int = widthInTiles * heightInTiles;
-
-		for (i in 0...l)
-		{
-			if (_data[i] == index)
-			{
-				point = FlxPoint.get(x + (i % widthInTiles) * scaledTileWidth, y + Std.int(i / widthInTiles) * scaledTileHeight);
-
-				if (midpoint)
-				{
-					point.x += scaledTileWidth * 0.5;
-					point.y += scaledTileHeight * 0.5;
-				}
-
-				if (array == null)
-				{
-					array = new Array<FlxPoint>();
-				}
-				array.push(point);
-			}
-		}
-
-		return array;
+		return getAllTilePos(tileIndex, midpoint);
 	}
 
 	/**
 	 * Call this function to lock the automatic camera to the map's edges.
 	 *
-	 * @param   camera       Specify which game camera you want.  If null getScreenPosition() will just grab the first global camera.
-	 * @param   border       Adjusts the camera follow boundary by whatever number of tiles you specify here.  Handy for blocking off deadends that are offscreen, etc.  Use a negative number to add padding instead of hiding the edges.
+	 * @param   camera       The desired camera.  If `null`, `getDefaultCamera()` is used.
+	 * @param   border       Adjusts the camera follow boundary by whatever number of tiles you
+	 *                       specify here. Handy for blocking off deadends that are offscreen, etc.
+	 *                       Use a negative number to add padding instead of hiding the edges.
 	 * @param   updateWorld  Whether to update the collision system's world size, default value is true.
 	 */
 	public function follow(?camera:FlxCamera, border = 0, updateWorld = true):Void
 	{
 		if (camera == null)
-			camera = FlxG.camera;
+			camera = getDefaultCamera();
 
 		camera.setScrollBoundsRect(x
 			+ border * scaledTileWidth, y
@@ -903,11 +915,12 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			trimmedEnd.put();
 		}
 
-		final startIndex = getTileIndexByCoords(start);
-		final endIndex = getTileIndexByCoords(end);
+		final startIndex = getMapIndex(start);
+		final endIndex = getMapIndex(end);
 
 		// If the starting tile is solid, return the starting position
-		if (getTileCollisions(getTileByIndex(startIndex)) != NONE)
+		final tile = getTileData(startIndex);
+		if (tile != null && tile.solid)
 		{
 			if (result != null)
 				result.copyFrom(start);
@@ -916,10 +929,10 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			return false;
 		}
 
-		final startTileX = startIndex % widthInTiles;
-		final startTileY = Std.int(startIndex / widthInTiles);
-		final endTileX = endIndex % widthInTiles;
-		final endTileY = Std.int(endIndex / widthInTiles);
+		final startTileX = getColumn(startIndex);
+		final startTileY = getRow(startIndex);
+		final endTileX = getColumn(endIndex);
+		final endTileY = getRow(endIndex);
 		var hitIndex = -1;
 
 		if (start.x == end.x)
@@ -928,7 +941,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			if (hitIndex != -1 && result != null)
 			{
 				// check the bottom
-				result.copyFrom(getTileCoordsByIndex(hitIndex, false));
+				result.copyFrom(getTilePos(hitIndex));
 				result.x = start.x;
 				if (start.y > end.y)
 					result.y += scaledTileHeight;
@@ -945,16 +958,13 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 			final inc = movesRight ? 1 : -1;
 			final offset = movesRight ? 1 : 0;
 			var tileX = startTileX;
-			var tileY = 0;
-			var xPos = 0.0;
-			var yPos = 0.0;
 			var lastTileY = startTileY;
 
 			while (tileX != endTileX)
 			{
-				xPos = x + (tileX + offset) * scaledTileWidth;
-				yPos = m * xPos + b;
-				tileY = Math.floor((yPos - y) / scaledTileHeight);
+				final xPos = getColumnPos(tileX + offset);
+				final yPos = m * getColumnPos(tileX + offset) + b;
+				final tileY = getRowAt(yPos);
 				hitIndex = checkColumn(tileX, lastTileY, tileY);
 				if (hitIndex != -1)
 					break;
@@ -967,7 +977,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 			if (hitIndex != -1 && result != null)
 			{
-				result.copyFrom(getTileCoordsByIndex(hitIndex, false));
+				result.copyFrom(getTilePos(hitIndex));
 				if (Std.int(hitIndex / widthInTiles) == lastTileY)
 				{
 					if (start.x > end.x)
@@ -1014,8 +1024,9 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		final step = startY <= endY ? 1 : -1;
 		while (true)
 		{
-			var index = y * widthInTiles + x;
-			if (getTileCollisions(getTileByIndex(index)) != NONE)
+			final index = getMapIndex(x, y);
+			final tile = getTileData(index);
+			if (tile != null && tile.solid)
 				return index;
 
 			if (y == endY)
@@ -1057,8 +1068,6 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		var stepY:Float = deltaY / steps;
 		var curX:Float = start.x - stepX - x;
 		var curY:Float = start.y - stepY - y;
-		var tileX:Int;
-		var tileY:Int;
 		var i:Int = 0;
 
 		start.putWeak();
@@ -1075,10 +1084,11 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 				continue;
 			}
 
-			tileX = Math.floor(curX / scaledTileWidth);
-			tileY = Math.floor(curY / scaledTileHeight);
-
-			if (_tileObjects[_data[tileY * widthInTiles + tileX]].allowCollisions != NONE)
+			var tileX = Math.floor(curX / scaledTileWidth);
+			var tileY = Math.floor(curY / scaledTileHeight);
+			
+			final tile = getTileData(tileX, tileY);
+			if (tile != null && tile.solid)
 			{
 				// Some basic helper stuff
 				tileX *= Std.int(scaledTileWidth);
@@ -1144,19 +1154,18 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	/**
 	 * Change a particular tile to FlxSprite. Or just copy the graphic if you dont want any changes to map data itself.
 	 *
-	 * @param   x              The X coordinate of the tile (in tiles, not pixels).
-	 * @param   y              The Y coordinate of the tile (in tiles, not pixels).
+	 * @param   tileX          The X coordinate of the tile (in tiles, not pixels).
+	 * @param   tileY          The Y coordinate of the tile (in tiles, not pixels).
 	 * @param   newTile        New tile for the map data. Use -1 if you dont want any changes. Default = 0 (empty)
 	 * @param   spriteFactory  Method for converting FlxTile to FlxSprite. If null then will be used defaultTileToSprite() method.
 	 * @return FlxSprite.
 	 */
-	public function tileToSprite(X:Int, Y:Int, NewTile:Int = 0, ?SpriteFactory:FlxTileProperties->FlxSprite):FlxSprite
+	public function tileToSprite(tileX:Int, tileY:Int, newTile = 0, ?spriteFactory:FlxTileProperties->FlxSprite):FlxSprite
 	{
-		if (SpriteFactory == null)
-			SpriteFactory = defaultTileToSprite;
-
-		var rowIndex:Int = X + (Y * widthInTiles);
-		var tile:FlxTile = _tileObjects[_data[rowIndex]];
+		if (spriteFactory == null)
+			spriteFactory = defaultTileToSprite;
+		
+		final tile:FlxTile = getTileData(tileX, tileY);
 		var image:FlxImageFrame = null;
 
 		if (tile != null && tile.visible)
@@ -1164,19 +1173,19 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		else
 			image = FlxImageFrame.fromEmptyFrame(graphic, FlxRect.get(0, 0, tileWidth, tileHeight));
 
-		var tileX:Float = X * tileWidth * scale.x + x;
-		var tileY:Float = Y * tileHeight * scale.y + y;
-		var tileSprite:FlxSprite = SpriteFactory({
+		final worldX:Float = tileX * tileWidth * scale.x + x;
+		final worldY:Float = tileY * tileHeight * scale.y + y;
+		final tileSprite:FlxSprite = spriteFactory({
 			graphic: image,
-			x: tileX,
-			y: tileY,
+			x: worldX,
+			y: worldY,
 			scale: FlxPoint.get().copyFrom(scale),
 			alpha: alpha,
 			blend: blend
 		});
 
-		if (NewTile >= 0)
-			setTile(X, Y, NewTile);
+		if (newTile >= 0)
+			setTileIndex(tileX, tileY, newTile);
 
 		return tileSprite;
 	}
@@ -1214,7 +1223,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		}
 		else
 		{
-			getScreenPosition(_point, camera).subtractPoint(offset).copyToFlash(_helperPoint);
+			getScreenPosition(_point, camera).subtract(offset).copyTo(_helperPoint);
 
 			_helperPoint.x = isPixelPerfectRender(camera) ? Math.floor(_helperPoint.x) : _helperPoint.x;
 			_helperPoint.y = isPixelPerfectRender(camera) ? Math.floor(_helperPoint.y) : _helperPoint.y;
@@ -1256,7 +1265,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 			for (column in 0...screenColumns)
 			{
-				tile = _tileObjects[_data[columnIndex]];
+				tile = getTileData(columnIndex);
 
 				if (tile != null && tile.visible && tile.frame.type != FlxFrameType.EMPTY)
 				{
@@ -1351,18 +1360,15 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 	function drawDebugTile(debugTile:BitmapData, color:FlxColor):Void
 	{
-		if (color != FlxColor.TRANSPARENT)
+		if (color == FlxColor.TRANSPARENT)
 		{
-			var gfx:Graphics = FlxSpriteUtil.flashGfx;
-			gfx.clear();
-			gfx.moveTo(0, 0);
-			gfx.lineStyle(1, color, 0.5);
-			gfx.lineTo(tileWidth - 1, 0);
-			gfx.lineTo(tileWidth - 1, tileHeight - 1);
-			gfx.lineTo(0, tileHeight - 1);
-			gfx.lineTo(0, 0);
-
-			debugTile.draw(FlxSpriteUtil.flashGfxSprite);
+			debugTile.fillRect(debugTile.rect, FlxColor.TRANSPARENT);
+		}
+		else
+		{
+			// 0.5 alpha
+			debugTile.fillRect(debugTile.rect, (0x80 << 24) | color.rgb);
+			debugTile.fillRect(new Rectangle(1, 1, tileWidth - 2, tileHeight - 2), 0x0);
 		}
 	}
 
@@ -1371,9 +1377,9 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		setDirty();
 	}
 	#end
-
+	
 	/**
-	 * Internal function used in setTileByIndex() and the constructor to update the map.
+	 * Internal function used in setTileIndex() and the constructor to update the map.
 	 *
 	 * @param   index  The index of the tile object in _tileObjects internal array you want to update.
 	 */
@@ -1403,23 +1409,25 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 
 	/**
 	 * Internal function for setting graphic property for this object.
-	 * It changes graphic' useCount also for better memory tracking.
+	 * Changes the graphic's `useCount` for better memory tracking.
 	 */
+	@:noCompletion
 	function set_graphic(value:FlxGraphic):FlxGraphic
 	{
-		// If graphics are changing
 		if (graphic != value)
 		{
 			// If new graphic is not null, increase its use count
 			if (value != null)
-				value.useCount++;
-
+				value.incrementUseCount();
+			
 			// If old graphic is not null, decrease its use count
 			if (graphic != null)
-				graphic.useCount--;
+				graphic.decrementUseCount();
+			
+			graphic = value;
 		}
-
-		return graphic = value;
+		
+		return value;
 	}
 
 	override function set_pixelPerfectRender(value:Bool):Bool
@@ -1477,10 +1485,11 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	{
 		scaledTileWidth = tileWidth * scale.x;
 		width = scaledWidth;
-
+		
+		final cameras = getCameras();
 		if (cameras == null)
 			return;
-
+		
 		for (i in 0...cameras.length)
 			if (_buffers[i] != null)
 				_buffers[i].updateColumns(tileWidth, widthInTiles, scale.x, cameras[i]);
@@ -1490,10 +1499,11 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 	{
 		scaledTileHeight = tileHeight * scale.y;
 		height = scaledHeight;
-
+		
+		final cameras = getCameras();
 		if (cameras == null)
 			return;
-
+		
 		for (i in 0...cameras.length)
 			if (_buffers[i] != null)
 				_buffers[i].updateRows(tileHeight, heightInTiles, scale.y, cameras[i]);
@@ -1516,7 +1526,7 @@ class FlxTilemap extends FlxBaseTilemap<FlxTile>
 		return tileSprite;
 	}
 
-	override function set_allowCollisions(value:Int):Int
+	override function set_allowCollisions(value:FlxDirectionFlags):FlxDirectionFlags
 	{
 		for (tile in _tileObjects)
 			if (tile.index >= _collideIndex)

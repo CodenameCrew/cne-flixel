@@ -50,7 +50,13 @@ class FlxGamepadManager implements IFlxInputManager
 	 * @since 4.6.0
 	 */
 	public var deviceDisconnected(default, null):FlxTypedSignal<FlxGamepad->Void>;
-
+	
+	/**
+	 * Whether the bottom or right face button is ACCEPT
+	 * @since 5.9.0
+	 */
+	public var acceptMode:FlxGamepadAcceptMode = BOTTOM;
+	
 	/**
 	 * Stores all gamepads - can have null entries, but index matches event.device
 	 */
@@ -401,16 +407,32 @@ class FlxGamepadManager implements IFlxInputManager
 		// and the most popular tools just turn it into a 360 controller
 
 		name = name.toLowerCase().remove("-").remove("_");
-		return if (name.contains("ouya")) OUYA; // "OUYA Game Controller"
-		else if (name.contains("wireless controller") || name.contains("ps4")) PS4; // "Wireless Controller" or "PS4 controller"
-		else if (name.contains("logitech")) LOGITECH; else if ((name.contains("xbox") && name.contains("360"))
-			|| name.contains("xinput")) XINPUT; else if (name.contains("nintendo rvlcnt01tr")) WII_REMOTE; // WiiRemote with motion plus
-		else if (name.contains("nintendo rvlcnt01")) WII_REMOTE; // WiiRemote w/o  motion plus
-		else if (name.contains("mayflash wiimote pc adapter")) MAYFLASH_WII_REMOTE; // WiiRemote paired to MayFlash DolphinBar (with or w/o motion plus)
-		else if (name.contains("pro controller") || name.contains("joycon l+r")) SWITCH_PRO; else if (name.contains("joycon (l)")) SWITCH_JOYCON_LEFT; else
-			if (name.contains("joycon (r)")) SWITCH_JOYCON_RIGHT; else if (name.contains("mfi"))
-				MFI; // Keep last. "mfi" may show up in brand names, words, serials or SKUs
-		else UNKNOWN;
+		return if (name.contains("ouya"))
+				OUYA; // "OUYA Game Controller"
+			else if (name.contains("wireless controller") || name.contains("ps4") || name.contains("dualshock 4"))
+				PS4; // "Wireless Controller" or "PS4 controller"
+			else if (name.contains("ps5") || name.contains('dualsense'))
+				PS5;
+			else if (name.contains("logitech"))
+				LOGITECH;
+			else if ((name.contains("xbox") && name.contains("360")) || name.contains("xinput"))
+				XINPUT;
+			else if (name.contains("nintendo rvlcnt01tr"))
+				WII_REMOTE; // WiiRemote with motion plus
+			else if (name.contains("nintendo rvlcnt01"))
+				WII_REMOTE; // WiiRemote w/o  motion plus
+			else if (name.contains("mayflash wiimote pc adapter"))
+				MAYFLASH_WII_REMOTE; // WiiRemote paired to MayFlash DolphinBar (with or w/o motion plus)
+			else if (name.contains("pro controller") || name.contains("joycon l+r"))
+				SWITCH_PRO;
+			else if (name.contains("joycon (l)"))
+				SWITCH_JOYCON_LEFT;
+			else if (name.contains("joycon (r)"))
+				SWITCH_JOYCON_RIGHT;
+			else if (name.contains("mfi"))
+				MFI;// Keep last. "mfi" may show up in brand names, words, serials or SKUs
+			else
+				UNKNOWN;
 	}
 
 	function removeGamepad(Device:GameInputDevice):Void
@@ -580,4 +602,28 @@ class FlxGamepadManager implements IFlxInputManager
 				count++;
 		return count;
 	}
+}
+
+/**
+ * @since 5.9.0
+ */
+enum FlxGamepadAcceptMode
+{
+	/**
+	 * The bottom face button is `ACCEPT` and the right face button is `CANCEL`.
+	 * This is common on western-style consoles, like XBox or American PS4/5
+	 */
+	BOTTOM;
+	
+	/**
+	 * The right face button is `ACCEPT` and the bottom face button is `CANCEL`.
+	 * This is common in Japanese PS4/5 consoles, and Nintendo consoles
+	 */
+	RIGHT;
+	
+	/**
+	 * Behaves like `BOTTOM` for nearly all gamepads, but `RIGHT` for specific mappings,
+	 * namely Nintendo Switch gamepads
+	 */
+	USE_MAPPING;
 }

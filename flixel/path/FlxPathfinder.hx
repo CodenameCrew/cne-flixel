@@ -60,8 +60,8 @@ class FlxTypedPathfinder<Tilemap:FlxBaseTilemap<FlxObject>, Data:FlxTypedPathfin
 	public function findPath(map:Tilemap, start:FlxPoint, end:FlxPoint, simplify:FlxPathSimplifier = LINE):Null<Array<FlxPoint>>
 	{
 		// Figure out what tile we are starting and ending on.
-		var startIndex = map.getTileIndexByCoords(start);
-		var endIndex = map.getTileIndexByCoords(end);
+		final startIndex = map.getMapIndex(start);
+		final endIndex = map.getMapIndex(end);
 
 		var data = createData(map, startIndex, endIndex);
 		var indices = findPathIndicesHelper(data);
@@ -119,7 +119,7 @@ class FlxTypedPathfinder<Tilemap:FlxBaseTilemap<FlxObject>, Data:FlxTypedPathfin
 	function getPathPointsFromIndices(data:Data, indices:Array<Int>)
 	{
 		// convert indices to world coordinates
-		return indices.map(data.map.getTileCoordsByIndex.bind(_, true));
+		return indices.map((i)->data.map.getTilePos(i, true));
 	}
 
 	/**
@@ -128,6 +128,7 @@ class FlxTypedPathfinder<Tilemap:FlxBaseTilemap<FlxObject>, Data:FlxTypedPathfin
 	 * @param data   The pathfinder data for this current search.
 	 * @param points An array of FlxPoint nodes.
 	 */
+	@:haxe.warning("-WDeprecated")
 	function simplifyPath(data:Data, points:Array<FlxPoint>, simplify:FlxPathSimplifier):Array<FlxPoint>
 	{
 		switch (simplify)
@@ -248,6 +249,7 @@ class FlxTypedPathfinder<Tilemap:FlxBaseTilemap<FlxObject>, Data:FlxTypedPathfin
 	 * @param points     An array of FlxPoint nodes.
 	 * @param reolution  Defaults to 1, meaning check every tile or so.  Higher means more checks!
 	 */
+	@:haxe.warning("-WDeprecated")
 	function simplifyRayStep(data:Data, points:Array<FlxPoint>, resolution:Float):Void
 	{
 		// A point used to calculate rays
@@ -616,7 +618,8 @@ class FlxTypedPathfinderData<Tilemap:FlxBaseTilemap<FlxObject>>
 
 	public function hasValidStartEnd()
 	{
-		return startIndex >= 0 && endIndex >= 0 && startIndex < map.totalTiles && endIndex < map.totalTiles;
+		return map.tileExists(startIndex)
+			&& map.tileExists(endIndex);
 	}
 
 	public function destroy()
@@ -643,7 +646,7 @@ class FlxTypedPathfinderData<Tilemap:FlxBaseTilemap<FlxObject>>
 	 */
 	inline function getX(tile:Int)
 	{
-		return tile % map.widthInTiles;
+		return map.getColumn(tile);
 	}
 
 	/**
@@ -651,7 +654,7 @@ class FlxTypedPathfinderData<Tilemap:FlxBaseTilemap<FlxObject>>
 	 */
 	inline function getY(tile:Int)
 	{
-		return Std.int(tile / map.widthInTiles);
+		return map.getRow(tile);
 	}
 
 	/**
@@ -660,7 +663,7 @@ class FlxTypedPathfinderData<Tilemap:FlxBaseTilemap<FlxObject>>
 	inline function getTileCollisionsByIndex(tile:Int)
 	{
 		#if debug numChecks++; #end
-		return map.getTileCollisions(map.getTileByIndex(tile));
+		return map.getTileData(tile).allowCollisions;
 	}
 }
 
@@ -686,6 +689,7 @@ enum FlxPathSimplifier
 	 * Removes nodes who'with neighbors that have no walls directly blocking
 	 * Uses `tilemap.rayStep`.
 	 */
+	@:deprecated("RAY_STEP is deprecated, use RAY, instead")
 	RAY_STEP(resolution:Float);
 
 	/**

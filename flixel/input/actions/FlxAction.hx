@@ -462,9 +462,9 @@ class FlxAction implements IFlxDestroyable
 				inputs.splice(i, 1);
 				continue;
 			}
-
+			
 			input.update();
-
+			
 			if (input.check(this))
 				triggered = true;
 		}

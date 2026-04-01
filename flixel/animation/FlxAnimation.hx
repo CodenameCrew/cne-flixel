@@ -31,7 +31,7 @@ class FlxAnimation extends FlxBaseAnimation
 	 * Note: `FlxFrameCollections` and `FlxAtlasFrames` may have their own duration set per-frame,
 	 * those values will override this value.
 	 */
-	public var frameDuration(default, null):Float = 0;
+	public var frameDuration:Float = 0;
 
 	/**
 	 * Seconds between frames (inverse of the framerate)
@@ -58,7 +58,7 @@ class FlxAnimation extends FlxBaseAnimation
 	/**
 	 * Whether or not the animation is looped.
 	 */
-	public var looped(default, null):Bool = true;
+	public var looped:Bool = true;
 
 	/**
 	 * The custom loop point for this animation.
@@ -86,6 +86,14 @@ class FlxAnimation extends FlxBaseAnimation
 	 * @since 4.2.0
 	 */
 	public var frames:Array<Int>;
+	
+	/**
+	 * How fast or slow time should pass for this animation.
+	 * 
+	 * Similar to `FlxAnimationController`'s `timeScale`, but won't effect other animations.
+	 * @since 5.4.1
+	 */
+	public var timeScale:Float = 1.0;
 
 	/**
 	 * If addByIndices was used
@@ -109,14 +117,6 @@ class FlxAnimation extends FlxBaseAnimation
 	 * Internal, used to wait the frameDuration at the end of the animation.
 	 */
 	var _frameFinishedEndTimer:Float = 0;
-
-	/**
-	 * How fast or slow time should pass for this animation.
-	 *
-	 * Similar to `FlxAnimationController`'s `timeScale`, but won't effect other animations.
-	 * @since 5.4.1
-	 */
-	public var timeScale:Float = 1.0;
 
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
@@ -289,7 +289,9 @@ class FlxAnimation extends FlxBaseAnimation
 					onLoop.dispatch();
 				}
 				else
+				{
 					curFrame--;
+				}
 			}
 			else
 			{
@@ -300,7 +302,9 @@ class FlxAnimation extends FlxBaseAnimation
 					onLoop.dispatch();
 				}
 				else
+				{
 					curFrame++;
+				}
 			}
 
 			// prevents null ref when the sprite is destroyed on finishCallback (#2782)

@@ -17,11 +17,12 @@ class SignalFrontEnd
 	 * @since 4.6.0
 	 */
 	public var postStateSwitch(default, null):FlxSignal = new FlxSignal();
-
+	
 	@:deprecated("Use preStateSwitch instead of stateSwitched")
 	public var stateSwitched(get, never):FlxSignal;
+	/** Dispatched just before state.create() is called */
 	public var preStateCreate(default, null):FlxTypedSignal<FlxState->Void> = new FlxTypedSignal<FlxState->Void>();
-
+	
 	/**
 	 * Gets dispatched when the game is resized.
 	 * Passes the new window width and height to callback functions.

@@ -14,7 +14,7 @@ import flixel.input.touch.FlxTouch;
 /**
  * A set of functions related to angle calculations.
  * In degrees: (down = 90, right = 0, up = -90)
- * 
+ *
  * Note: in Flixel 5.0.0 all angle-related tools were changed so that 0 degrees points right, instead of up
  * @see [Flixel 5.0.0 Migration guide](https://github.com/HaxeFlixel/flixel/wiki/Flixel-5.0.0-Migration-guide)
  */
@@ -200,6 +200,25 @@ class FlxAngle
 	}
 
 	/**
+	 * Find the angle between two FlxPoints.
+	 *
+	 * @param	PointA		The FlxPoint to test from
+	 * @param	PointB		The FlxPoint to angle PointA towards
+	 * @param	AsDegrees	If you need the value in degrees instead of radians, set to true
+	 * @return	The angle (in radians unless AsDegrees is true)
+	 */
+	public static function angleBetweenPoints(PointA:FlxPoint, PointB:FlxPoint, AsDegrees:Bool = false):Float
+	{
+		var dx:Float = PointB.x - PointA.x;
+		var dy:Float = PointB.y - PointA.y;
+
+		PointA.putWeak();
+		PointB.putWeak();
+
+		return angleFromOrigin(dx, dy, AsDegrees);
+	}
+
+	/**
 	 * Find the angle (in degrees) between an FlxSprite and an FlxPoint.
 	 * The source sprite takes its x/y and origin into account.
 	 * @since 5.0.0
@@ -243,8 +262,8 @@ class FlxAngle
 
 		var p:FlxPoint = Object.getScreenPosition();
 
-		var dx:Float = FlxG.mouse.screenX - p.x;
-		var dy:Float = FlxG.mouse.screenY - p.y;
+		var dx:Float = FlxG.mouse.viewX - p.x;
+		var dy:Float = FlxG.mouse.viewY - p.y;
 
 		p.put();
 
@@ -293,8 +312,8 @@ class FlxAngle
 		// In order to get the angle between the object and mouse, we need the objects screen coordinates (rather than world coordinates)
 		var p:FlxPoint = Object.getScreenPosition();
 
-		var dx:Float = Touch.screenX - p.x;
-		var dy:Float = Touch.screenY - p.y;
+		var dx:Float = Touch.viewX - p.x;
+		var dy:Float = Touch.viewY - p.y;
 
 		p.put();
 

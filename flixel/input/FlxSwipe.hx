@@ -3,6 +3,7 @@ package flixel.input;
 import flixel.FlxG;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
+import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxStringUtil;
 import flixel.util.FlxDestroyUtil;
 
@@ -26,10 +27,10 @@ class FlxSwipe implements IFlxDestroyable
 	public var radians(get, never):Float;
 	public var duration(get, never):Float;
 
-	var _startTimeInTicks:Int;
-	var _endTimeInTicks:Int;
+	var _startTimeInTicks:Float;
+	var _endTimeInTicks:Float;
 
-	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:Int)
+	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:Float)
 	{
 		this.ID = ID;
 		startPosition = StartPosition;
@@ -37,17 +38,11 @@ class FlxSwipe implements IFlxDestroyable
 		_startTimeInTicks = StartTimeInTicks;
 		_endTimeInTicks = FlxG.game.ticks;
 	}
-
+	
 	public function destroy()
 	{
-		if(startPosition != null) {
-			startPosition.putWeak();
-			startPosition = null;
-		}
-		if(endPosition != null) {
-			endPosition.putWeak();
-			endPosition = null;
-		}
+		startPosition = FlxDestroyUtil.put(startPosition);
+		endPosition = FlxDestroyUtil.put(endPosition);
 	}
 
 	inline function toString():String

@@ -3,6 +3,7 @@ package flixel;
 import flixel.graphics.tile.FlxDrawBaseItem;
 import flixel.system.FlxSplash;
 import flixel.util.FlxArrayUtil;
+import flixel.util.typeLimit.NextState;
 import openfl.filters.ShaderFilter;
 import flixel.system.FlxAssets.FlxShader;
 import openfl.Assets;
@@ -15,10 +16,6 @@ import openfl.filters.BitmapFilter;
 import flixel.util.FlxDestroyUtil;
 #if desktop
 import openfl.events.FocusEvent;
-#end
-#if FLX_POST_PROCESS
-import flixel.effects.postprocess.PostProcess;
-import openfl.display.OpenGLView;
 #end
 #if FLX_DEBUG
 import flixel.system.debug.FlxDebugger;
@@ -79,7 +76,7 @@ class FlxGame extends Sprite
 	/**
 	 * Time in milliseconds that has passed (amount of "ticks" passed) since the game has started.
 	 */
-	public var ticks(default, null):Int = 0;
+	public var ticks(default, null):Float = 0;
 
 	/**
 	 * Enables or disables the filters set via `setFilters()`.
@@ -89,56 +86,31 @@ class FlxGame extends Sprite
 	/**
 	 * A flag for triggering the `preGameStart` and `postGameStart` "events".
 	 */
-	@:allow(flixel.system.FlxSplash)
+	@:allow(flixel.FlxIntroSplash)
 	var _gameJustStarted:Bool = false;
 
 	/**
 	 * Class type of the initial/first game state for the game, usually `MenuState` or something like that.
 	 */
-	var _initialState:Class<FlxState>;
+	var _initialState:NextState;
 
 	/**
 	 * Current game state.
 	 */
 	var _state:FlxState;
 
+	#if flash
 	/**
 	 * Total number of milliseconds elapsed since game start.
 	 */
-	var _total:Int = 0;
+	var _total:Float = 0;
+	#end
 
 	/**
 	 * Time stamp of game startup. Needed on JS where `Lib.getTimer()`
 	 * returns time stamp of current date, not the time passed since app start.
 	 */
-	var _startTime:Int = 0;
-
-	/**
-	 * Total number of milliseconds elapsed since last update loop.
-	 * Counts down as we step through the game loop.
-	 */
-	var _accumulator:Float;
-
-	/**
-	 * Milliseconds of time since last step.
-	 */
-	var _elapsedMS:Float;
-
-	/**
-	 * Milliseconds of time per step of the game loop. e.g. 60 fps = 16ms.
-	 */
-	var _stepMS:Float;
-
-	/**
-	 * Optimization so we don't have to divide step by 1000 to get its value in seconds every frame.
-	 */
-	var _stepSeconds:Float;
-
-	/**
-	 * Max allowable accumulation (see `_accumulator`).
-	 * Should always (and automatically) be set to roughly 2x the stage framerate.
-	 */
-	var _maxAccumulation:Float;
+	var _startTime:Float = 0;
 
 	/**
 	 * Whether the game lost focus.
@@ -149,14 +121,6 @@ class FlxGame extends Sprite
 	 * The filters array to be applied to the game.
 	 */
 	var _filters:Array<BitmapFilter>;
-
-	#if (desktop && lime_legacy)
-	/**
-	 * Ugly workaround to ensure consistent behaviour between flash and cpp
-	 * (the focus event should not fire when the game starts up!)
-	 */
-	var _onFocusFiredOnce:Bool = false;
-	#end
 
 	#if FLX_FOCUS_LOST_SCREEN
 	/**
@@ -204,7 +168,11 @@ class FlxGame extends Sprite
 	/**
 	 * If a state change was requested, the new state object is stored here until we switch to it.
 	 */
-	var _requestedState:FlxState;
+	var _nextState:NextState;
+
+	var _requestedState(get, set):NextState;
+	inline function get__requestedState() return _nextState;
+	inline function set__requestedState(v) return _nextState = v;
 
 	/**
 	 * A flag for keeping track of whether a game reset was requested or not.
@@ -231,18 +199,6 @@ class FlxGame extends Sprite
 	var _recordingRequested:Bool = false;
 	#end
 
-	#if FLX_POST_PROCESS
-	/**
-	 * `Sprite` for postprocessing effects
-	 */
-	var postProcessLayer:Sprite = new Sprite();
-
-	/**
-	 * Post process effects active on the `postProcessLayer`.
-	 */
-	var postProcesses:Array<PostProcess> = [];
-	#end
-
 	/**
 	 * Instantiate a new game object.
 	 *
@@ -254,7 +210,9 @@ class FlxGame extends Sprite
 	 *                         If the demensions don't match the `Project.xml`, 
 	 *                         [`scaleMode`](https://api.haxeflixel.com/flixel/system/scaleModes/index.html)
 	 *                         will determine the actual display size of the game.
-	 * @param initialState     The class name of the state you want to create and switch to first (e.g. `MenuState`).
+	 * @param initialState     A constructor for the initial state, ex: `PlayState.new` or `()->new PlayState()`.
+	 *                         Note: Before Flixel 6, this took a `Class<FlxState>`, this has been
+	 *                         deprecated, but is still available, for backwards compatibility.
 	 * @param updateFramerate  How frequently the game should update. Default is 60 fps.
 	 * @param drawFramerate    Sets the actual display / draw framerate for the game. Default is 60 fps.
 	 * @param skipSplash       Whether you want to skip the flixel splash screen with `FLX_NO_DEBUG`.
@@ -262,7 +220,7 @@ class FlxGame extends Sprite
 	 *
 	 * @see [scale modes](https://api.haxeflixel.com/flixel/system/scaleModes/index.html)
 	 */
-	public function new(gameWidth = 0, gameHeight = 0, ?initialState:Class<FlxState>, updateFramerate = 60, drawFramerate = 60, skipSplash = false,
+	public function new(gameWidth = 0, gameHeight = 0, ?initialState:InitialState, updateFramerate = 60, drawFramerate = 60, skipSplash = false,
 			startFullscreen = false)
 	{
 		super();
@@ -284,7 +242,6 @@ class FlxGame extends Sprite
 
 		FlxG.updateFramerate = updateFramerate;
 		FlxG.drawFramerate = drawFramerate;
-		_accumulator = _stepMS;
 		_skipSplash = skipSplash;
 
 		#if FLX_RECORD
@@ -292,7 +249,7 @@ class FlxGame extends Sprite
 		#end
 
 		// Then get ready to create the game object for real
-		_initialState = (initialState == null) ? FlxState : initialState;
+		_initialState = (initialState == null) ? FlxState.new : initialState.toNextState();
 
 		addEventListener(Event.ADDED_TO_STAGE, create);
 	}
@@ -354,7 +311,9 @@ class FlxGame extends Sprite
 		removeEventListener(Event.ADDED_TO_STAGE, create);
 
 		_startTime = getTimer();
+		#if flash
 		_total = getTicks();
+		#end
 
 		#if desktop
 		FlxG.fullscreen = _startFullscreen;
@@ -366,11 +325,6 @@ class FlxGame extends Sprite
 		stage.frameRate = FlxG.drawFramerate;
 
 		addChild(_inputContainer);
-
-		#if FLX_POST_PROCESS
-		if (OpenGLView.isSupported)
-			addChild(postProcessLayer);
-		#end
 
 		// Creating the debugger overlay
 		#if FLX_DEBUG
@@ -393,9 +347,9 @@ class FlxGame extends Sprite
 		#end
 
 		// Focus gained/lost monitoring
-		#if (desktop && openfl <= "4.0.0")
-		stage.addEventListener(FocusEvent.FOCUS_OUT, onFocusLost);
-		stage.addEventListener(FocusEvent.FOCUS_IN, onFocus);
+		#if (sys && openfl >= "9.3.0")
+		stage.nativeWindow.addEventListener(Event.DEACTIVATE, onFocusLost);
+		stage.nativeWindow.addEventListener(Event.ACTIVATE, onFocus);
 		#else
 		stage.addEventListener(Event.DEACTIVATE, onFocusLost);
 		stage.addEventListener(Event.ACTIVATE, onFocus);
@@ -408,8 +362,15 @@ class FlxGame extends Sprite
 		if (FlxG.updateFramerate < FlxG.drawFramerate)
 			FlxG.log.warn("FlxG.updateFramerate: The update framerate shouldn't be smaller" + " than the draw framerate, since it can slow down your game.");
 
+		#if flash
 		// Finally, set up an event for the actual game loop stuff.
-		stage.addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		stage.addEventListener(Event.ENTER_FRAME, function(e)
+		{
+			ticks = getTicks();
+			__enterFrame(ticks - _total);
+			_total = ticks;
+		});
+		#end
 
 		// We need to listen for resize event which means new context
 		// it means that we need to recreate BitmapDatas of dumped tilesheets
@@ -428,15 +389,6 @@ class FlxGame extends Sprite
 			return; // Don't run this function twice (bug in standalone flash player)
 		#end
 
-		#if (desktop && lime_legacy)
-		// make sure the on focus event doesn't fire on startup
-		if (!_onFocusFiredOnce)
-		{
-			_onFocusFiredOnce = true;
-			return;
-		}
-		#end
-
 		#if mobile
 		// just check if device orientation has been changed
 		onResize(_);
@@ -445,6 +397,8 @@ class FlxGame extends Sprite
 		_lostFocus = false;
 		FlxG.signals.focusGained.dispatch();
 		_state.onFocus();
+
+		stage.frameRate = FlxG.drawFramerate;
 
 		if (!FlxG.autoPause)
 			return;
@@ -457,8 +411,6 @@ class FlxGame extends Sprite
 		#if FLX_DEBUG
 		debugger.stats.onFocus();
 		#end
-
-		stage.frameRate = FlxG.drawFramerate;
 		#if FLX_SOUND_SYSTEM
 		FlxG.sound.onFocus();
 		#end
@@ -467,11 +419,6 @@ class FlxGame extends Sprite
 
 	function onFocusLost(event:Event):Void
 	{
-		#if next
-		if (event != null && event.target != FlxG.stage)
-			return;
-		#end
-
 		#if flash
 		if (_lostFocus)
 			return; // Don't run this function twice (bug in standalone flash player)
@@ -480,6 +427,8 @@ class FlxGame extends Sprite
 		_lostFocus = true;
 		FlxG.signals.focusLost.dispatch();
 		_state.onFocusLost();
+
+		stage.frameRate = focusLostFramerate;
 
 		if (!FlxG.autoPause)
 			return;
@@ -492,8 +441,6 @@ class FlxGame extends Sprite
 		#if FLX_DEBUG
 		debugger.stats.onFocusLost();
 		#end
-
-		stage.frameRate = focusLostFramerate;
 		#if FLX_SOUND_SYSTEM
 		FlxG.sound.onFocusLost();
 		#end
@@ -505,11 +452,6 @@ class FlxGame extends Sprite
 	{
 		var width:Int = FlxG.stage.stageWidth;
 		var height:Int = FlxG.stage.stageHeight;
-
-		#if !flash
-		if (FlxG.renderTile)
-			FlxG.bitmap.onContext();
-		#end
 
 		resizeGame(width, height);
 	}
@@ -536,25 +478,21 @@ class FlxGame extends Sprite
 		if (soundTray != null)
 			soundTray.screenCenter();
 		#end
-
-		#if FLX_POST_PROCESS
-		for (postProcess in postProcesses)
-			postProcess.rebuild();
-		#end
 	}
 
 	/**
 	 * Handles the `onEnterFrame` call and figures out how many updates and draw calls to do.
 	 */
-	function onEnterFrame(_):Void
+	@SuppressWarnings("checkstyle:MethodName")
+	private #if !flash override #end function __enterFrame(deltaTime:Float):Void
 	{
+		#if !flash
 		ticks = getTicks();
-		_elapsedMS = ticks - _total;
-		_total = ticks;
+		#end
 
 		#if FLX_SOUND_TRAY
 		if (soundTray != null && soundTray.active)
-			soundTray.update(_elapsedMS);
+			soundTray.update(deltaTime);
 		#end
 
 		if (!_lostFocus || !FlxG.autoPause)
@@ -565,7 +503,7 @@ class FlxGame extends Sprite
 				{
 					FlxG.vcr.stepRequested = false;
 				}
-				else if (_state == _requestedState) // don't pause a state switch request
+				else if (_nextState == null) // don't pause a state switch request
 				{
 					#if FLX_DEBUG
 					debugger.update();
@@ -581,21 +519,7 @@ class FlxGame extends Sprite
 				}
 			}
 
-			if (FlxG.fixedTimestep)
-			{
-				_accumulator += _elapsedMS;
-				_accumulator = (_accumulator > _maxAccumulation) ? _maxAccumulation : _accumulator;
-
-				while (_accumulator >= _stepMS)
-				{
-					step();
-					_accumulator -= _stepMS;
-				}
-			}
-			else
-			{
-				step();
-			}
+			step(deltaTime);
 
 			#if FLX_DEBUG
 			FlxBasic.visibleCount = 0;
@@ -608,6 +532,9 @@ class FlxGame extends Sprite
 			debugger.update();
 			#end
 		}
+		#if !flash
+		super.__enterFrame(deltaTime);
+		#end
 	}
 
 	/**
@@ -621,17 +548,15 @@ class FlxGame extends Sprite
 		#if FLX_DEBUG
 		_skipSplash = true;
 		#end
-
-		if (_skipSplash || FlxSplash.nextState != null) // already played
+		
+		if (_skipSplash)
 		{
-			_requestedState = cast Type.createInstance(_initialState, []);
-			if (FlxSplash.nextState == null)
-				_gameJustStarted = true;
+			_nextState = _initialState;
+			_gameJustStarted = true;
 		}
 		else
 		{
-			FlxSplash.nextState = _initialState;
-			_requestedState = new FlxSplash();
+			_nextState = ()->new FlxIntroSplash(_initialState);
 			_skipSplash = true; // only play it once
 		}
 
@@ -667,8 +592,16 @@ class FlxGame extends Sprite
 		if (_state != null)
 			_state.destroy();
 
+
+		// sound datas too.
+		#if FLX_SOUND_SYSTEM
+		FlxG.sound.clearCache();
+		#end
+
 		// Finally assign and create the new state
-		_state = _requestedState;
+		_state = _nextState.createInstance();
+		_state._constructor = _nextState.getConstructor();
+		_nextState = null;
 
 		if (_gameJustStarted)
 			FlxG.signals.preGameStart.dispatch();
@@ -690,8 +623,8 @@ class FlxGame extends Sprite
 		_state.createPost();
 		FlxG.signals.postStateSwitch.dispatch();
 	}
-
-	function gameStart():Void
+	
+	function gameStart()
 	{
 		FlxG.signals.postGameStart.dispatch();
 		_gameJustStarted = false;
@@ -703,7 +636,7 @@ class FlxGame extends Sprite
 	 * the appropriate number of times each frame.
 	 * This block handles state changes, replays, all that good stuff.
 	 */
-	function step():Void
+	function step(deltaTime:Float):Void
 	{
 		// Handle game reset request
 		if (_resetGame)
@@ -719,7 +652,7 @@ class FlxGame extends Sprite
 		FlxBasic.activeCount = 0;
 		#end
 
-		update();
+		update(deltaTime);
 
 		#if FLX_DEBUG
 		debugger.stats.activeObjects(FlxBasic.activeCount);
@@ -760,12 +693,12 @@ class FlxGame extends Sprite
 	 * This function is called by `step()` and updates the actual game state.
 	 * May be called multiple times per "frame" or draw call.
 	 */
-	function update():Void
+	function update(deltaTime:Float):Void
 	{
 		if (!_state.active || !_state.exists)
 			return;
 
-		if (_state != _requestedState)
+		if (_nextState != null)
 			switchState();
 
 		#if FLX_DEBUG
@@ -773,17 +706,11 @@ class FlxGame extends Sprite
 			ticks = getTicks();
 		#end
 
-		updateElapsed();
+		updateElapsed(deltaTime);
 
-		updateInput();
-
-		// This caused issues if it was before `updateInput`.. so uh yeah FINALLY I FIXED A BUG THATS BEEN IN CNE FOR LIKE YEARS :SOB: - LJ
+		updateInput(deltaTime);
+		
 		FlxG.signals.preUpdate.dispatch();
-
-		#if FLX_POST_PROCESS
-		if (postProcesses[0] != null)
-			postProcesses[0].update(FlxG.elapsed);
-		#end
 
 		#if FLX_SOUND_SYSTEM
 		FlxG.sound.update(FlxG.elapsed);
@@ -800,30 +727,34 @@ class FlxGame extends Sprite
 		#end
 
 		#if FLX_POINTER_INPUT
-		FlxDestroyUtil.destroyArray(FlxG.swipes);
+		var len = FlxG.swipes.length;
+		while(len-- > 0)
+		{
+			final swipe = FlxG.swipes.pop();
+			if (swipe != null)
+				swipe.destroy();
+		}
 		#end
 
 		filters = filtersEnabled ? _filters : null;
 	}
 
-	function updateElapsed():Void
+	function updateElapsed(deltaTime:Float):Void
 	{
 		if (FlxG.fixedTimestep)
 		{
-			FlxG.elapsed = FlxG.timeScale * _stepSeconds; // fixed timestep
-			FlxG.rawElapsed = _stepSeconds;
+			FlxG.rawElapsed = 1.0 / FlxG.updateFramerate; // fixed timestep
 		}
 		else
 		{
-			FlxG.rawElapsed = _elapsedMS / 1000; // variable timestep
-			if (FlxG.rawElapsed > FlxG.maxElapsed)
-				FlxG.rawElapsed = FlxG.maxElapsed;
-
-			FlxG.elapsed = FlxG.timeScale * FlxG.rawElapsed;
+			FlxG.rawElapsed = deltaTime / 1000.0; // variable timestep
+			if (FlxG.rawElapsed > FlxG.maxElapsed) FlxG.rawElapsed = FlxG.maxElapsed;
 		}
+
+		FlxG.elapsed = FlxG.timeScale * FlxG.rawElapsed;
 	}
 
-	function updateInput():Void
+	function updateInput(deltaTime:Float):Void
 	{
 		#if FLX_RECORD
 		if (replaying)
@@ -832,7 +763,7 @@ class FlxGame extends Sprite
 
 			if (FlxG.vcr.timeout > 0)
 			{
-				FlxG.vcr.timeout -= _stepMS;
+				FlxG.vcr.timeout -= deltaTime;
 
 				if (FlxG.vcr.timeout <= 0)
 				{
@@ -860,7 +791,7 @@ class FlxGame extends Sprite
 			}
 
 			#if FLX_DEBUG
-			debugger.vcr.updateRuntime(_stepMS);
+			debugger.vcr.updateRuntime(deltaTime);
 			#end
 		}
 		else
@@ -877,7 +808,7 @@ class FlxGame extends Sprite
 			_replay.recordFrame();
 
 			#if FLX_DEBUG
-			debugger.vcr.updateRuntime(_stepMS);
+			debugger.vcr.updateRuntime(deltaTime);
 			#end
 		}
 		#end
@@ -900,11 +831,6 @@ class FlxGame extends Sprite
 
 		if (FlxG.renderTile)
 			FlxDrawBaseItem.drawCalls = 0;
-
-		#if FLX_POST_PROCESS
-		if (postProcesses[0] != null)
-			postProcesses[0].capture();
-		#end
 
 		FlxG.cameras.lock();
 
@@ -942,9 +868,18 @@ class FlxGame extends Sprite
 		return getTimer() - _startTime;
 	}
 
-	dynamic function getTimer():Int
+	dynamic function getTimer():Float
 	{
 		// expensive, only call if necessary
 		return Lib.getTimer();
+	}
+}
+
+private class FlxIntroSplash extends FlxSplash
+{
+	override function startOutro(onOutroComplete:() -> Void)
+	{
+		FlxG.game._gameJustStarted = true;
+		super.startOutro(onOutroComplete);
 	}
 }

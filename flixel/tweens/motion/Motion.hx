@@ -55,9 +55,10 @@ class Motion extends FlxTween
 			_object.setPosition(x, y);
 		}
 	}
-
-	override function isTweenOf(object:Dynamic, ?field:OneOfTwo<String, Int>):Bool
+	
+	override function isTweenOf(object:Dynamic, ?field:String):Bool
 	{
-		return _object == object && (field == null || field == "x" || field == "y");
+		return _object == object
+			&& (field == null || field == "x" || field == "y");
 	}
 }

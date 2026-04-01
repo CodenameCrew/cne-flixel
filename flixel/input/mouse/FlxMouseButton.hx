@@ -23,7 +23,7 @@ class FlxMouseButton extends FlxInput<Int> implements IFlxDestroyable
 	}
 
 	public var justPressedPosition(default, null) = FlxPoint.get();
-	public var justPressedTimeInTicks(default, null):Int = -1;
+	public var justPressedTimeInTicks(default, null):Float = -1;
 
 	/**
 	 * Updates the last and current state of this mouse button.
@@ -34,14 +34,13 @@ class FlxMouseButton extends FlxInput<Int> implements IFlxDestroyable
 
 		if (justPressed)
 		{
-			justPressedPosition.set(FlxG.mouse.screenX, FlxG.mouse.screenY);
+			justPressedPosition.set(FlxG.mouse.viewX, FlxG.mouse.viewY);
 			justPressedTimeInTicks = FlxG.game.ticks;
 		}
 		#if FLX_POINTER_INPUT
 		else if (justReleased)
 		{
-			// FlxPoint.weak(justPressedPosition.x, justPressedPosition.y)
-			FlxG.swipes.push(new FlxSwipe(ID, justPressedPosition, FlxG.mouse.getScreenPosition(FlxPoint.weak()), justPressedTimeInTicks));
+			FlxG.swipes.push(new FlxSwipe(ID, justPressedPosition.copyTo(), FlxG.mouse.getViewPosition(FlxPoint.weak()), justPressedTimeInTicks));
 		}
 		#end
 	}
