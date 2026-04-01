@@ -76,7 +76,7 @@ class FlxDrawBaseItem<T> {
 		else parameter.value[0] = value;
 	}
 
-	inline function addColorTransform(transform:ColorTransform) {
+	function addColorTransform(transform:ColorTransform) {
 		if (colored) {
 			colorMultipliers.push(transform.redMultiplier);
 			colorMultipliers.push(transform.greenMultiplier);
@@ -94,7 +94,7 @@ class FlxDrawBaseItem<T> {
 		}
 	}
 
-	inline function bindToShader(camera:FlxCamera, shader:FlxShader) {
+	function bindToShader(camera:FlxCamera, shader:FlxShader) {
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.wrap = wrapMode;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
