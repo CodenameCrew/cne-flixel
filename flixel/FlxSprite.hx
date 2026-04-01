@@ -908,6 +908,8 @@ class FlxSprite extends FlxObject
 		if (isFrameNull)
 			checkEmptyFrame();
 
+		checkClipRect();
+
 		if (alpha == 0 || _frame.type == FlxFrameType.EMPTY)
 			return;
 		
@@ -1636,14 +1638,7 @@ class FlxSprite extends FlxObject
 		}
 		
 		_frame = frame.copyTo(_frame);
-		if (clipRect != null)
-		{
-			_frame = frame.clipTo(clipRect, _frame);
-		}
-		else
-		{
-			_frame = frame.copyTo(_frame);
-		}
+		if (clipRect != null) _frame.clip(clipRect);
 
 		isFrameNull = false;
 
