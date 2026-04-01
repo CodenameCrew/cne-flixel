@@ -593,6 +593,11 @@ class FlxGame extends Sprite
 			_state.destroy();
 
 
+		// sound datas too.
+		#if FLX_SOUND_SYSTEM
+		FlxG.sound.clearCache();
+		#end
+
 		// Finally assign and create the new state
 		_state = _nextState.createInstance();
 		_state._constructor = _nextState.getConstructor();

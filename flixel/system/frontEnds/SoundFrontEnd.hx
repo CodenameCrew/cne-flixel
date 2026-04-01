@@ -6,49 +6,103 @@ import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxMath;
 import flixel.sound.FlxSound;
+import flixel.sound.FlxSoundData;
 import flixel.sound.FlxSoundGroup;
 import flixel.system.FlxAssets;
 import flixel.system.ui.FlxSoundTray;
 import flixel.text.FlxInputText;
+import flixel.util.FlxArrayUtil;
 import flixel.util.FlxSignal;
 #if FLX_SAVE
 import flixel.util.FlxSave;
 #end
 import openfl.media.Sound;
+import openfl.utils.Assets;
+import lime.media.AudioManager;
+import lime.media.AudioBuffer;
+import haxe.io.Bytes;
 
 /**
  * Accessed via `FlxG.sound`.
  */
+@:allow(flixel.sound.FlxSound)
 @:allow(flixel.FlxG)
 class SoundFrontEnd
 {
+	#if FLX_SAVE
+	public static var save(get, null):FlxSave;
+
+	static function get_save():FlxSave
+	{
+		if (save == null || !save.isBound)
+			save = FlxG.save;
+		return save;
+	}
+	#end
+
+	/**
+	 * How much sounds to keep in the list after clearing between states.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public static var poolMaxSounds:Int = 16;
+
 	/**
 	 * A handy container for a background music object.
 	 */
 	public var music:FlxSound;
 
 	/**
+	 * Whether or not should it automatically switch to a new default playback device if detected.
+	 */
+	public var automaticDefaultDevice(get, set):Bool;
+
+	/**
+	 * The current used playback device name to play audios.
+	 */
+	public var deviceName(get, set):String;
+
+	/**
+	 * Set this to a number between 0 and 1 to change the global volume.
+	 */
+	public var volume(get, set):Float;
+
+	/**
 	 * Whether or not the game sounds are muted.
 	 */
-	public var muted(default, set):Bool = false;
-	
-	public function set_muted(v:Bool):Bool
-	{
-		return muted = #if mobile false #else v #end;
-	}
+	public var muted(get, set):Bool;
 
+	/**
+	 * A Read only variable to check if it's paused or not.
+	 */
+	public var paused(default, null):Bool = false;
 
 	/**
 	 * Set this hook to get a callback whenever the volume changes.
 	 * Function should take the form myVolumeHandler(volume:Float).
 	 */
-	@:deprecated("volumeHandler is deprecated, use onVolumeChange, instead")
+	//@:deprecated("volumeHandler is deprecated, use onVolumeChange instead")
 	public var volumeHandler:Float->Void;
 
 	/**
 	 * A signal that gets dispatched whenever the volume changes.
 	 */
 	public var onVolumeChange(default, null):FlxTypedSignal<Float->Void> = new FlxTypedSignal<Float->Void>();
+
+	/**
+	 * Dispatched when the default for the playback device is changed.
+	 */
+	public var onDefaultDeviceChanged(default, null):FlxTypedSignal<String->Void> = new FlxTypedSignal<String->Void>();
+
+	/**
+	 * Dispatched whenever a playback device is added.
+	 */
+	public var onDeviceAdded(default, null):FlxTypedSignal<String->Void> = new FlxTypedSignal<String->Void>();
+
+	/**
+	 * Dispatched whenever a playbck device is removed.
+	 */
+	public var onDeviceRemoved(default, null):FlxTypedSignal<String->Void> = new FlxTypedSignal<String->Void>();
 
 	#if FLX_KEYBOARD
 	/**
@@ -110,20 +164,15 @@ class SoundFrontEnd
 	public var list(default, null):FlxTypedGroup<FlxSound> = new FlxTypedGroup<FlxSound>();
 
 	/**
-	 * Set this to a number between 0 and 1 to change the global volume.
+	 * Whether or not can it be paused on lost focus (if FlxG.autoPause is true).
 	 */
-	public var volume(default, set):Float = 1;
+	public var canAutoPause:Bool = true;
 
-	#if FLX_SAVE
-	public static var save(get, null):FlxSave;
-
-	static function get_save():FlxSave
-	{
-		if (save == null || !save.isBound)
-			save = FlxG.save;
-		return save;
-	}
-	#end
+	var _volume:Float = 1.0;
+	var _muted:Bool = false;
+	var _lastTimeScale:Float;
+	var _lostFocusPause:Bool;
+	var _cache:Map<String, FlxSoundData>;
 
 	/**
 	 * Set up and play a looping background soundtrack.
@@ -189,7 +238,7 @@ class SoundFrontEnd
 			sound.loadEmbedded(embeddedSound, looped, autoDestroy, onComplete);
 			loadHelper(sound, volume, group, autoPlay);
 			// Call OnlLoad() because the sound already loaded
-			if (onLoad != null && sound._sound != null)
+			if (onLoad != null && sound.data != null)
 				onLoad();
 		}
 		else
@@ -207,7 +256,7 @@ class SoundFrontEnd
 				}
 			}
 
-			sound.loadStream(url, looped, autoDestroy, onComplete, loadCallback);
+			sound.loadFromURL(url, looped, autoDestroy, onComplete, loadCallback);
 			loadHelper(sound, volume, group);
 		}
 
@@ -216,8 +265,7 @@ class SoundFrontEnd
 
 	function loadHelper(sound:FlxSound, volume:Float, group:FlxSoundGroup, autoPlay = false):FlxSound
 	{
-		if (group == null)
-			group = defaultSoundGroup;
+		if (group == null) group = defaultSoundGroup;
 		
 		sound.volume = volume;
 		group.add(sound);
@@ -228,6 +276,16 @@ class SoundFrontEnd
 		return sound;
 	}
 
+	@:deprecated("Don't use this, a deprecated CNE modification function")
+	inline function destroySound(sound:FlxSound):Void
+	{
+		defaultMusicGroup.remove(sound);
+		defaultSoundGroup.remove(sound);
+		// defaultMusicGroup.remove(sound);
+		// defaultSoundGroup.remove(sound);
+		sound.destroy();
+	}
+
 	/**
 	 * Method for sound caching (especially useful on mobile targets). The game may freeze
 	 * for some time the first time you try to play a sound if you don't use this method.
@@ -235,6 +293,7 @@ class SoundFrontEnd
 	 * @param   embeddedSound  Name of sound assets specified in your .xml project file
 	 * @return  Cached Sound object
 	 */
+	@:deprecated("cache() is deprecated, use FlxSoundData.fromAsset() instead.")
 	public inline function cache(embeddedSound:String):Sound
 	{
 		// load the sound into the OpenFL assets cache
@@ -252,7 +311,7 @@ class SoundFrontEnd
 	{
 		for (id in FlxG.assets.list(SOUND))
 		{
-			cache(id);
+			FlxSoundData.fromAssetKey(id);
 		}
 	}
 
@@ -272,10 +331,6 @@ class SoundFrontEnd
 	 */
 	public function play(embeddedSound:FlxSoundAsset, volume = 1.0, looped = false, ?group:FlxSoundGroup, autoDestroy = true, ?onComplete:Void->Void):FlxSound
 	{
-		if ((embeddedSound is String))
-		{
-			embeddedSound = cache(embeddedSound);
-		}
 		var sound = list.recycle(FlxSound).loadEmbedded(embeddedSound, looped, autoDestroy, onComplete);
 		return loadHelper(sound, volume, group, true);
 	}
@@ -301,41 +356,51 @@ class SoundFrontEnd
 	}
 
 	/**
-	 * Pause all sounds currently playing.
+	 * Pauses every audios that are listed that are about to and currently playing.
 	 */
 	public function pause():Void
 	{
-		if (music != null && music.exists && music.active)
-		{
-			music.pause();
-		}
-
-		for (sound in list.members)
-		{
-			if (sound != null && sound.exists && sound.active)
-			{
-				sound.pause();
-			}
-		}
-	}
-
-	/**
-	 * Resume playing existing sounds.
-	 */
-	public function resume():Void
-	{
 		if (music != null && music.exists)
 		{
-			music.resume();
+			if (music._pausedPlay = music.source.playing) music.source.pause();
+			music._pausedByHandler = true;
 		}
 
 		for (sound in list.members)
 		{
 			if (sound != null && sound.exists)
 			{
-				sound.resume();
+				if (sound._pausedPlay = sound.source.playing) sound.source.pause();
+				sound._pausedByHandler = true;
 			}
 		}
+
+		paused = true;
+	}
+
+	/**
+	 * Resumes back every audios that was playing and plays the pending audios.
+	 */
+	public function resume():Void
+	{
+		if (music != null && music.exists && music._pausedByHandler)
+		{
+			music._pausedByHandler = false;
+			if (music._pausedPlay) music.source.play();
+			music._pausedPlay = false;
+		}
+
+		for (sound in list.members)
+		{
+			if (sound != null && sound.exists && sound._pausedByHandler)
+			{
+				sound._pausedByHandler = false;
+				if (sound._pausedPlay) sound.source.play();
+				sound._pausedPlay = false;
+			}
+		}
+
+		paused = false;
 	}
 
 	/**
@@ -351,48 +416,216 @@ class SoundFrontEnd
 			music = null;
 		}
 
-		for (sound in list.members)
+		// Effectively removing null sounds and removing destroyed sounds if it exceed max pool count.
+		var i = list.members.length, n = 0, sound:FlxSound;
+		while (i-- > 0)
 		{
-			if (sound != null && (forceDestroy || !sound.persist))
+			sound = list.members[i];
+			if (sound == null)
 			{
+				FlxArrayUtil.swapAndPop(list.members, i);
+			}
+			else if (forceDestroy || !sound.persist)
+			{
+				if (n < poolMaxSounds) n++;
+				else FlxArrayUtil.swapAndPop(list.members, i);
 				sound.destroy();
+			}
+			else
+			{
+				n++;
+			}
+		}
+
+		// bypass the null set accessor.
+		Reflect.setField(list.members, "length", n);
+	}
+
+	/**
+	 * Check the local sound data cache to see if a sound data with this key has been loaded already.
+	 * 
+	 * @param	key		The key identifying the sound data.
+	 * @return	Whether or not this file can be found in the cache.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public inline function checkCache(key:String):Bool
+	{
+		return getCache(key) != null;
+	}
+
+	/**
+	 * Removes and destroys a cached `FlxSoundData` from memory with specified key.
+	 * @param	key			Key of the cached sound data.
+	 * @param	destroy 	Should it automatically destroys it after removing (Default is `true`).
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public function removeCache(key:String, destroy = true):Void
+	{
+		if (key == null) return;
+
+		if (destroy)
+		{
+			var obj = getCache(key);
+			if (obj != null) obj.destroy();
+		}
+
+		Assets.cache.removeSound(key);
+		_cache.remove(key);
+	}
+
+	/**
+	 * Caches the specified sound data.
+	 * 
+	 * @param	soundData	The sound data to cache.
+	 * @return	The cached sound data.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public inline function addCache(soundData:FlxSoundData):FlxSoundData
+	{
+		if (soundData != null && (soundData.key is String)) _cache.set(soundData.key, soundData);
+		return soundData;
+	}
+
+	/**
+	 * Gets a cached `FlxSoundData` with specified key.
+	 * @param	key		Key of the cached sound data.
+	 * @return	The `FlxSoundData` with the specified key, or null if the object doesn't exist.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public inline function getCache(key:String):FlxSoundData
+	{
+		return _cache.get(key);
+	}
+
+	/**
+	 * Clears audio data cache (and destroys those auio datas).
+	 * `FlxSoundData` object will be removed and destroyed only if it shouldn't persist in the cache and its useCount is 0.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public function clearCache():Void
+	{
+		if (_cache == null)
+		{
+			_cache = new Map();
+			return;
+		}
+
+		for (key in _cache.keys())
+		{
+			var obj = _cache.get(key);
+			if (obj.unused)
+			{
+				Assets.cache.removeSound(key);
+				_cache.remove(key);
+				obj.destroy();
+			}
+			else if (obj != null && !obj.persist && obj.useCount <= 0)
+			{
+				obj.unused = true;
 			}
 		}
 	}
 
-	inline function destroySound(sound:FlxSound):Void
+	/**
+	 * Completely resets audio data cache, which means destroying ALL of the cached FlxSoundData objects.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public function resetCache():Void
 	{
-		// defaultMusicGroup.remove(sound);
-		// defaultSoundGroup.remove(sound);
-		sound.destroy();
+		if (_cache == null)
+		{
+			_cache = new Map();
+			return;
+		}
+
+		for (key in _cache.keys()) removeCache(key);
+	}
+
+	/**
+	 * Removes all unused sound datas from cache,
+	 * but skips somes which should persist in cache and shouldn't be destroyed on no use.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public function clearUnused():Void
+	{
+		for (key in _cache.keys())
+		{
+			var obj = _cache.get(key);
+			if (obj != null && obj.useCount <= 0 && !obj.persist && obj.destroyOnNoUse)
+			{
+				Assets.cache.removeSound(key);
+				_cache.remove(key);
+				obj.destroy();
+			}
+		}
+	}
+
+	/**
+	 * Gets a key from a cached AudioBuffer.
+	 *
+	 * @param	buffer	AudioBuffer to find in the cache.
+	 * @return	The AudioBuffer's key or null if there isn't such AudioBuffer in cache.
+	 * 
+	 * @since FunkinCrew's Flixel
+	 */
+	public function findKeyForBuffer(buffer:AudioBuffer):Null<String>
+	{
+		for (key in _cache.keys())
+		{
+			var obj = _cache.get(key);
+			if (obj != null && obj.buffer == buffer) return key;
+		}
+		return null;
 	}
 
 	/**
 	 * Toggles muted, also activating the sound tray.
 	 */
-	@:haxe.warning("-WDeprecated")
 	public function toggleMuted():Void
 	{
 		muted = !muted;
-
-		if (volumeHandler != null)
-		{
-			volumeHandler(muted ? 0 : volume);
-		}
-
-		onVolumeChange.dispatch(muted ? 0 : volume);
-
 		showSoundTray(true);
 	}
 
 	/**
 	 * Changes the volume by a certain amount, also activating the sound tray.
 	 */
-	public function changeVolume(Amount:Float):Void
+	public function changeVolume(value:Float):Void
 	{
+		volume += value;
 		muted = false;
-		volume += Amount;
-		showSoundTray(Amount > 0);
+		showSoundTray(value > 0);
+	}
+
+	public function linearToLog(x:Float, minValue:Float = 0.001):Float
+	{
+		// If linear volume is 0, return 0
+		if (x <= 0) return 0;
+
+		// Ensure x is between 0 and 1
+		x = Math.min(1, x);
+
+		// Convert linear scale to logarithmic
+		return Math.exp(Math.log(minValue) * (1 - x));
+	}
+
+	public function logToLinear(x:Float, minValue:Float = 0.001):Float
+	{
+		// If logarithmic volume is below than minValue, return 0
+		if (x <= minValue) return 0;
+
+		// Ensure x is between minValue and 1
+		x = Math.min(1, x);
+
+		// Convert logarithmic scale to linear
+		return 1 - (Math.log(Math.max(x, minValue)) / Math.log(minValue));
 	}
 
 	/**
@@ -419,7 +652,7 @@ class SoundFrontEnd
 	 */
 	public dynamic function applySoundCurve(volume:Float)
 	{
-		return volume;
+		return Math.pow(volume, 1.75);
 		
 		// Example of linear to logarithmic sound curve:
 		// final clampedVolume = Math.max(0, Math.min(1, volume));
@@ -433,7 +666,7 @@ class SoundFrontEnd
 	 */
 	public dynamic function reverseSoundCurve(curvedVolume:Float)
 	{
-		return curvedVolume;
+		return Math.pow(curvedVolume, 0.5714285714285714);
 		
 		// Example of logarithmic to linear sound curve:
 		// final clampedVolume = Math.max(minValue, Math.min(1, x));
@@ -442,6 +675,11 @@ class SoundFrontEnd
 	
 	function new()
 	{
+		resetCache();
+
+		AudioManager.onDefaultPlaybackDeviceChanged.add(onDefaultDeviceChanged.dispatch);
+		AudioManager.onPlaybackDeviceAdded.add(onDeviceAdded.dispatch);
+		AudioManager.onPlaybackDeviceRemoved.add(onDeviceRemoved.dispatch);
 		#if FLX_SAVE
 		loadSavedPrefs();
 		#end
@@ -453,14 +691,8 @@ class SoundFrontEnd
 	@:allow(flixel.FlxGame)
 	function update(elapsed:Float):Void
 	{
-		if (music != null && music.active)
-			music.update(elapsed);
-
-		if (list != null && list.active)
-			list.update(elapsed);
-
 		#if FLX_KEYBOARD
-		if (!FlxInputText.globalManager.isTyping && keysAllowed)
+		if (keysAllowed && !FlxInputText.globalManager.isTyping)
 		{
 			if (FlxG.keys.anyJustReleased(muteKeys))
 				toggleMuted();
@@ -470,39 +702,40 @@ class SoundFrontEnd
 				changeVolume(-0.1);
 		}
 		#end
+
+		if (!paused)
+		{
+			if (_lastTimeScale != FlxG.timeScale)
+			{
+				_lastTimeScale = FlxG.timeScale;
+				if (music != null && music.active) music._updatePitch();
+				for (sound in list.members)
+				{
+					if (sound != null && sound.active) sound._updatePitch();
+				}
+			}
+
+			if (music != null && music.active) music.update(elapsed);
+			if (list != null && list.active) list.update(elapsed);
+		}
 	}
 
 	@:allow(flixel.FlxGame)
 	function onFocusLost():Void
 	{
-		if (music != null)
+		if (_lostFocusPause = canAutoPause && FlxG.autoPause && !paused)
 		{
-			music.onFocusLost();
-		}
-
-		for (sound in list.members)
-		{
-			if (sound != null)
-			{
-				sound.onFocusLost();
-			}
+			pause();
 		}
 	}
 
 	@:allow(flixel.FlxGame)
 	function onFocus():Void
 	{
-		if (music != null)
+		if (_lostFocusPause)
 		{
-			music.onFocus();
-		}
-
-		for (sound in list.members)
-		{
-			if (sound != null)
-			{
-				sound.onFocus();
-			}
+			_lostFocusPause = false;
+			resume();
 		}
 	}
 
@@ -512,36 +745,143 @@ class SoundFrontEnd
 	 */
 	function loadSavedPrefs():Void
 	{
-		var save = SoundFrontEnd.save;
 		if (!save.isBound)
 			return;
 
 		if (save.data.volume != null)
 		{
-			volume = save.data.volume;
+			set_volume(save.data.volume);
 		}
 
 		if (save.data.mute != null)
 		{
-			muted = save.data.mute;
+			set_muted(save.data.mute);
 		}
 	}
 	#end
 
-	@:haxe.warning("-WDeprecated")
-	function set_volume(Volume:Float):Float
+	function updateVolume():Void
 	{
-		#if mobile Volume = 1; #end
-		volume = FlxMath.bound(Volume, 0, 1);
-
-		if (volumeHandler != null)
+		if (music != null && music.exists)
 		{
-			volumeHandler(muted ? 0 : volume);
+			music._updateVolume();
 		}
 
-		onVolumeChange.dispatch(muted ? 0 : volume);
+		for (sound in list.members)
+		{
+			if (sound != null && sound.exists)
+			{
+				sound._updateVolume();
+			}
+		}
+	}
 
-		return volume;
+	inline function get_automaticDefaultDevice():Bool
+	{
+		return AudioManager.automaticDefaultPlaybackDevice;
+	}
+
+	function set_automaticDefaultDevice(value:Bool):Bool
+	{
+		if (AudioManager.automaticDefaultPlaybackDevice != value)
+		{
+			AudioManager.automaticDefaultPlaybackDevice = value;
+			if (value && AudioManager.getCurrentPlaybackDeviceName() != AudioManager.getPlaybackDefaultDeviceName())
+			{
+				AudioManager.refresh();
+			}
+		}
+		return value;
+	}
+
+	inline function get_deviceName():String
+	{
+		return AudioManager.getCurrentPlaybackDeviceName();
+	}
+
+	function set_deviceName(value:String):String
+	{
+		if (AudioManager.getCurrentPlaybackDeviceName() != value)
+		{
+			if (AudioManager.refresh(value)) return value;
+			else
+			{
+				AudioManager.refresh();
+				return AudioManager.getCurrentPlaybackDeviceName();
+			}
+		}
+		else
+		{
+			return value;
+		}
+	}
+
+	function get_volume():Float
+	{
+		return _volume;
+	}
+
+	function set_volume(value:Float):Float
+	{
+		var prevVolume = _volume;
+		_volume = FlxMath.bound(value, 0, 1);
+
+		// https://github.com/FunkinCrew/flixel/pull/12
+		#if !mobile
+		// Initially for the audio overhaul changes generally, it was made to use the global volume in AudioManager,
+		//  instead of iterating every FlxSounds, but ensues an issues where sounds outside flixel (openfl, lime, hxvlc)
+		//  are affected too, so this was reverted. -raltyro
+		/*
+		if (AudioManager.muted)
+		{
+			AudioManager.gain = 0;
+		}
+		else
+		{
+			AudioManager.gain = applySoundCurve(value);
+			if (value != _volume)
+			{
+				if (volumeHandler != null) volumeHandler(value);
+				onVolumeChange.dispatch(value);
+			}
+		}
+		*/
+
+		if (!_muted && _volume != prevVolume)
+		{
+			updateVolume();
+
+			if (volumeHandler != null) volumeHandler(value);
+			onVolumeChange.dispatch(value);
+		}
+		#end
+
+		return _volume;
+	}
+
+	function get_muted():Bool
+	{
+		return _muted;
+	}
+
+	function set_muted(value:Bool):Bool
+	{
+		// https://github.com/FunkinCrew/flixel/pull/12
+		#if mobile
+		return _muted = value;
+		#else
+		if (_muted != value)
+		{
+			_muted = value;
+			updateVolume();
+
+			var volume = value ? 0 : _volume;
+			if (volumeHandler != null) volumeHandler(volume);
+			onVolumeChange.dispatch(volume);
+		}
+
+		return value;
+		#end
 	}
 }
 #end

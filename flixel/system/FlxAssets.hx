@@ -10,14 +10,18 @@ import flixel.graphics.atlas.TexturePackerAtlas;
 import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.frames.FlxFramesCollection;
-import flixel.system.frontEnds.AssetFrontEnd;
 import flixel.graphics.frames.bmfont.BMFont;
+import flixel.sound.FlxSoundData;
+import flixel.system.frontEnds.AssetFrontEnd;
+import flixel.util.typeLimit.OneOfSix;
+import flixel.util.typeLimit.OneOfFive;
 import flixel.util.typeLimit.OneOfFour;
 import flixel.util.typeLimit.OneOfThree;
 import flixel.util.typeLimit.OneOfTwo;
 import haxe.Json;
 import haxe.io.Bytes;
 import haxe.xml.Access;
+import lime.media.AudioBuffer;
 import openfl.display.BitmapData;
 import openfl.display.Graphics;
 import openfl.media.Sound;
@@ -36,7 +40,7 @@ class VirtualInputData extends #if nme ByteArray #else ByteArrayData #end {}
 
 typedef FlxTexturePackerJsonAsset = FlxJsonAsset<TexturePackerAtlas>;
 typedef FlxAsepriteJsonAsset = FlxJsonAsset<AseAtlas>;
-typedef FlxSoundAsset = OneOfThree<String, Sound, Class<Sound>>;
+typedef FlxSoundAsset = OneOfSix<FlxSoundData, String, Sound, Class<Sound>, AudioBuffer, ByteArray>;
 typedef FlxGraphicAsset = OneOfThree<FlxGraphic, BitmapData, String>;
 typedef FlxTilemapGraphicAsset = OneOfFour<FlxFramesCollection, FlxGraphic, BitmapData, String>;
 typedef FlxBitmapFontGraphicAsset = OneOfFour<FlxFrame, FlxGraphic, BitmapData, String>;
