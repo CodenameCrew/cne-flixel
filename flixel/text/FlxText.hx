@@ -40,6 +40,11 @@ import openfl.geom.Rectangle;
 class FlxText extends FlxSprite
 {
 	/**
+	 * Whether or not should the texts should also modify software renderer antialiasing when antialiasing is set.
+	 */
+	public static var modifyTextFormatAntialias:Bool = false;
+
+	/**
 	 * 4px gutter at the bottom when the field has automatic height
 	 */
 	static inline var VERTICAL_GUTTER:Int = 4;
@@ -1339,7 +1344,7 @@ class FlxText extends FlxSprite
 
 	override function set_antialiasing(value:Bool):Bool
 	{
-		if (value)
+		if (!modifyTextFormatAntialias || value)
 		{
 			textField.antiAliasType = NORMAL;
 			textField.sharpness = 100;
