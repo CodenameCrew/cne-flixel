@@ -1112,10 +1112,8 @@ class FlxSound extends FlxBasic
 
 	function set_proximityEnabled(value:Bool):Bool
 	{
-		if (proximityEnabled != value && !value)
+		if (proximityEnabled != (proximityEnabled = value) && !value)
 		{
-			proximityEnabled = value;
-
 			_volumeAdjust = 1;
 			//_pitchAdjust = 1;
 			_panAdjust = 0;
@@ -1129,10 +1127,8 @@ class FlxSound extends FlxBasic
 
 	function set_proximityPan(value:Bool):Bool
 	{
-		if (proximityPan != value && proximityEnabled && !value)
+		if (proximityPan != (proximityPan = value) && proximityEnabled && !value)
 		{
-			proximityPan = value;
-
 			_panAdjust = 0;
 			_updatePan();
 		}
