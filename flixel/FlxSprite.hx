@@ -1172,6 +1172,8 @@ class FlxSprite extends FlxObject
 	@:haxe.warning("-WDeprecated")
 	function updateColorTransform():Void
 	{
+		if (colorTransform == null) colorTransform = new ColorTransform();
+
 		colorTransform.setMultipliers(color.redFloat, color.greenFloat, color.blueFloat, alpha);
 		useColorTransform = hasColorTransformRaw();
 		
