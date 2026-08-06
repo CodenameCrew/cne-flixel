@@ -702,8 +702,7 @@ class FlxGame extends Sprite
 			switchState();
 
 		#if FLX_DEBUG
-		if (FlxG.debugger.visible)
-			ticks = getTicks();
+		final updateTicks = getTicks();
 		#end
 
 		updateElapsed(deltaTime);
@@ -723,7 +722,7 @@ class FlxGame extends Sprite
 		FlxG.signals.postUpdate.dispatch();
 
 		#if FLX_DEBUG
-		debugger.stats.flixelUpdate(getTicks() - ticks);
+		debugger.stats.flixelUpdate(getTicks() - updateTicks);
 		#end
 
 		#if FLX_POINTER_INPUT
@@ -823,8 +822,7 @@ class FlxGame extends Sprite
 			return;
 
 		#if FLX_DEBUG
-		if (FlxG.debugger.visible)
-			ticks = getTicks();
+		final drawTicks = getTicks();
 		#end
 
 		FlxG.signals.preDraw.dispatch();
@@ -859,7 +857,7 @@ class FlxGame extends Sprite
 		FlxG.signals.postDraw.dispatch();
 
 		#if FLX_DEBUG
-		debugger.stats.flixelDraw(getTicks() - ticks);
+		debugger.stats.flixelDraw(getTicks() - drawTicks);
 		#end
 	}
 
