@@ -118,6 +118,12 @@ class FlxAnimation extends FlxBaseAnimation
 	 */
 	var _frameFinishedEndTimer:Float = 0;
 
+	/**
+	 * Internal, used to avoid first frame being only seen shorter than the next frames.
+	 * @since CodenameCrew's Flixel
+	 */
+	var _playTicks:Null<Float>;
+
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onPlay:FlxTypedSignal<String->Bool->Bool->Int->Void> = new FlxTypedSignal();
@@ -178,6 +184,7 @@ class FlxAnimation extends FlxBaseAnimation
 		reversed = Reversed;
 		paused = false;
 		_frameTimer = 0;
+		_playTicks = FlxG.game.ticks;
 		finished = frameDuration == 0;
 
 		var maxFrameIndex:Int = numFrames - 1;
@@ -257,6 +264,12 @@ class FlxAnimation extends FlxBaseAnimation
 
 	override public function update(elapsed:Float):Void
 	{
+		if (_playTicks == FlxG.game.ticks)
+		{
+			_playTicks = null;
+			return;
+		}
+
 		if (paused)
 			return;
 
