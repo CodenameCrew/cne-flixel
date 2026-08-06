@@ -296,8 +296,16 @@ import openfl.geom.Point;
 	public var ly(get, never):Float; inline function get_ly():Float return this.ly;
 
 	public inline function new(x:Float = 0, y:Float = 0)
-		this = FlxPoint.get(x, y);
-	
+	{
+		// there's just more issues using this since the codes thats using new FlxPoint
+		// expects to be free from the pool and let it be handled to the garbage collector,
+		// and unexpectedly stays in the pool never to be recognized as unused.
+		// CodenameCrew's Flixel
+
+		//this = FlxPoint.get(x, y);
+		this = new FlxBasePoint(x, y);
+	}
+
 	/**
 	 * Set the coordinates of this point object.
 	 *
