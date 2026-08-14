@@ -1702,8 +1702,8 @@ class FlxBitmapText extends FlxSprite
 		for (i in 0...text.length) {
 			var c = text.charCodeAt(i);
 
-			// Always preserve literal spaces (even if not in charMap)
-			if (c == " ".code) {
+			// Always preserve space chars (character codes taken from `StringTools.isSpace`)
+			if (c >= 9 && c <= 13 || c == 32) {
 				buf.add(" ");
 				continue;
 			}
