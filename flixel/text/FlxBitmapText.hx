@@ -1704,7 +1704,7 @@ class FlxBitmapText extends FlxSprite
 
 			// Always preserve space chars (character codes taken from `StringTools.isSpace`)
 			if (c >= 9 && c <= 13 || c == 32) {
-				buf.add(" ");
+				buf.addChar(c);
 				continue;
 			}
 
