@@ -6,6 +6,7 @@ import flixel.graphics.FlxGraphic;
 import flixel.graphics.atlas.FlxAtlas;
 import flixel.graphics.atlas.FlxNode;
 import flixel.graphics.frames.FlxFramesCollection;
+import flixel.math.FlxAngle;
 import flixel.math.FlxMath;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
@@ -177,7 +178,7 @@ class FlxText extends FlxSprite
 	/**
 	 * Used to offset the graphic to account for the border
 	 */
-	var _graphicOffset:FlxPoint = FlxPoint.get(0, 0);
+	var _graphicOffset:FlxPoint = FlxPoint.get();
 	
 	var _defaultFormat:TextFormat;
 	var _formatAdjusted:TextFormat;
@@ -1059,10 +1060,9 @@ class FlxText extends FlxSprite
 	override function drawSimple(camera:FlxCamera):Void
 	{
 		// same as super but checks _graphicOffset
-		getScreenPosition(_point, camera).subtract(offset).subtract(_graphicOffset);
-		if (isPixelPerfectRender(camera))
-			_point.floor();
-		
+		getScreenPosition(_point, camera).subtractPoint(offset).subtractPoint(_graphicOffset);
+		if (isPixelPerfectRender(camera)) _point.floor();
+
 		_point.copyTo(_flashPoint);
 		camera.copyPixels(_frame, framePixels, _flashRect, _flashPoint, colorTransform, blend, antialiasing);
 	}
@@ -1070,29 +1070,44 @@ class FlxText extends FlxSprite
 	override function drawComplex(camera:FlxCamera):Void
 	{
 		_frame.prepareMatrix(_matrix, ANGLE_0, checkFlipX(), checkFlipY());
-		_matrix.translate(-origin.x, -origin.y);
+		_matrix.translate(-origin.x - _graphicOffset.x, -origin.y - _graphicOffset.y);
+
+		if (frameOffsetAngle != null && frameOffsetAngle != angle)
+		{
+			var angleOff = (frameOffsetAngle - angle) * FlxAngle.TO_RAD;
+			var cos = Math.cos(angleOff), sin = Math.sin(angleOff);
+			// cos doesnt need to be negated
+			_matrix.rotateWithTrig(cos, -sin);
+			_matrix.translate(-frameOffset.x, -frameOffset.y);
+			_matrix.rotateWithTrig(cos, sin);
+		}
+		else
+			_matrix.translate(-frameOffset.x, -frameOffset.y);
+
 		_matrix.scale(scale.x, scale.y);
-		
+
 		if (bakedRotationAngle <= 0)
 		{
 			updateTrig();
 			
-			if (angle != 0)
-				_matrix.rotateWithTrig(_cosAngle, _sinAngle);
+			if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
 		}
-		
-		// same as super but checks _graphicOffset
-		getScreenPosition(_point, camera).subtract(offset).subtract(_graphicOffset);
-		_point.add(origin.x, origin.y);
+
+		getScreenPosition(_point, camera).subtractPoint(offset).addPoint(origin);
 		_matrix.translate(_point.x, _point.y);
-		
+
 		if (isPixelPerfectRender(camera))
 		{
 			_matrix.tx = Math.floor(_matrix.tx);
 			_matrix.ty = Math.floor(_matrix.ty);
 		}
+
+		doAdditionalMatrixStuff(_matrix, camera);
 		
-		camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shader);
+		if (layer != null)
+			layer.drawPixels(this, camera, _frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
+		else
+			camera.drawPixels(_frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 	}
 
 	/**

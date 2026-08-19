@@ -962,9 +962,8 @@ class FlxSprite extends FlxObject
 	@:noCompletion
 	function drawSimple(camera:FlxCamera):Void
 	{
-		getScreenPosition(_point, camera).subtract(offset);
-		if (isPixelPerfectRender(camera))
-			_point.floor();
+		getScreenPosition(_point, camera).subtractPoint(offset);
+		if (isPixelPerfectRender(camera)) _point.floor();
 
 		_point.copyToFlash(_flashPoint);
 		camera.copyPixels(_frame, framePixels, _flashRect, _flashPoint, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
@@ -978,49 +977,45 @@ class FlxSprite extends FlxObject
 	
 	function drawFrameComplex(frame:FlxFrame, camera:FlxCamera):Void
 	{
-		final matrix = this._matrix; // TODO: Just use local?
-		frame.prepareMatrix(matrix, FlxFrameAngle.ANGLE_0, checkFlipX() != camera.flipX, checkFlipY() != camera.flipY);
-		matrix.translate(-origin.x, -origin.y);
+		frame.prepareMatrix(_matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
+		_matrix.translate(-origin.x, -origin.y);
 
 		if (frameOffsetAngle != null && frameOffsetAngle != angle)
 		{
 			var angleOff = (frameOffsetAngle - angle) * FlxAngle.TO_RAD;
-			var cos = Math.cos(angleOff);
-			var sin = Math.sin(angleOff);
+			var cos = Math.cos(angleOff), sin = Math.sin(angleOff);
 			// cos doesnt need to be negated
-			matrix.rotateWithTrig(cos, -sin);
-			matrix.translate(-frameOffset.x, -frameOffset.y);
-			matrix.rotateWithTrig(cos, sin);
+			_matrix.rotateWithTrig(cos, -sin);
+			_matrix.translate(-frameOffset.x, -frameOffset.y);
+			_matrix.rotateWithTrig(cos, sin);
 		}
 		else
-			matrix.translate(-frameOffset.x, -frameOffset.y);
+			_matrix.translate(-frameOffset.x, -frameOffset.y);
 
-		matrix.scale(scale.x, scale.y);
-		
+		_matrix.scale(scale.x, scale.y);
+
 		if (bakedRotationAngle <= 0)
 		{
 			updateTrig();
 			
-			if (angle != 0)
-				matrix.rotateWithTrig(_cosAngle, _sinAngle);
+			if (angle != 0) _matrix.rotateWithTrig(_cosAngle, _sinAngle);
 		}
-		
-		getScreenPosition(_point, camera).subtract(offset);
-		_point.add(origin.x, origin.y);
-		matrix.translate(_point.x, _point.y);
-		
+
+		getScreenPosition(_point, camera).subtractPoint(offset).addPoint(origin);
+		_matrix.translate(_point.x, _point.y);
+
 		if (isPixelPerfectRender(camera))
 		{
-			matrix.tx = Math.floor(matrix.tx);
-			matrix.ty = Math.floor(matrix.ty);
+			_matrix.tx = Math.floor(_matrix.tx);
+			_matrix.ty = Math.floor(_matrix.ty);
 		}
 
 		doAdditionalMatrixStuff(_matrix, camera);
 
 		if (layer != null)
-			layer.drawPixels(this, camera, frame, framePixels, matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
+			layer.drawPixels(this, camera, frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 		else
-			camera.drawPixels(frame, framePixels, matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
+			camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
 	}
 
 	/**
