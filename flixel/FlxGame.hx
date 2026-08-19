@@ -262,8 +262,7 @@ class FlxGame extends Sprite
 	public function addShader(shader:FlxShader)
 	{
 		var filter:ShaderFilter = null;
-		if (_filters == null)
-			_filters = [];
+		if (_filters == null) _filters = [];
 		_filters.push(filter = new ShaderFilter(shader));
 		return filter;
 	}
@@ -735,7 +734,7 @@ class FlxGame extends Sprite
 		}
 		#end
 
-		filters = filtersEnabled ? _filters : null;
+		__filters = filtersEnabled ? _filters : null;
 	}
 
 	function updateElapsed(deltaTime:Float):Void

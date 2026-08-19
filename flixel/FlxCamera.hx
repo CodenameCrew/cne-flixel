@@ -22,7 +22,6 @@ import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
 import flixel.graphics.tile.FlxDrawBaseItem;
 import flixel.graphics.tile.FlxDrawQuadsItem;
 import flixel.graphics.tile.FlxDrawTrianglesItem;
-import flixel.graphics.tile.FlxGraphicsShader;
 import flixel.math.FlxMath;
 import flixel.math.FlxMatrix;
 import flixel.math.FlxPoint;
@@ -282,18 +281,6 @@ class FlxCamera extends FlxBasic
 	 */
 	public var viewMarginY(default, null):Float;
 
-	// deprecated vars
-	@:deprecated("use viewMarginLeft or viewMarginX")
-	var viewOffsetX(get, set):Float;
-	@:deprecated("use viewMarginTop or viewMarginY")
-	var viewOffsetY(get, set):Float;
-	@:deprecated("use viewMarginLeft or viewMarginX")
-	var viewOffsetWidth(get, never):Float;
-	@:deprecated("use viewMarginTop or viewMarginY")
-	var viewOffsetHeight(get, never):Float;
-
-	// delegates
-
 	/**
 	 * The margin cut off on the left by the camera zooming in (or out), in world space.
 	 * @since 5.2.0
@@ -524,15 +511,6 @@ class FlxCamera extends FlxBasic
 	 */
 	public var filters:Null<Array<BitmapFilter>> = null;
 
-	@:deprecated("_filters is deprecated, use filters instead")
-	var _filters(get, set):Null<Array<BitmapFilter>>;
-
-	inline function get_filters():Array<BitmapFilter>
-		return _filters;
-
-	inline function set_filters(value:Array<BitmapFilter>):Array<BitmapFilter>
-		return _filters = value;
-
 	/**
 	 * Camera's initial zoom value. Used for camera's scale handling.
 	 */
@@ -652,9 +630,10 @@ class FlxCamera extends FlxBasic
 	 */
 	public function addShader(shader:FlxShader)
 	{
-		var filter:ShaderFilter = null;
-		if (_filters == null) _filters = [];
-		_filters.push(filter = new ShaderFilter(shader));
+		if (filters == null) filters = [];
+
+		final filter = new ShaderFilter(shader);
+		filters.push(filter);
 		return filter;
 	}
 
@@ -665,12 +644,13 @@ class FlxCamera extends FlxBasic
 	 */
 	public function removeShader(shader:FlxShader):Bool
 	{
-		if (_filters == null) _filters = [];
-		for (f in _filters) {
+		if (filters == null) filters = [];
+
+		for (f in filters) {
 			if (f is ShaderFilter) {
 				var sf = cast(f, ShaderFilter);
 				if (sf.shader == shader) {
-					_filters.remove(f);
+					filters.remove(f);
 					return true;
 				}
 			}
@@ -1263,9 +1243,15 @@ class FlxCamera extends FlxBasic
 			flashSprite.y += lastShakeY;
 		}
 
-		if (filtersEnabled && flashSprite.filters != null)
+		if (filtersEnabled && filters != null && filters.length != 0)
 		{
-			flashSprite.filters = filters;
+			@:privateAccess
+			{
+				// setting filters in new openfl clones the filters.
+				// just do this instead.
+				flashSprite.__filters = filters;
+				flashSprite.__setRenderDirty();
+			}
 
 			// var rect = _scrollRect.scrollRect;
 
@@ -1277,14 +1263,14 @@ class FlxCamera extends FlxBasic
 			var w = width * initialZoom * FlxG.scaleMode.scale.x * FlxG.stage.window.scale;
 			var h = height * initialZoom * FlxG.scaleMode.scale.y * FlxG.stage.window.scale;
 
-			for (f in flashSprite.filters)
+			for (f in filters)
 			{
 				if (f is ShaderFilter)
 				{
 					var f:ShaderFilter = cast f;
-					if (f.shader is FlxGraphicsShader)
+					if (f.shader is FlxShader)
 					{
-						var shader:FlxGraphicsShader = cast f.shader;
+						var shader:FlxShader = cast f.shader;
 
 						/*if (rect != null)
 							{
@@ -2309,6 +2295,17 @@ class FlxCamera extends FlxBasic
 	inline function get_viewBottom():Float return scroll.y + viewMarginBottom;
 
 	// deprecated vars
+
+	@:deprecated("use viewMarginLeft or viewMarginX")
+	var viewOffsetX(get, set):Float;
+	@:deprecated("use viewMarginTop or viewMarginY")
+	var viewOffsetY(get, set):Float;
+	@:deprecated("use viewMarginLeft or viewMarginX")
+	var viewOffsetWidth(get, never):Float;
+	@:deprecated("use viewMarginTop or viewMarginY")
+	var viewOffsetHeight(get, never):Float;
+	@:deprecated("use filters")
+	var _filters(get, set):Null<Array<BitmapFilter>>;
 	
 	inline function get_viewOffsetX():Float return viewMarginX;
 
