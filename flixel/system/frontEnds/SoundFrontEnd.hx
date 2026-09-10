@@ -857,8 +857,9 @@ class SoundFrontEnd
 		{
 			updateVolume();
 
-			if (volumeHandler != null) volumeHandler(value);
-			onVolumeChange.dispatch(value);
+			final volume = _muted ? 0 : _volume;
+			if (volumeHandler != null) volumeHandler(volume);
+			onVolumeChange.dispatch(volume);
 		}
 		#end
 
@@ -881,7 +882,7 @@ class SoundFrontEnd
 			_muted = value;
 			updateVolume();
 
-			var volume = value ? 0 : _volume;
+			final volume = value ? 0 : _volume;
 			if (volumeHandler != null) volumeHandler(volume);
 			onVolumeChange.dispatch(volume);
 		}
