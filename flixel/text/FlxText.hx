@@ -919,7 +919,7 @@ class FlxText extends FlxSprite
 				borderWidth += Math.abs(offsetX);
 				borderHeight += Math.abs(offsetY);
 			
-			case OUTLINE_FAST | OUTLINE:
+			case OUTLINE_FAST | OUTLINE | OUTLINE_CARDINAL:
 				borderWidth += Math.abs(borderSize) * 2;
 				borderHeight += Math.abs(borderSize) * 2;
 			
@@ -1131,10 +1131,10 @@ class FlxText extends FlxSprite
 				_graphicOffset.x = offsetX < 0 ? -offsetX : 0;
 				_graphicOffset.y = offsetY < 0 ? -offsetY : 0;
 			
-			case OUTLINE_FAST | OUTLINE if (borderSize < 0):
+			case OUTLINE_FAST | OUTLINE | OUTLINE_CARDINAL if (borderSize < 0):
 				_graphicOffset.set(-borderSize, -borderSize);
 			
-			case NONE | OUTLINE_FAST | OUTLINE:
+			case NONE | OUTLINE_FAST | OUTLINE | OUTLINE_CARDINAL:
 				_graphicOffset.set(0, 0);
 		}
 		_matrix.translate(_graphicOffset.x, _graphicOffset.y);
@@ -1224,7 +1224,34 @@ class FlxText extends FlxSprite
 
 					_matrix.translate(curDelta, 0); // return to center
 				}
-			
+
+			case OUTLINE_CARDINAL:
+				// Render an outline around the text
+				// (do 4 offset draw calls just in all cardinal directions)
+				applyFormats(_formatAdjusted, true);
+
+				var graphic:BitmapData = _hasBorderAlpha ? _borderPixels : graphic.bitmap;
+				final iterations = FlxMath.maxInt(1, Std.int(borderSize * borderQuality));
+				var i = iterations + 1;
+				while (i-- > 1)
+				{
+					final curDelta = borderSize / iterations * i;
+					_matrix.translate(-curDelta, 0);
+					drawTextFieldTo(graphic);
+					_matrix.translate(curDelta * 2, 0);
+					drawTextFieldTo(graphic);
+					_matrix.translate(-curDelta, -curDelta);
+					drawTextFieldTo(graphic);
+					_matrix.translate(0, curDelta * 2);
+					drawTextFieldTo(graphic);
+					//copyTextWithOffset(-curDelta, 0); // left
+					//copyTextWithOffset(curDelta * 2, 0); // right
+					//copyTextWithOffset(-curDelta, -curDelta); // up
+					//copyTextWithOffset(0, curDelta * 2); // down
+					
+					_matrix.translate(0, -curDelta); // return to center
+				}
+
 			case OUTLINE_FAST:
 				// Render an outline around the text
 				// (do 4 diagonal offset draw calls)
@@ -1449,6 +1476,11 @@ enum FlxTextBorderStyle
 	 * Outline on all 8 sides
 	 */
 	OUTLINE;
+	
+	/**
+	 * Outline on all 4 cardinal directions (UP, DOWN, LEFT, RIGHT)
+	 */
+	OUTLINE_CARDINAL;
 	
 	/**
 	 * Outline, optimized using only 4 draw calls
