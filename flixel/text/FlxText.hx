@@ -895,67 +895,54 @@ class FlxText extends FlxSprite
 		if (textField == null || !_regen)
 			return;
 
-		final oldGraphic:FlxGraphic = graphic;
-		final oldBorderPixels:BitmapData = _borderPixels;
+		final oldGraphic = graphic, oldBorderPixels = _borderPixels;
 
 		final oldWidth:Int = graphic != null ? graphic.width : 0;
 		final oldHeight:Int = graphic != null ? graphic.height : VERTICAL_GUTTER;
-
+		
 		final newWidthFloat:Float = textField.width;
 		final newHeightFloat:Float = _autoHeight ? textField.textHeight + VERTICAL_GUTTER : textField.height;
-
+		
 		var borderWidth:Float = 0;
 		var borderHeight:Float = 0;
-		switch (borderStyle)
+		switch(borderStyle)
 		{
 			case SHADOW if (_shadowOffset.x != 1 || _shadowOffset.y != 1):
 				borderWidth += Math.abs(_shadowOffset.x);
 				borderHeight += Math.abs(_shadowOffset.y);
-
+			
 			case SHADOW: // With the default shadowOffset value
 				borderWidth += Math.abs(borderSize);
 				borderHeight += Math.abs(borderSize);
-
+			
 			case SHADOW_XY(offsetX, offsetY):
 				borderWidth += Math.abs(offsetX);
 				borderHeight += Math.abs(offsetY);
-
+			
 			case OUTLINE_FAST | OUTLINE:
 				borderWidth += Math.abs(borderSize) * 2;
 				borderHeight += Math.abs(borderSize) * 2;
-
+			
 			case NONE:
 		}
-
-		final newWidth:Int = Math.ceil(textField.width);
-		final textfieldHeight = _autoHeight ? textField.textHeight : textField.height;
-		final vertGutter = _autoHeight ? VERTICAL_GUTTER : 0;
-		// Account for gutter
-		final newHeight:Int = Math.ceil(textfieldHeight) + vertGutter;
-
-		if (oldBorderPixels != null)
-
-		{
-			oldBorderPixels.dispose();
-			_borderPixels = null;
-		}
+		
+		final newWidth:Int = Math.ceil(newWidthFloat + borderWidth);
+		final newHeight:Int = Math.ceil(newHeightFloat + borderHeight);
 
 		if (graphic == null || oldWidth != newWidth || oldHeight != newHeight)
 		{
-			if (oldGraphic != null)
-			{
-				oldGraphic.destroy();
-			}
+			if (oldGraphic != null) oldGraphic.destroy();
+			if (oldBorderPixels != null) oldBorderPixels.dispose();
 
 			// Need to generate a new buffer to store the text graphic
 			final key:String = FlxG.bitmap.getUniqueKey("text");
 			makeGraphic(newWidth, newHeight, FlxColor.TRANSPARENT, false, key);
-			width = Math.ceil(newWidthFloat);
-			height = Math.ceil(newHeightFloat);
 
 			#if FLX_TRACK_GRAPHICS
 			graphic.trackingInfo = 'text($ID, $text)';
 			#end
+			
+			if (_hasBorderAlpha) _borderPixels = graphic.bitmap.clone();
 
 			if (_autoHeight) textField.height = newHeight;
 
@@ -967,14 +954,14 @@ class FlxText extends FlxSprite
 		else
 		{
 			graphic.bitmap.fillRect(_flashRect, FlxColor.TRANSPARENT);
+			if (_hasBorderAlpha)
+			{
+				if (_borderPixels == null) _borderPixels = new BitmapData(frameWidth, frameHeight, true);
+				else _borderPixels.fillRect(_flashRect, FlxColor.TRANSPARENT);
+			}
 		}
 
-		if (_hasBorderAlpha)
-		{
-			_borderPixels = new BitmapData(frameWidth, frameHeight, true, FlxColor.TRANSPARENT);
-		}
-
-		if (textField != null && textField.text != null && textField.text != "")
+		if (textField != null && textField.text != null && textField.text.length > 0)
 	    {
 			// Now that we've cleared a buffer, we need to actually render the text to it
 			copyTextFormat(_defaultFormat, _formatAdjusted);
