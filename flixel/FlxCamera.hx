@@ -30,6 +30,7 @@ import flixel.math.FlxAngle;
 import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxAxes;
 import flixel.util.FlxColor;
+import flixel.util.FlxColorMatrix;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxSpriteUtil;
 
@@ -829,7 +830,7 @@ class FlxCamera extends FlxBasic
 	}
 
 	public function drawPixels(?frame:FlxFrame, ?pixels:BitmapData, matrix:FlxMatrix, ?transform:ColorTransform, ?blend:BlendMode, ?smoothing:Bool = false,
-			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode):Void
+			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?colorMatrix:FlxColorMatrix):Void
 	{
 		if (FlxG.renderBlit)
 		{
@@ -865,12 +866,12 @@ class FlxCamera extends FlxBasic
 			final drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
 				wrapMode, depthCompareMode);
 			#end
-			drawItem.addQuad(frame, matrix, transform);
+			drawItem.addQuad(frame, matrix, transform, colorMatrix);
 		}
 	}
 
 	public function copyPixels(?frame:FlxFrame, ?pixels:BitmapData, ?sourceRect:Rectangle, destPoint:Point, ?transform:ColorTransform, ?blend:BlendMode,
-			?smoothing:Bool = false, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode):Void
+			?smoothing:Bool = false, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?colorMatrix:FlxColorMatrix):Void
 	{
 		if (FlxG.renderBlit)
 		{
@@ -911,13 +912,13 @@ class FlxCamera extends FlxBasic
 			final drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
 				wrapMode, depthCompareMode);
 			#end
-			drawItem.addQuad(frame, _helperMatrix, transform);
+			drawItem.addQuad(frame, _helperMatrix, transform, colorMatrix);
 		}
 	}
 
 	public function drawTriangles(graphic:FlxGraphic, vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>,
 			?position:FlxPoint, ?blend:BlendMode, repeat:Bool = false, smoothing:Bool = false, ?transform:ColorTransform, ?shader:FlxShader,
-			?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):Void
+			?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling, ?colorMatrix:FlxColorMatrix):Void
 	{
 		final cameraBounds = _bounds.set(viewMarginLeft, viewMarginTop, viewWidth, viewHeight);
 
@@ -1002,7 +1003,7 @@ class FlxCamera extends FlxBasic
 			final drawItem:FlxDrawTrianglesItem = startTrianglesBatch(graphic, smoothing, isColored, blend, hasColorOffsets, shader,
 				repeat ? REPEAT : wrapMode, depthCompareMode, culling);
 
-			drawItem.addTriangles(vertices, indices, uvtData, colors, position, cameraBounds, transform);
+			drawItem.addTriangles(vertices, indices, uvtData, colors, position, cameraBounds, transform, colorMatrix);
 		}
 	}
 

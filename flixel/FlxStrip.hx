@@ -57,7 +57,7 @@ class FlxStrip extends FlxSprite
 				continue;
 
 			getScreenPosition(_point, camera).subtractPoint(offset);
-			camera.drawTriangles(graphic, vertices, indices, uvtData, colors, _point, blend, repeat, antialiasing, colorTransform, shader);
+			camera.drawTriangles(graphic, vertices, indices, uvtData, colors, _point, blend, repeat, antialiasing, colorTransform, shader, null, null, null, colorMatrix);
 		}
 	}
 }

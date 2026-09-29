@@ -11,11 +11,13 @@ attribute vec4 openfl_ColorMultiplier;
 attribute vec4 openfl_ColorOffset;
 attribute vec4 openfl_Position;
 attribute vec2 openfl_TextureCoord;
+attribute mat4 flixel_ColorMatrix; // hi :3
 
 varying float openfl_Alphav;
 varying vec4 openfl_ColorMultiplierv;
 varying vec4 openfl_ColorOffsetv;
 varying vec2 openfl_TextureCoordv;
+varying mat4 flixel_ColorMatrixv;
 
 uniform mat4 openfl_Matrix;
 uniform bool openfl_HasColorTransform;
@@ -24,10 +26,11 @@ uniform vec2 openfl_TextureSize;
 attribute float alpha;
 attribute vec4 colorMultiplier;
 attribute vec4 colorOffset;
+attribute mat4 colorMatrix;
 uniform bool hasColorTransform;")
 
 	@:glVertexBody("openfl_TextureCoordv = openfl_TextureCoord;
-
+flixel_ColorMatrixv = colorMatrix;
 if (hasColorTransform)
 {
 	openfl_Alphav = openfl_Alpha * colorMultiplier.a;
@@ -68,6 +71,7 @@ void main(void)
 varying vec4 openfl_ColorMultiplierv;
 varying vec4 openfl_ColorOffsetv;
 varying vec2 openfl_TextureCoordv;
+varying mat4 flixel_ColorMatrixv;
 
 uniform bool openfl_HasColorTransform;
 uniform vec2 openfl_TextureSize;
@@ -85,6 +89,7 @@ vec4 apply_flixel_transform(vec4 color)
 	// ...also in flixel_texture2D, it also converts to linear alpha anyway.
 	if (!premultiplyAlpha) color.rgb /= color.a;
 
+	color *= flixel_ColorMatrixv;
 	color = clamp(openfl_ColorOffsetv + (color * openfl_ColorMultiplierv), 0.0, 1.0);
 	return vec4(color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
 }

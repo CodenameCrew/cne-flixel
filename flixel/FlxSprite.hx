@@ -16,6 +16,7 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.system.FlxAssets.FlxShader;
 import flixel.util.FlxBitmapDataUtil;
 import flixel.util.FlxColor;
+import flixel.util.FlxColorMatrix;
 import flixel.util.FlxDestroyUtil;
 import flixel.util.FlxDirectionFlags;
 import flixel.FlxTypes;
@@ -284,6 +285,13 @@ class FlxSprite extends FlxObject
 	 * The color effects of this sprite, changes to `color` or `alpha` will be reflected here
 	 */
 	public var colorTransform(default, null) = new ColorTransform();
+
+	/**
+	 * A 4x4 matrix for more advanced color transformation.
+	 * Processed before `colorTransform`. Does not work in blit render.
+	 * @since today
+	 */
+	public var colorMatrix = new FlxColorMatrix();
 
 	public var onDraw(default, set):FlxSprite->Void;
 
@@ -1013,9 +1021,9 @@ class FlxSprite extends FlxObject
 		doAdditionalMatrixStuff(_matrix, camera);
 
 		if (layer != null)
-			layer.drawPixels(this, camera, frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
+			layer.drawPixels(this, camera, frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode, null);
 		else
-			camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode);
+			camera.drawPixels(frame, framePixels, _matrix, colorTransform, blend, antialiasing, shaderEnabled ? shader : null, wrapMode, null, colorMatrix);
 	}
 
 	/**

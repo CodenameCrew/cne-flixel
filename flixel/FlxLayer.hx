@@ -213,7 +213,7 @@ class FlxLayer extends FlxBasic
 		if (!cameraExists)
 		{
 			FlxG.log.warn('Camera ${camera} is not added to the layer, drawing normally');
-			camera.drawPixels(frame, pixels, matrix, transform, blend, smoothing, shader);
+			camera.drawPixels(frame, pixels, matrix, transform, blend, smoothing, shader, wrapMode, depthCompareMode, sprite.colorMatrix);
 			return;
 		}
 
@@ -250,7 +250,7 @@ class FlxLayer extends FlxBasic
 			#else
 			var drawItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader, wrapMode, depthCompareMode);
 			#end
-			drawItem.addQuad(frame, matrix, transform);
+			drawItem.addQuad(frame, matrix, transform, sprite.colorMatrix);
 		}
 	}
 

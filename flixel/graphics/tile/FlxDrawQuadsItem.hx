@@ -2,7 +2,7 @@ package flixel.graphics.tile;
 
 import openfl.geom.ColorTransform;
 import openfl.Vector;
-
+import flixel.util.FlxColorMatrix;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
 import flixel.math.FlxMatrix;
@@ -33,7 +33,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		transforms = null;
 	}
 
-	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {
+	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform, ?colorMatrix:FlxColorMatrix) {
 		rects.push(frame.frame.x); rects.push(frame.frame.y);
 		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
@@ -41,22 +41,23 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 		transforms.push(matrix.d); transforms.push(matrix.tx); transforms.push(matrix.ty);
 
 		transform ??= FlxDrawBaseItem.colorIdentity;
+		colorMatrix ??= FlxColorMatrix.colorIdentity;
 		var vertices = VERTICES_PER_QUAD;
 		while (vertices-- > 0) {
-			addColorTransform(transform);
+			addColorTransform(transform, colorMatrix);
 		}
 	}
 
-	public function addColoredQuad(frame:FlxFrame, matrix:FlxMatrix, ?transforms:Array<ColorTransform>) {
+	public function addColoredQuad(frame:FlxFrame, matrix:FlxMatrix, ?transforms:Array<ColorTransform>, ?colorMatrices:Array<FlxColorMatrix>) {
 		rects.push(frame.frame.x); rects.push(frame.frame.y);
 		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
 		this.transforms.push(matrix.a); this.transforms.push(matrix.b); this.transforms.push(matrix.c);
 		this.transforms.push(matrix.d); this.transforms.push(matrix.tx); this.transforms.push(matrix.ty);
 
-		var i = 0, transformsLength = transforms?.length ?? 0;
+		var i = 0, transformsLength = transforms?.length ?? 0, matricesLength = colorMatrices?.length ?? 0;
 		while (i < VERTICES_PER_QUAD) {
-			addColorTransform(i < transformsLength ? transforms[i] : FlxDrawBaseItem.colorIdentity);
+			addColorTransform(i < transformsLength ? transforms[i] : FlxDrawBaseItem.colorIdentity, i < matricesLength ? colorMatrices[i] : FlxColorMatrix.colorIdentity);
 			i++;
 		}
 	}

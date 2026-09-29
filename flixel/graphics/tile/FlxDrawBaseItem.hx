@@ -5,7 +5,7 @@ import openfl.display.ShaderParameter;
 import openfl.display3D.Context3DCompareMode;
 import openfl.display3D.Context3DWrapMode;
 import openfl.geom.ColorTransform;
-
+import flixel.util.FlxColorMatrix;
 import flixel.graphics.frames.FlxFrame;
 import flixel.math.FlxMatrix;
 import flixel.system.FlxAssets.FlxShader;
@@ -36,6 +36,7 @@ class FlxDrawBaseItem<T> {
 	var alphas:Array<Float>;
 	var colorMultipliers:Array<Float>;
 	var colorOffsets:Array<Float>;
+	var colorMatrixInfo:Array<Float>;
 
 	public function new() {
 		colorMultipliers = alphas = [];
@@ -49,6 +50,8 @@ class FlxDrawBaseItem<T> {
 		colorMultipliers.resize(0);
 		if (colorOffsets != null) colorOffsets.resize(0);
 		else if (hasColorOffsets) colorOffsets = [];
+		if (colorMatrixInfo != null) colorMatrixInfo.resize(0);
+		else colorMatrixInfo = [];
 	}
 	public function reset() baseReset();
 
@@ -61,12 +64,13 @@ class FlxDrawBaseItem<T> {
 		alphas = null;
 		colorMultipliers = null;
 		colorOffsets = null;
+		colorMatrixInfo = null;
 	}
 	public function dispose() baseDispose();
 
 	public function render(camera:FlxCamera) {}
 
-	public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {}
+	public function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform, ?colorMatrix:FlxColorMatrix) {}
 
 	function get_numVertices():Int return 0;
 	function get_numTriangles():Int return 0;
@@ -76,7 +80,9 @@ class FlxDrawBaseItem<T> {
 		else parameter.value[0] = value;
 	}
 
-	function addColorTransform(transform:ColorTransform) {
+	function addColorTransform(transform:ColorTransform, ?colorMatrix:FlxColorMatrix) {
+		colorMatrix ??= FlxColorMatrix.colorIdentity;
+
 		if (colored) {
 			colorMultipliers.push(transform.redMultiplier);
 			colorMultipliers.push(transform.greenMultiplier);
@@ -91,6 +97,12 @@ class FlxDrawBaseItem<T> {
 			colorOffsets.push(transform.greenOffset);
 			colorOffsets.push(transform.blueOffset);
 			colorOffsets.push(transform.alphaOffset);
+		}
+
+		if (colorMatrix != null) {
+			// i need a better way istg
+			if (colorMatrixInfo.length < 16)
+				for (i in 0...16) colorMatrixInfo.push(colorMatrix.rawData[i]);
 		}
 	}
 
@@ -108,6 +120,7 @@ class FlxDrawBaseItem<T> {
 		shader.alpha.value = colored ? null : alphas;
 		shader.colorMultiplier.value = colored ? colorMultipliers : null;
 		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
+		shader.colorMatrix.value = colorMatrixInfo;
 
 		camera.canvas.graphics.overrideBlendMode(blend);
 		camera.canvas.graphics.beginShaderFill(shader);

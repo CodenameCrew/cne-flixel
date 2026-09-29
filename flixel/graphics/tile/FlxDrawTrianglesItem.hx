@@ -2,7 +2,7 @@ package flixel.graphics.tile;
 
 import openfl.display.TriangleCulling;
 import openfl.geom.ColorTransform;
-
+import flixel.util.FlxColorMatrix;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
 import flixel.math.FlxMatrix;
@@ -80,7 +80,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	public function addTriangles(vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>, ?position:FlxPoint,
-		?cameraBounds:FlxRect, ?transform:ColorTransform)
+		?cameraBounds:FlxRect, ?transform:ColorTransform, ?colorMatrix:FlxColorMatrix)
 	{
 		if (position == null) position = point.set();
 		cameraBounds?.putWeak(); // unused
@@ -102,7 +102,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		final colorsLength = colors?.length ?? 0;
 		var index = 0, color:FlxColor;
 		transform ??= FlxDrawBaseItem.colorIdentity;
-
+		colorMatrix ??= FlxColorMatrix.colorIdentity;
 		i = 0;
 		while (i < indicesLength) {
 			if ((index = indices[i]) < colorsLength) {
@@ -122,9 +122,13 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 					colorOffsets.push(transform.blueOffset);
 					colorOffsets.push(transform.alphaOffset);
 				}
+
+				if (colorMatrix != null) {
+					for (i in 0...16) colorMatrixInfo.push(colorMatrix.rawData[i]);
+				}
 			}
 			else
-				addColorTransform(transform);
+				addColorTransform(transform, colorMatrix);
 
 			this.indices.push(prevNumberOfVertices + index);
 			i++;
@@ -132,7 +136,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 	}
 
 	public function addColoredTriangles(vertices:DrawData<Float>, indices:DrawData<Int>, uvtData:DrawData<Float>, ?colors:DrawData<Int>, ?position:FlxPoint,
-		?cameraBounds:FlxRect, ?transforms:Array<ColorTransform>)
+		?cameraBounds:FlxRect, ?transforms:Array<ColorTransform>, ?colorMatrices:Array<FlxColorMatrix>)
 	{
 		if (position == null) position = point.set();
 		cameraBounds?.putWeak(); // unused
@@ -151,13 +155,15 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		position.putWeak();
 
-		final colorsLength = colors?.length ?? 0, transformsLength = transforms?.length ?? 0;
-		var index = 0, color:FlxColor, transform:ColorTransform;
+		final colorsLength = colors?.length ?? 0, transformsLength = transforms?.length ?? 0, matricesLength = colorMatrices?.length ?? 0;
+		var index = 0, color:FlxColor, transform:ColorTransform, colorMatrix:FlxColorMatrix;
 
 		i = 0;
 		while (i < indicesLength) {
 			if ((index = indices[i]) < transformsLength) transform = transforms[index];
 			else transform = FlxDrawBaseItem.colorIdentity;
+			if ((index = indices[i]) < matricesLength) colorMatrix = colorMatrices[index];
+			else colorMatrix = FlxColorMatrix.colorIdentity;
 
 			if (index < colorsLength) {
 				color = colors[index];
@@ -176,16 +182,20 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 					colorOffsets.push(transform.blueOffset);
 					colorOffsets.push(transform.alphaOffset);
 				}
+
+				if (colorMatrix != null) {
+					for (i in 0...16) colorMatrixInfo.push(colorMatrix.rawData[i]);
+				}
 			}
 			else
-				addColorTransform(transform);
+				addColorTransform(transform, colorMatrix);
 
 			this.indices.push(prevNumberOfVertices + index);
 			i++;
 		}
 	}
 
-	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {
+	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform, ?colorMatrix:FlxColorMatrix) {
 		final prevNumberOfVertices = numVertices;
 
 		inline function addVertex(x:Float, y:Float) {
@@ -211,9 +221,10 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		indices.push(prevNumberOfVertices);
 
 		transform ??= FlxDrawBaseItem.colorIdentity;
+		colorMatrix ??= FlxColorMatrix.colorIdentity;
 		var vertices = INDICES_PER_QUAD;
 		while (vertices-- > 0) {
-			addColorTransform(transform);
+			addColorTransform(transform, colorMatrix);
 		}
 	}
 
