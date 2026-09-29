@@ -101,7 +101,7 @@ class FlxColorMatrix extends Matrix3D {
 	 * Desaturates an image by a specific factor.
 	 * @param factor The factor in question (0-1)
 	 */
-	public function grayscale(factor:Float) {
+	public function grayscale(?factor:Float = 1) {
 		for (r in 0...4) {
 			for (c in 0...4) {
 				var i = r + (c * 4);
