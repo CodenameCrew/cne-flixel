@@ -114,8 +114,9 @@ class FlxColorMatrix extends Matrix3D {
 
 
 	/**
-	 * djustment for hue, saturation, brightness and contrast
-	 * of a sprite, based on Adobe Flash. (not fully accurate)
+	 * Adjustment for hue, saturation, brightness and contrast
+	 * of a sprite, based on Adobe Flash. (not fully accurate).
+	 * WIll override the current matrix.
 	 * 
 	 * @param hue Hue (-360 <-> 360)
 	 * @param sat Saturation (-100 <-> 100)
@@ -124,7 +125,7 @@ class FlxColorMatrix extends Matrix3D {
 	 */
 	public function adjustColor(?hue:Float = 0, ?sat:Float = 0, ?bri:Float = 0, ?con:Float = 0) {
 		for (i in 0...3) {
-			rawData[(i * 4) + 3] += (bri / 255);
+			rawData[(i * 4) + 3] = (bri / 255);
 		}
 
 		this.hue = hue;
