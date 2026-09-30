@@ -680,7 +680,7 @@ class FlxCamera extends FlxBasic
 
 	@:noCompletion
 	public function startQuadBatch(graphic:FlxGraphic, colored:Bool, hasColorOffsets:Bool = false, ?blend:BlendMode, smooth:Bool = false,
-			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode):FlxDrawQuadsItem
+			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?hasColorMatrix:Bool):FlxDrawQuadsItem
 	{
 		// TODO: catch this error when the dev actually messes up, not in the draw phase
 		//if (graphic.isDestroyed) throw 'Cannot queue ${graphic.key}. This sprite was destroyed.';
@@ -694,6 +694,7 @@ class FlxCamera extends FlxBasic
 			&& _headTiles.graphics == graphic
 			&& _headTiles.colored == colored
 			&& _headTiles.hasColorOffsets == hasColorOffsets
+			&& _headTiles.hasColorMatrix == hasColorMatrix
 			&& (_headTiles.blend == blend && isCoherentBlendMode(blend))
 			&& _headTiles.antialiasing == smooth
 			&& _headTiles.shader == shader
@@ -710,6 +711,7 @@ class FlxCamera extends FlxBasic
 		item.antialiasing = smooth;
 		item.colored = colored;
 		item.hasColorOffsets = hasColorOffsets;
+		item.hasColorMatrix = hasColorMatrix;
 		item.blend = blend;
 		item.shader = shader;
 		item.wrapMode = wrapMode;
@@ -728,7 +730,7 @@ class FlxCamera extends FlxBasic
 
 	@:noCompletion
 	public function startTrianglesBatch(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool,
-			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):FlxDrawTrianglesItem
+			?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling, ?hasColorMatrix:Bool):FlxDrawTrianglesItem
 	{
 		// TODO: catch this error when the dev actually messes up, not in the draw phase
 		//if (graphic.isDestroyed) throw 'Cannot queue ${graphic.key}. This sprite was destroyed.';
@@ -744,6 +746,7 @@ class FlxCamera extends FlxBasic
 			&& _headTriangles.colored == isColored
 			&& (_headTriangles.blend == blend && isCoherentBlendMode(blend))
 			&& _headTriangles.hasColorOffsets == hasColorOffsets
+			&& _headTriangles.hasColorMatrix == hasColorMatrix
 			&& _headTriangles.shader == shader
 			&& _headTriangles.culling == culling
 			&& _headTriangles.wrapMode == wrapMode
@@ -751,11 +754,11 @@ class FlxCamera extends FlxBasic
 		)
 			return _headTriangles;
 
-		return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, depthCompareMode, culling);
+		return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, depthCompareMode, culling, hasColorMatrix);
 	}
 
 	@:noCompletion
-	public function getNewDrawTrianglesItem(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling):FlxDrawTrianglesItem
+	public function getNewDrawTrianglesItem(graphic:FlxGraphic, smoothing:Bool = false, isColored:Bool = false, ?blend:BlendMode, ?hasColorOffsets:Bool, ?shader:FlxShader, ?wrapMode:Context3DWrapMode, ?depthCompareMode:Context3DCompareMode, ?culling:TriangleCulling, ?hasColorMatrix:Bool):FlxDrawTrianglesItem
 	{
 		if (blend == null) blend = NORMAL;
 		if (wrapMode == null) wrapMode = CLAMP;
@@ -770,6 +773,7 @@ class FlxCamera extends FlxBasic
 		item.colored = isColored;
 		item.blend = blend;
 		item.hasColorOffsets = hasColorOffsets;
+		item.hasColorMatrix = hasColorMatrix;
 		item.shader = shader;
 		item.culling = culling;
 		item.wrapMode = wrapMode;
@@ -851,7 +855,7 @@ class FlxCamera extends FlxBasic
 		{
 			var isColored = (transform != null #if !html5 && transform.hasRGBMultipliers() #end);
 			var hasColorOffsets:Bool = (transform != null && transform.hasRGBAOffsets());
-
+			var hasColorMatrix:Bool = (colorMatrix != null && colorMatrix.isNotIdentity());
 			if (!rotateSprite && angle != 0)
 			{
 				matrix.translate(-width / 2, -height / 2);
@@ -861,10 +865,10 @@ class FlxCamera extends FlxBasic
 
 			#if FLX_RENDER_TRIANGLE
 			final drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
-				wrapMode, depthCompareMode);
+				wrapMode, depthCompareMode, null, hasColorMatrix);
 			#else
 			final drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
-				wrapMode, depthCompareMode);
+				wrapMode, depthCompareMode, hasColorMatrix);
 			#end
 			drawItem.addQuad(frame, matrix, transform, colorMatrix);
 		}
@@ -904,13 +908,13 @@ class FlxCamera extends FlxBasic
 
 			var isColored = (transform != null && transform.hasRGBMultipliers());
 			var hasColorOffsets:Bool = (transform != null && transform.hasRGBAOffsets());
-
+			var hasColorMatrix:Bool = (colorMatrix != null && colorMatrix.isNotIdentity());
 			#if FLX_RENDER_TRIANGLE
 			final drawItem:FlxDrawTrianglesItem = startTrianglesBatch(frame.parent, smoothing, isColored, blend, hasColorOffsets, shader,
-				wrapMode, depthCompareMode);
+				wrapMode, depthCompareMode, null, hasColorMatrix);
 			#else
 			final drawItem:FlxDrawQuadsItem = startQuadBatch(frame.parent, isColored, hasColorOffsets, blend, smoothing, shader,
-				wrapMode, depthCompareMode);
+				wrapMode, depthCompareMode, hasColorMatrix);
 			#end
 			drawItem.addQuad(frame, _helperMatrix, transform, colorMatrix);
 		}
@@ -999,9 +1003,9 @@ class FlxCamera extends FlxBasic
 		{
 			final isColored = (colors != null && colors.length != 0) || (transform != null && transform.hasRGBMultipliers());
 			final hasColorOffsets = (transform != null && transform.hasRGBAOffsets());
-
+			final hasColorMatrix:Bool = (colorMatrix != null && colorMatrix.isNotIdentity());
 			final drawItem:FlxDrawTrianglesItem = startTrianglesBatch(graphic, smoothing, isColored, blend, hasColorOffsets, shader,
-				repeat ? REPEAT : wrapMode, depthCompareMode, culling);
+				repeat ? REPEAT : wrapMode, depthCompareMode, culling, hasColorMatrix);
 
 			drawItem.addTriangles(vertices, indices, uvtData, colors, position, cameraBounds, transform, colorMatrix);
 		}

@@ -27,10 +27,10 @@ attribute float alpha;
 attribute vec4 colorMultiplier;
 attribute vec4 colorOffset;
 attribute mat4 colorMatrix;
-uniform bool hasColorTransform;")
+uniform bool hasColorTransform;
+uniform bool hasColorMatrix;")
 
 	@:glVertexBody("openfl_TextureCoordv = openfl_TextureCoord;
-flixel_ColorMatrixv = colorMatrix;
 if (hasColorTransform)
 {
 	openfl_Alphav = openfl_Alpha * colorMultiplier.a;
@@ -58,7 +58,18 @@ else
 		openfl_ColorOffsetv = colorOffset / 255.0;
 		openfl_ColorMultiplierv = vec4(1.0);
 	}
-}")
+}
+if (hasColorMatrix) {
+	flixel_ColorMatrixv = colorMatrix;
+} else {
+	flixel_ColorMatrixv = mat4(
+		1.0, 0.0, 0.0, 0.0,
+		0.0, 1.0, 0.0, 0.0,
+		0.0, 0.0, 1.0, 0.0,
+		0.0, 0.0, 0.0, 1.0
+	);
+}	
+")
 
 	@:glVertexSource("#pragma header
 void main(void)
@@ -78,6 +89,7 @@ uniform vec2 openfl_TextureSize;
 uniform sampler2D bitmap;
 uniform bool hasTransform;
 uniform bool hasColorTransform;
+uniform bool hasColorMatrix;
 uniform bool premultiplyAlpha;
 
 vec4 apply_flixel_transform(vec4 color)
@@ -85,7 +97,7 @@ vec4 apply_flixel_transform(vec4 color)
 	if (!hasTransform) return color;
 	else if (color.a <= 0.0 || openfl_Alphav == 0.0) return vec4(0.0);
 
-	color *= flixel_ColorMatrixv;
+	if (hasColorMatrix) color *= flixel_ColorMatrixv;
 	
 	// this is just solely for ASTC compressed textures.
 	// ...also in flixel_texture2D, it also converts to linear alpha anyway.

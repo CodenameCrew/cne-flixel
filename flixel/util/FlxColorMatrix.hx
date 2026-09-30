@@ -3,6 +3,7 @@ package flixel.util;
 import openfl.geom.Matrix3D;
 import flixel.util.FlxColor;
 import flixel.math.FlxMath;
+import openfl.Vector;
 
 /**
  * Helper 4x4 matrix class for advanced color editing.
@@ -14,6 +15,20 @@ class FlxColorMatrix extends Matrix3D {
 	 * To reset any `colorMatrix`, just do `colorMatrix.identity()`.
 	 */
 	public static final colorIdentity:FlxColorMatrix = new FlxColorMatrix();
+
+	/**
+	 * Gets an element of the matrix.
+	 * This exists due to not being able to set `rawData[?]` indices in HScript.
+	 * (and `rawData.__array` is inaccessible in source but is accessible in hscript???)
+	 */
+	public function get(a:Int):Float { return rawData[a]; }
+
+	/**
+	 * Sets an element of the matrix.
+	 * This exists due to not being able to set `rawData[?]` indices in HScript.
+	 * (and `rawData.__array` is inaccessible in source but is accessible in hscript???)
+	 */
+	public function set(a:Int, v:Float):Float { return rawData[a] = v; }
 
 	/**
 	 * Short-hand value to get/set the color that replaces the red channel. Alpha channel is ignored.
@@ -112,7 +127,6 @@ class FlxColorMatrix extends Matrix3D {
 		}
 	}
 
-
 	/**
 	 * Adjustment for hue, saturation, brightness and contrast
 	 * of a sprite, based on Adobe Flash. (not fully accurate).
@@ -148,5 +162,18 @@ class FlxColorMatrix extends Matrix3D {
 		if (satFactor > 0) satFactor *= 3;
 		satFactor = 1 + (satFactor / 100);
 		grayscale(1 - satFactor);
+	}
+
+	/**
+	 * Returns whether this is not identical to the identity matrix.
+	 */
+	public function isNotIdentity():Bool
+	{
+		for (i in 0...16) {
+			if (rawData[i] != FlxColorMatrix.colorIdentity.rawData[i]) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

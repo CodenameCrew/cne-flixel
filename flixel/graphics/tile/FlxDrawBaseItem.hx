@@ -27,6 +27,7 @@ class FlxDrawBaseItem<T> {
 	public var antialiasing:Bool = false;
 	public var colored:Bool = false;
 	public var hasColorOffsets:Bool = false;
+	public var hasColorMatrix:Bool = false;
 	public var blend:BlendMode = NORMAL;
 	public var wrapMode:Context3DWrapMode = CLAMP;
 	public var depthCompareMode:Context3DCompareMode = ALWAYS;
@@ -50,8 +51,9 @@ class FlxDrawBaseItem<T> {
 		colorMultipliers.resize(0);
 		if (colorOffsets != null) colorOffsets.resize(0);
 		else if (hasColorOffsets) colorOffsets = [];
+
 		if (colorMatrixInfo != null) colorMatrixInfo.resize(0);
-		else colorMatrixInfo = [];
+		else if (hasColorMatrix) colorMatrixInfo = [];
 	}
 	public function reset() baseReset();
 
@@ -82,7 +84,6 @@ class FlxDrawBaseItem<T> {
 
 	function addColorTransform(transform:ColorTransform, ?colorMatrix:FlxColorMatrix) {
 		colorMatrix ??= FlxColorMatrix.colorIdentity;
-
 		if (colored) {
 			colorMultipliers.push(transform.redMultiplier);
 			colorMultipliers.push(transform.greenMultiplier);
@@ -98,14 +99,25 @@ class FlxDrawBaseItem<T> {
 			colorOffsets.push(transform.blueOffset);
 			colorOffsets.push(transform.alphaOffset);
 		}
-
-		if (colorMatrix != null) {
-			// i need a better way istg
-			if (colorMatrixInfo.length < 16)
-				for (i in 0...16) colorMatrixInfo.push(colorMatrix.rawData[i]);
+		
+		/*
+			this crashes
+			cus it never gets shifted
+			so next frame it would try to load
+			32 elements in a 4x4 matrix (16 elements)
+			so it kills itself
+		*/
+		if (hasColorMatrix) {
+			for (i in 0...16) colorMatrixInfo.push(colorMatrix.rawData[i]);
 		}
 	}
 
+	private static final __colorIdentity:Array<Float> = [
+		1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	];
 	function bindToShader(camera:FlxCamera, shader:FlxShader) {
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.wrap = wrapMode;
@@ -113,6 +125,7 @@ class FlxDrawBaseItem<T> {
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored);
+		setParameterValue(shader.hasColorMatrix, hasColorMatrix);
 
 		@:privateAccess
 		setParameterValue(shader.premultiplyAlpha, !graphics.bitmap.readable && graphics.bitmap.__texture != null && graphics.bitmap.__texture.__premultiplyAlpha);
@@ -120,7 +133,7 @@ class FlxDrawBaseItem<T> {
 		shader.alpha.value = colored ? null : alphas;
 		shader.colorMultiplier.value = colored ? colorMultipliers : null;
 		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
-		shader.colorMatrix.value = colorMatrixInfo;
+		shader.colorMatrix.value = hasColorMatrix ? colorMatrixInfo : __colorIdentity;
 
 		camera.canvas.graphics.overrideBlendMode(blend);
 		camera.canvas.graphics.beginShaderFill(shader);
