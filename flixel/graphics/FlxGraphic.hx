@@ -31,7 +31,7 @@ class FlxGraphic implements IFlxDestroyable
 	 * The default value for the `destroyOnNoUse` variable at creation
 	 * @since	FunkinCrew's Flixel
 	 */
-	public static var defaultDestroyOnNoUse:Bool = false;
+	public static var defaultDestroyOnNoUse:Bool = true;
 
 	/**
 	 * Creates and caches FlxGraphic object from openfl.Assets key string.
@@ -66,6 +66,7 @@ class FlxGraphic implements IFlxDestroyable
 
 		graphic = createGraphic(bitmap, key, Unique);
 		graphic.assetsKey = Source;
+		graphic.destroyOnNoUse = false;
 		return graphic;
 	}
 
@@ -583,6 +584,8 @@ class FlxGraphic implements IFlxDestroyable
 	public function incrementUseCount()
 	{
 		useCount++;
+
+		mustDestroy = false;
 	}
 	
 	public function decrementUseCount()

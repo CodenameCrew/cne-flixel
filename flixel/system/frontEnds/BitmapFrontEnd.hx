@@ -130,8 +130,7 @@ class BitmapFrontEnd
 	public inline function get(key:String):FlxGraphic
 	{
 		var graphic = _cache.get(key);
-		if (graphic != null)
-			graphic.mustDestroy = false;
+		if (graphic != null) graphic.mustDestroy = false;
 		return graphic;
 	}
 
@@ -272,15 +271,13 @@ class BitmapFrontEnd
 
 	public function removeIfNoUse(graphic:FlxGraphic):Void
 	{
-		if (graphic != null && graphic.useCount == 0 && !graphic.persist)
+		if (graphic != null && graphic.useCount <= 0 && !graphic.persist)
 			remove(graphic);
 	}
 
 	@:allow(flixel.graphics.FlxGraphic)
 	var __doNotDelete:Bool = false;
-
-	var __countCache:Array<FlxGraphic> = [];
-	var __cacheCopy:Map<String, FlxGraphic> = [];
+	var __deletions:Map<String, FlxGraphic> = [];
 
 	/**
 	 * Clears image cache (and destroys those images).
@@ -288,36 +285,22 @@ class BitmapFrontEnd
 	 */
 	public function clearCache():Void
 	{
-		if (_cache == null)
-		{
-			_cache = new Map();
-			return;
-		}
-
 		__doNotDelete = false;
 
-		// i dont get this, who implemented this -ralty
-		for (g in __countCache)
-			g.useCount -= 10;
-
-		__countCache = [];
-
-		for (key in __cacheCopy.keys())
+		for (key => obj in __deletions)
 		{
-			var obj = __cacheCopy.get(key);
-			var objN = get(key);
-			if (objN != null && objN != obj)
-			{
-				obj.destroy();
-			}
-			if (obj.mustDestroy || (obj.destroyOnNoUse && !obj.persist && obj.useCount <= 0))
+			if (obj.mustDestroy)
 			{
 				removeKey(key);
 				obj.destroy();
 			}
+			else if (obj.useCount <= 0)
+			{
+				obj.mustDestroy = true;
+			}
 		}
 
-		__cacheCopy = [];
+		__deletions = [];
 	}
 
 	/**
@@ -326,28 +309,20 @@ class BitmapFrontEnd
 	public function mapCacheAsDestroyable()
 	{
 		if (_cache == null)
+		{
 			_cache = new Map();
-
-		__countCache = [];
+			return;
+		}
 
 		__doNotDelete = true;
-		__cacheCopy = [];
-		for (k => e in _cache)
+
+		for (key => obj in _cache)
 		{
-			if (e == null)
-				continue;
-			if (e.assetsKey != null)
+			if (obj == null) continue;
+			else if (!obj.persist && (obj.useCount <= 0 || obj.mustDestroy))
 			{
-				__countCache.push(e);
-				e.useCount += 10;
+				__deletions.set(key, obj);
 			}
-			else if (e.destroyOnNoUse)
-			{
-				FlxG.bitmap.removeByKey(k);
-				continue;
-			}
-			e.mustDestroy = true;
-			__cacheCopy.set(k, e);
 		}
 	}
 
