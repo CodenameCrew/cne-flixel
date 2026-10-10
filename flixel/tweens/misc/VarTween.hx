@@ -126,14 +126,28 @@ class VarTween extends FlxTween
 
 	function setStartValues()
 	{
-		for (info in _propertyInfos)
-		{
+		var i:Int = 0;
+		while (i < _propertyInfos.length) {
+			var info = _propertyInfos[i++];
 			var value:Dynamic = info.getField();
-			if (value == null)
-				throw 'The object does not have the property "${info.field}"';
+			var invalid:Bool = false;
+			if (value == null) {
+				FlxG.log.error('The object does not have the property "${info.field}"');
+				invalid = true;
+			}
 
-			if (Math.isNaN(value))
-				throw 'The property "${info.field}" is not numeric.';
+			if (Math.isNaN(value)) {
+				FlxG.log.error('The property "${info.field}" is not numeric.');
+				invalid = true;
+			}
+
+			if (invalid) {
+				_propertyInfos.splice(--i, 1);
+				if (_propertyInfos.length < 1) {
+					// my brain when coding goes wrong
+					cancel(); destroy(); break;
+				} else continue;
+			}
 
 			info.startValue = value;
 			info.range = info.range - value;
