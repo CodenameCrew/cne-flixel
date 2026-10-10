@@ -38,7 +38,7 @@ class FlxSound extends FlxBasic
 	/**
 	 * The default value for the `timeScaledPitch` variable at creation if none is specified in the constructor.
 	 */
-	public static var defaultTimeScaledPitch:Bool = false;
+	public static var defaultTimeScaledPitch:Bool = true;
 	#end
 
 	/**
@@ -56,24 +56,20 @@ class FlxSound extends FlxBasic
 
 		for (sound in sounds)
 		{
-			if (sound == null || !sound.exists) continue;
+			if (sound == null || !sound.loaded || !sound.exists || sound._pausedByHandler) continue;
 
-			if (sound._pausedByHandler) sound.resume();
-			else
-			{
-				sources.push(sound.source);
+			sources.push(sound.source);
 
-				sound._updateVolume();
-				#if FLX_PITCH
-				sound._updatePitch();
-				#end
-				sound._updatePan();
-				sound._updateLoop();
+			sound._updateVolume();
+			#if FLX_PITCH
+			sound._updatePitch();
+			#end
+			sound._updatePan();
+			sound._updateLoop();
 
-				sound._paused = false;
-				sound._completed = false;
-				sound.active = false;
-			}
+			sound._paused = false;
+			sound._completed = false;
+			sound.active = true;
 		}
 
 		AudioSource.playSources(sources);
@@ -724,9 +720,6 @@ class FlxSound extends FlxBasic
 
 	function init(data:FlxSoundData, ?looped:Bool, ?loopTime:Float, ?endTime:Float, autoDestroy = false, ?onComplete:Void->Void):FlxSound
 	{
-		exists = true;
-		alive = true;
-
 		stop();
 
 		this.autoDestroy = autoDestroy;
@@ -749,6 +742,9 @@ class FlxSound extends FlxBasic
 				unload();
 			}
 		}
+
+		exists = true;
+		alive = true;
 
 		if (looped != null) this.looped = looped;
 		if (loopTime != null) this.loopTime = loopTime;
