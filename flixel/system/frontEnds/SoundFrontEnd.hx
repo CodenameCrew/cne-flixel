@@ -276,7 +276,7 @@ class SoundFrontEnd
 		return sound;
 	}
 
-	@:deprecated("Don't use this, a deprecated CNE modification function")
+	@:deprecated("destroySound is deprecated, use FlxSound.destroy() instead.")
 	inline function destroySound(sound:FlxSound):Void
 	{
 		defaultMusicGroup.remove(sound);

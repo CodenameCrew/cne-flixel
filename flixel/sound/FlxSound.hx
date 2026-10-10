@@ -479,6 +479,8 @@ class FlxSound extends FlxBasic
 	override function destroy():Void
 	{
 		kill();
+
+		if (group != null) group.remove(this);
 		source.dispose();
 
 		_point = FlxDestroyUtil.put(_point);
@@ -1106,7 +1108,7 @@ class FlxSound extends FlxBasic
 	function set_group(value:FlxSoundGroup):FlxSoundGroup
 	{
 		if (value != null) value.add(this);
-		else group.remove(this);
+		else if (group != null) group.remove(this);
 		return group;
 	}
 
