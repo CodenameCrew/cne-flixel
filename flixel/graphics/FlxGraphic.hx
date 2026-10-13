@@ -66,7 +66,7 @@ class FlxGraphic implements IFlxDestroyable
 
 		graphic = createGraphic(bitmap, key, Unique);
 		graphic.assetsKey = Source;
-		graphic.destroyOnNoUse = false;
+		graphic.destroyOnNoUse = false; // Don't destroy immediately on no use for assets
 		return graphic;
 	}
 

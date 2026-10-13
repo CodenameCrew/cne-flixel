@@ -277,7 +277,6 @@ class BitmapFrontEnd
 
 	@:allow(flixel.graphics.FlxGraphic)
 	var __doNotDelete:Bool = false;
-	var __deletions:Map<String, FlxGraphic> = [];
 
 	/**
 	 * Clears image cache (and destroys those images).
@@ -285,22 +284,19 @@ class BitmapFrontEnd
 	 */
 	public function clearCache():Void
 	{
-		__doNotDelete = false;
-
-		for (key => obj in __deletions)
+		for (key => obj in _cache)
 		{
-			if (obj.mustDestroy)
+			if (obj == null) removeKey(key);
+			else if (obj.mustDestroy && (!obj.persist && obj.useCount <= 0))
 			{
 				removeKey(key);
 				obj.destroy();
 			}
-			else if (obj.useCount <= 0)
-			{
-				obj.mustDestroy = true;
-			}
+			else
+				obj.mustDestroy = false;
 		}
 
-		__deletions = [];
+		__doNotDelete = false;
 	}
 
 	/**
@@ -319,10 +315,7 @@ class BitmapFrontEnd
 		for (key => obj in _cache)
 		{
 			if (obj == null) continue;
-			else if (!obj.persist && (obj.useCount <= 0 || obj.mustDestroy))
-			{
-				__deletions.set(key, obj);
-			}
+			else if (!obj.persist) obj.mustDestroy = true;
 		}
 	}
 
