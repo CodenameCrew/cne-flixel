@@ -5,6 +5,7 @@ import flixel.graphics.frames.FlxFrame;
 import flixel.math.FlxPoint;
 import flixel.math.FlxRect;
 import flixel.system.FlxAssets;
+import flixel.util.FlxArrayUtil;
 import flixel.util.FlxColor;
 import openfl.Assets;
 import openfl.display.BitmapData;
@@ -276,7 +277,7 @@ class BitmapFrontEnd
 	}
 
 	@:allow(flixel.graphics.FlxGraphic)
-	var __doNotDelete:Bool = false;
+	var _destroyableCache:Map<String, FlxGraphic>;
 
 	/**
 	 * Clears image cache (and destroys those images).
@@ -284,19 +285,75 @@ class BitmapFrontEnd
 	 */
 	public function clearCache():Void
 	{
-		for (key => obj in _cache)
+		if (_cache == null)
 		{
-			if (obj == null) removeKey(key);
-			else if (obj.mustDestroy && (!obj.persist && obj.useCount <= 0))
-			{
-				removeKey(key);
-				obj.destroy();
-			}
-			else
-				obj.mustDestroy = false;
+			_cache = new Map();
+			return;
 		}
 
-		__doNotDelete = false;
+		var lookup:Array<FlxGraphic> = [], keys:Array<String> = [];
+
+		if (_destroyableCache != null)
+		{
+			for (key => obj in _destroyableCache)
+			{
+				if (obj.isDestroyed) _cache.remove(key);
+				else if (obj != _cache.get(key)) obj.destroy();
+				else if (obj.mustDestroy)
+				{
+					if (!obj.persist) obj.mustDestroy = false;
+					else if (obj.useCount <= 0)
+					{
+						removeKey(key);
+						obj.destroy();
+					}
+					else
+					{
+						lookup.push(obj);
+						keys.push(key);
+					}
+				}
+			}
+
+			_destroyableCache = [];
+		}
+		else
+		{
+			for (key => obj in _cache)
+			{
+				if (obj == null || obj.isDestroyed) _cache.remove(key);
+				else if (!obj.persist)
+				{
+					if (obj.useCount <= 0)
+					{
+						removeKey(key);
+						obj.destroy();
+					}
+					else
+					{
+						lookup.push(obj);
+						keys.push(key);
+					}
+				}
+			}
+		}
+
+		var i = lookup.length, obj:FlxGraphic;
+		while (i-- > 0)
+		{
+			if ((obj = lookup[i]).useCount <= 0)
+			{
+				trace(keys[i]);
+				removeKey(keys[i]);
+				obj.destroy();
+
+				FlxArrayUtil.swapAndPop(lookup, i);
+				FlxArrayUtil.swapAndPop(keys, i);
+				i = lookup.length;
+			}
+		}
+
+		for (obj in lookup) obj.mustDestroy = false;
 	}
 
 	/**
@@ -304,18 +361,18 @@ class BitmapFrontEnd
 	 */
 	public function mapCacheAsDestroyable()
 	{
-		if (_cache == null)
-		{
-			_cache = new Map();
-			return;
-		}
+		if (_cache == null) return;
 
-		__doNotDelete = true;
+		_destroyableCache = [];
 
 		for (key => obj in _cache)
 		{
-			if (obj == null) continue;
-			else if (!obj.persist) obj.mustDestroy = true;
+			if (obj == null) _cache.remove(key);
+			else
+			{
+				obj.mustDestroy = true;
+				_destroyableCache.set(key, obj);
+			}
 		}
 	}
 
