@@ -455,7 +455,7 @@ class FlxGraphic implements IFlxDestroyable
 	 */
 	public function destroy():Void
 	{
-		bitmap = FlxDestroyUtil.dispose(bitmap);
+		@:bypassAccessor bitmap = FlxDestroyUtil.dispose(bitmap);
 
 		shader = null;
 
@@ -584,8 +584,6 @@ class FlxGraphic implements IFlxDestroyable
 	public function incrementUseCount()
 	{
 		useCount++;
-
-		mustDestroy = false;
 	}
 	
 	public function decrementUseCount()

@@ -40,6 +40,8 @@ class BitmapFrontEnd
 	@:allow(flixel.system.frontEnds.BitmapLogFrontEnd)
 	var _cache:Map<String, FlxGraphic>;
 
+	var _destroyableCache:Map<String, FlxGraphic>;
+
 	var _whitePixel:FlxFrame;
 
 	var _lastUniqueKeyIndex:Int = 0;
@@ -276,9 +278,6 @@ class BitmapFrontEnd
 			remove(graphic);
 	}
 
-	@:allow(flixel.graphics.FlxGraphic)
-	var _destroyableCache:Map<String, FlxGraphic>;
-
 	/**
 	 * Clears image cache (and destroys those images).
 	 * Graphics object will be removed and destroyed only if it shouldn't persist in the cache and its useCount is 0.
@@ -343,7 +342,6 @@ class BitmapFrontEnd
 		{
 			if ((obj = lookup[i]).useCount <= 0)
 			{
-				trace(keys[i]);
 				removeKey(keys[i]);
 				obj.destroy();
 
