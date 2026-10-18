@@ -400,6 +400,31 @@ class FlxSound extends FlxBasic
 	var _point:FlxPoint;
 	var _point2:FlxPoint;
 
+	// CNE Deprecated Variables, soon to be removed?
+	var buffer(get, set):AudioBuffer;
+	function get_buffer():AudioBuffer return data != null ? data.buffer : null;
+	function set_buffer(v:AudioBuffer):AudioBuffer return data != null ? (data.buffer = v) : v;
+
+	var _sound(get, set):Sound;
+	function get__sound():Sound return data != null ? data._sound : null;
+	function set__sound(v:Sound):Sound return data != null ? (data._sound = v) : v;
+
+	var _source(get, never):AudioSource;
+	function get__source():AudioSource return source;
+
+	var _channel(get, null):SoundChannel;
+	function get__channel():SoundChannel {
+		if (_channel == null) @:privateAccess {
+			_channel = new SoundChannel(_sound, null);
+			_channel.__audioSource = source;
+		}
+		return _channel;
+	}
+
+	var _transform(get, set):SoundTransform;
+	function get__transform():SoundTransform return _channel.soundTransform;
+	function set__transform(v:SoundTransform):SoundTransform return _channel.soundTransform = v;
+
 	/**
 	 * The FlxSound constructor gets all the variables initialized, but NOT ready to play a sound yet.
 	 */
