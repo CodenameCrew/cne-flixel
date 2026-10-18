@@ -71,7 +71,7 @@ class BitmapFrontEnd
 	 */
 	public inline function checkCache(key:String):Bool
 	{
-		return get(key) != null;
+		return _cache.get(key) != null;
 	}
 
 	/**
@@ -300,10 +300,11 @@ class BitmapFrontEnd
 				else if (obj != _cache.get(key)) obj.destroy();
 				else if (obj.mustDestroy)
 				{
-					if (!obj.persist) obj.mustDestroy = false;
+					if (obj.persist) obj.mustDestroy = false;
 					else if (obj.useCount <= 0)
 					{
-						removeKey(key);
+						if (obj.assetsKey != null) Assets.cache.removeBitmapData(obj.assetsKey);
+						_cache.remove(key);
 						obj.destroy();
 					}
 					else
@@ -325,7 +326,8 @@ class BitmapFrontEnd
 				{
 					if (obj.useCount <= 0)
 					{
-						removeKey(key);
+						if (obj.assetsKey != null) Assets.cache.removeBitmapData(obj.assetsKey);
+						_cache.remove(key);
 						obj.destroy();
 					}
 					else
@@ -342,7 +344,8 @@ class BitmapFrontEnd
 		{
 			if ((obj = lookup[i]).useCount <= 0)
 			{
-				removeKey(keys[i]);
+				if (obj.assetsKey != null) Assets.cache.removeBitmapData(obj.assetsKey);
+				_cache.remove(keys[i]);
 				obj.destroy();
 
 				FlxArrayUtil.swapAndPop(lookup, i);
@@ -394,13 +397,14 @@ class BitmapFrontEnd
 			return;
 		}
 
-		for (key in _cache.keys())
+		for (key => obj in _cache)
 		{
-			var obj = get(key);
-			removeKey(key);
-
+			_cache.remove(key);
 			if (obj != null)
+			{
+				if (obj.assetsKey != null) Assets.cache.removeBitmapData(obj.assetsKey);
 				obj.destroy();
+			}
 		}
 	}
 
@@ -410,12 +414,14 @@ class BitmapFrontEnd
 	 */
 	public function clearUnused():Void
 	{
-		for (key in _cache.keys())
+		for (key => obj in _cache)
 		{
-			var obj = _cache.get(key);
-			if (obj != null && obj.useCount <= 0 && !obj.persist && obj.destroyOnNoUse)
+			if (obj == null || obj.isDestroyed) _cache.remove(key);
+			else if (!obj.persist && obj.destroyOnNoUse && obj.useCount <= 0)
 			{
-				removeByKey(key);
+				if (obj.assetsKey != null) Assets.cache.removeBitmapData(obj.assetsKey);
+				_cache.remove(key);
+				obj.destroy();
 			}
 		}
 	}

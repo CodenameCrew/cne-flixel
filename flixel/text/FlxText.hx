@@ -931,7 +931,6 @@ class FlxText extends FlxSprite
 
 		if (graphic == null || oldWidth != newWidth || oldHeight != newHeight)
 		{
-			if (oldGraphic != null) oldGraphic.destroy();
 			if (oldBorderPixels != null) oldBorderPixels.dispose();
 
 			// Need to generate a new buffer to store the text graphic
