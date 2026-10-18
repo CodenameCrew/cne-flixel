@@ -46,6 +46,14 @@ class BitmapFrontEnd
 
 	var _lastUniqueKeyIndex:Int = 0;
 
+	// CNE Deprecated Variables, soon to be removed?
+	@:allow(flixel.graphics.FlxGraphic)
+	var __doNotDelete:Bool = false;
+	var __countCache:Array<FlxGraphic> = [];
+	var __cacheCopy(get, set):Map<String, FlxGraphic>;
+	function get___cacheCopy():Map<String, FlxGraphic> return _destroyableCache;
+	function set___cacheCopy(v:Map<String, FlxGraphic>):Map<String, FlxGraphic> return _destroyableCache = v;
+
 	public function new()
 	{
 		reset();
