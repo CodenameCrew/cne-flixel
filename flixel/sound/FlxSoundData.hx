@@ -332,6 +332,18 @@ class FlxSoundData implements IFlxDestroyable
 	var _samples:Int64;
 	#end
 
+	// CNE Deprecated Variables, soon to be removed?
+	@:allow(flixel.sound.FlxSound)
+	@:isVar var _sound(get, set):Sound;
+	function get__sound() {
+		if (_sound == null) @:privateAccess (@:bypassAccessor _sound = new Sound()).__buffer = buffer;
+		return _sound;
+	}
+	function set__sound(v:Sound):Sound {
+		buffer = v != null ? v.__buffer : null;
+		return _sound = v;
+	}
+
 	/**
 	 * `FlxSoundData` contructor
 	 */
