@@ -750,7 +750,7 @@ class FlxCamera extends FlxBasic
 		)
 			return _headTriangles;
 
-		return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, depthCompareMode, culling);
+		return getNewDrawTrianglesItem(graphic, smoothing, isColored, blend, hasColorOffsets, shader, wrapMode, depthCompareMode, culling);
 	}
 
 	@:noCompletion
