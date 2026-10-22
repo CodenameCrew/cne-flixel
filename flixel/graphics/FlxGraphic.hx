@@ -31,6 +31,12 @@ class FlxGraphic implements IFlxDestroyable
 	public static var defaultDestroyOnNoUse:Bool = true;
 
 	/**
+	 * The default shader for FlxGraphic.
+	 * @since	CodenameCrew's Flixel
+	 */
+	public static var defaultShader:Null<FlxShader> = new FlxShader();
+
+	/**
 	 * Creates and caches FlxGraphic object from openfl.Assets key string.
 	 *
 	 * @param   Source   `openfl.Assets` key string. For example: `"assets/image.png"`.
@@ -419,7 +425,7 @@ class FlxGraphic implements IFlxDestroyable
 		frameCollectionTypes = new Array<FlxFrameCollectionType>();
 		this.bitmap = bitmap;
 
-		shader = new FlxShader();
+		shader = (defaultShader != null) ? defaultShader : new FlxShader();
 	}
 
 	/**
