@@ -102,16 +102,13 @@ class FlxDrawBaseItem<T> {
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored);
 
-		@:privateAccess
-		setParameterValue(shader.premultiplyAlpha, !graphics.bitmap.readable && graphics.bitmap.__texture != null && graphics.bitmap.__texture.__premultiplyAlpha);
-
 		shader.alpha.value = colored ? null : alphas;
 		shader.colorMultiplier.value = colored ? colorMultipliers : null;
 		shader.colorOffset.value = hasColorOffsets ? colorOffsets : null;
 
 		camera.canvas.graphics.overrideBlendMode(blend);
-		camera.canvas.graphics.beginShaderFill(shader);
 		camera.canvas.graphics.overrideDepthTest(depthCompareMode != ALWAYS, depthCompareMode);
+		camera.canvas.graphics.beginShaderFill(shader);
 	}
 }
 

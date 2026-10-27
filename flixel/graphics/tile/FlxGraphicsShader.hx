@@ -74,17 +74,13 @@ uniform vec2 openfl_TextureSize;
 uniform sampler2D bitmap;
 uniform bool hasTransform;
 uniform bool hasColorTransform;
-uniform bool premultiplyAlpha;
 
 vec4 apply_flixel_transform(vec4 color)
 {
 	if (!hasTransform) return color;
 	else if (color.a <= 0.0 || openfl_Alphav == 0.0) return vec4(0.0);
 
-	// this is just solely for ASTC compressed textures.
-	// ...also in flixel_texture2D, it also converts to linear alpha anyway.
-	if (!premultiplyAlpha) color.rgb /= color.a;
-
+	color.rgb /= color.a;
 	color = clamp(openfl_ColorOffsetv + (color * openfl_ColorMultiplierv), 0.0, 1.0);
 	return vec4(color.rgb * color.a * openfl_Alphav, color.a * openfl_Alphav);
 }
