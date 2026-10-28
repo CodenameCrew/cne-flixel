@@ -339,7 +339,7 @@ class FlxG
 	 * This makes FlxState.switchTo fully functionable again / reverts switchState functionality to Flixel 5.5.0 and below.
 	 * @since	CodenameCrew's Flixel
 	 */
-	public static var constructStateBeforeSwitch:Bool = false;
+	public static var constructStateBeforeSwitch:Bool = true;
 
 	public static var initialWidth(default, null):Int = 0;
 	public static var initialHeight(default, null):Int = 0;
