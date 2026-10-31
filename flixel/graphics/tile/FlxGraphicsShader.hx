@@ -77,7 +77,10 @@ uniform vec4 _camSize;
 
 void apply_flixel_transform(inout vec4 color) {
 	#if !defined(NO_GUARD_APPLY_FLIXEL_TRANSFORM)
-	if (color.a == 0.0 || openfl_Alphav == 0.0) return;
+	if (color.a == 0.0 || openfl_Alphav == 0.0) {
+		color = vec4(0.0);
+		return;
+	}
 	#endif
 
 	color.rgb /= color.a;
@@ -122,7 +125,6 @@ void main(void) {
 
 	apply_flixel_transform(color);
 	gl_FragColor = color;
-
 }")
 	public function new()
 	{
