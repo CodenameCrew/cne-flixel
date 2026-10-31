@@ -122,7 +122,6 @@ void main(void) {
 
 	apply_flixel_transform(color);
 	gl_FragColor = color;
-
 }")
 	public function new()
 	{
