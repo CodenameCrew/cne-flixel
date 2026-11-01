@@ -280,7 +280,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 
 	override function render(camera:FlxCamera) {
 		//if (graphics.isDestroyed) throw 'Attempted to render an invalid FlxDrawTrianglesItem, did you destroy a cached sprite?';
-		if (vertices.length == 0) return;
+		if (vertices.length == 0 || graphics.isDestroyed) return;
 
 		final shader = shader ?? graphics.shader;
 		bindToShader(camera, shader);

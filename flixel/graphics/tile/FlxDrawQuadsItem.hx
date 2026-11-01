@@ -93,7 +93,7 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 
 	override function render(camera:FlxCamera):Void {
 		//if (graphics.isDestroyed) throw 'Attempted to render an invalid FlxDrawQaudsItem, did you destroy a cached sprite?';
-		if (rects.length == 0) return;
+		if (rects.length == 0 || graphics.isDestroyed) return;
 
 		final shader = shader ?? graphics.shader;
 		bindToShader(camera, shader);
