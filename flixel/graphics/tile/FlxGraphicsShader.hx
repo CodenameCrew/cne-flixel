@@ -77,7 +77,7 @@ uniform vec4 _camSize;
 
 void apply_flixel_transform(inout vec4 color) {
 	#if !defined(NO_GUARD_APPLY_FLIXEL_TRANSFORM)
-	if (color.a == 0.0 || openfl_Alphav == 0.0) {
+	if (openfl_Alphav == 0.0 || color.a == 0.0) {
 		color = vec4(0.0);
 		return;
 	}
@@ -100,31 +100,30 @@ vec4 flixel_texture2D(sampler2D bitmap, vec2 coord) {
 	return color;
 }
 
-float map(float value, float min1, float max1, float min2, float max2) {
-	return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-}
+#define map(value, min1, max1, min2, max2) min2 + (value - min1) * (max2 - min2) / (max1 - min1)
 
 vec2 getCamPos(vec2 pos) {
-	vec4 size = _camSize / vec4(openfl_TextureSize, openfl_TextureSize);
-	return vec2(map(pos.x, size.x, size.x + size.z, 0.0, 1.0), map(pos.y, size.y, size.y + size.w, 0.0, 1.0));
+	vec4 size = _camSize / openfl_TextureSize.xyxy;
+	return (pos - size.xy) / size.zw;
 }
 vec2 camToOg(vec2 pos) {
-	vec4 size = _camSize / vec4(openfl_TextureSize, openfl_TextureSize);
-	return vec2(map(pos.x, 0.0, 1.0, size.x, size.x + size.z), map(pos.y, 0.0, 1.0, size.y, size.y + size.w));
+	vec4 size = _camSize / openfl_TextureSize.xyxy;
+	return size.xy + pos * size.zw;
 }
 #define textureCam(bitmap, pos) flixel_texture2D(bitmap, camToOg(pos))")
 
 	// There's no reason you need #pragma body in your shaders
-	@:glFragmentBody("gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv)")
+	@:glFragmentBody("gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);")
 
 	@:glFragmentSource("#define NO_GUARD_APPLY_FLIXEL_TRANSFORM
 #pragma header
 void main(void) {
-	vec4 color = texture2D(bitmap, openfl_TextureCoordv);
-	if (color.a == 0.0 || openfl_Alphav == 0.0) discard;
-
-	apply_flixel_transform(color);
-	gl_FragColor = color;
+	if (openfl_Alphav == 0.0) gl_FragColor = vec4(0.0);
+	else {
+		vec4 color = texture2D(bitmap, openfl_TextureCoordv);
+		if (color.a != 0.0) apply_flixel_transform(color);
+		gl_FragColor = color;
+	}
 }")
 	public function new()
 	{
