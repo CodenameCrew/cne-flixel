@@ -14,51 +14,81 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem> {
 	public var rects:Vector<Float> = new Vector<Float>();
 	public var transforms:Vector<Float> = new Vector<Float>();
 
+	#if !js
+	var rectsArray:Array<Float>;
+	var transformsArray:Array<Float>;
+	#end
+
 	public function new() {
 		super();
 		type = TILES;
+
+		#if !js
+		@:privateAccess rectsArray = untyped (rects).__array;
+		@:privateAccess transformsArray = untyped (transforms).__array;
+		#end
 	}
 
 	override function reset() {
 		baseReset();
 
+		#if js
 		rects.length = 0;
 		transforms.length = 0;
+		#else
+		rectsArray.resize(0);
+		transformsArray.resize(0);
+		#end
 	}
 
 	override function dispose() {
 		baseDispose();
+
+		rects.length = 0;
+		transforms.length = 0;
 
 		rects = null;
 		transforms = null;
 	}
 
 	override function addQuad(frame:FlxFrame, matrix:FlxMatrix, ?transform:ColorTransform) {
+		#if js
 		rects.push(frame.frame.x); rects.push(frame.frame.y);
 		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
 		transforms.push(matrix.a); transforms.push(matrix.b); transforms.push(matrix.c);
 		transforms.push(matrix.d); transforms.push(matrix.tx); transforms.push(matrix.ty);
+		#else
+		rectsArray.resize((tempIndex = rectsArray.length) + 4);
+		rectsArray[tempIndex++] = frame.frame.x; rectsArray[tempIndex++] = frame.frame.y;
+		rectsArray[tempIndex++] = frame.frame.width; rectsArray[tempIndex++] = frame.frame.height;
 
-		transform ??= FlxDrawBaseItem.colorIdentity;
-		var vertices = VERTICES_PER_QUAD;
-		while (vertices-- > 0) {
-			addColorTransform(transform);
-		}
+		transformsArray.resize((tempIndex = transformsArray.length) + 6);
+		transformsArray[tempIndex++] = matrix.a; transformsArray[tempIndex++] = matrix.b; transformsArray[tempIndex++] = matrix.c;
+		transformsArray[tempIndex++] = matrix.d; transformsArray[tempIndex++] = matrix.tx; transformsArray[tempIndex++] = matrix.ty;
+		#end
+
+		addColorTransform(transform, VERTICES_PER_QUAD);
 	}
 
 	public function addColoredQuad(frame:FlxFrame, matrix:FlxMatrix, ?transforms:Array<ColorTransform>) {
+		#if js
 		rects.push(frame.frame.x); rects.push(frame.frame.y);
 		rects.push(frame.frame.width); rects.push(frame.frame.height);
 
 		this.transforms.push(matrix.a); this.transforms.push(matrix.b); this.transforms.push(matrix.c);
 		this.transforms.push(matrix.d); this.transforms.push(matrix.tx); this.transforms.push(matrix.ty);
+		#else
+		rectsArray.resize((tempIndex = rectsArray.length) + 4);
+		rectsArray[tempIndex++] = frame.frame.x; rectsArray[tempIndex++] = frame.frame.y;
+		rectsArray[tempIndex++] = frame.frame.width; rectsArray[tempIndex++] = frame.frame.height;
 
-		var i = 0, transformsLength = transforms?.length ?? 0;
-		while (i < VERTICES_PER_QUAD) {
-			addColorTransform(i < transformsLength ? transforms[i] : FlxDrawBaseItem.colorIdentity);
-			i++;
-		}
+		transformsArray.resize((tempIndex = transformsArray.length) + 6);
+		transformsArray[tempIndex++] = matrix.a; transformsArray[tempIndex++] = matrix.b; transformsArray[tempIndex++] = matrix.c;
+		transformsArray[tempIndex++] = matrix.d; transformsArray[tempIndex++] = matrix.tx; transformsArray[tempIndex++] = matrix.ty;
+		#end
+
+		addColorTransforms(transforms, VERTICES_PER_QUAD);
 	}
 
 	override function render(camera:FlxCamera):Void {
