@@ -125,15 +125,14 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		#else
 		verticesArray.resize((tempIndex = verticesArray.length) + verticesLength);
-		tempIndex2 = 0;
+		uvtDataArray.resize((tempIndex2 = uvtDataArray.length) + verticesLength);
+		tempIndex3 = 0;
 		while (tempIndex2 < verticesLength) {
-			verticesArray[tempIndex++] = position.x + vertices[tempIndex2++];
-			verticesArray[tempIndex++] = position.y + vertices[tempIndex2++];
+			uvtDataArray[tempIndex2++] = uvtData[tempIndex3];
+			verticesArray[tempIndex++] = position.x + vertices[tempIndex3++];
+			uvtDataArray[tempIndex2++] = uvtData[tempIndex3];
+			verticesArray[tempIndex++] = position.y + vertices[tempIndex3++];
 		}
-
-		uvtDataArray.resize((tempIndex = uvtDataArray.length) + verticesLength);
-		tempIndex2 = 0;
-		while (tempIndex2 < verticesLength) uvtDataArray[tempIndex++] = uvtData[tempIndex2++];
 		#end
 
 		position.putWeak();
@@ -190,15 +189,14 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem> {
 		}
 		#else
 		verticesArray.resize((tempIndex = verticesArray.length) + verticesLength);
-		tempIndex2 = 0;
+		uvtDataArray.resize((tempIndex2 = uvtDataArray.length) + verticesLength);
+		tempIndex3 = 0;
 		while (tempIndex2 < verticesLength) {
-			verticesArray[tempIndex++] = position.x + vertices[tempIndex2++];
-			verticesArray[tempIndex++] = position.y + vertices[tempIndex2++];
+			uvtDataArray[tempIndex2++] = uvtData[tempIndex3];
+			verticesArray[tempIndex++] = position.x + vertices[tempIndex3++];
+			uvtDataArray[tempIndex2++] = uvtData[tempIndex3];
+			verticesArray[tempIndex++] = position.y + vertices[tempIndex3++];
 		}
-
-		uvtDataArray.resize((tempIndex = uvtDataArray.length) + verticesLength);
-		tempIndex2 = 0;
-		while (tempIndex2 < verticesLength) uvtDataArray[tempIndex++] = uvtData[tempIndex2++];
 		#end
 
 		position.putWeak();
