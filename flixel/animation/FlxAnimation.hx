@@ -124,6 +124,12 @@ class FlxAnimation extends FlxBaseAnimation
 	 */
 	var _playTicks:Null<Float>;
 
+	/**
+	 * Internal, used to know if the animation is still displaying its first frame.
+	 * @since CodenameCrew's Flixel
+	 */
+	var _firstFrame:Bool = false;
+
 	public var onFinish:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onFinishEnd:FlxTypedSignal<Void->Void> = new FlxTypedSignal();
 	public var onPlay:FlxTypedSignal<String->Bool->Bool->Int->Void> = new FlxTypedSignal();
@@ -185,6 +191,7 @@ class FlxAnimation extends FlxBaseAnimation
 		paused = false;
 		_frameTimer = 0;
 		_playTicks = FlxG.game.ticks;
+		_firstFrame = true;
 		finished = frameDuration == 0;
 
 		var maxFrameIndex:Int = numFrames - 1;
@@ -290,9 +297,12 @@ class FlxAnimation extends FlxBaseAnimation
 			return;
 
 		_frameTimer += elapsed * timeScale;
-		while (_frameTimer > curFrameDuration && !finished)
+		var firstFrameTolerance = _firstFrame ? elapsed * 0.5 : 0.0;
+		while ((_frameTimer + firstFrameTolerance) > curFrameDuration && !finished)
 		{
 			_frameTimer -= curFrameDuration;
+			_firstFrame = false;
+			firstFrameTolerance = 0.0;
 			if (reversed)
 			{
 				if (looped && curFrame == loopPoint)
